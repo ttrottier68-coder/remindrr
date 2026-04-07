@@ -1,0 +1,6 @@
+[build]
+  command = "cd Remindrr && corepack enable && pnpm install && pnpm build"
+  publish = "Remindrr/dist"
+
+[build.environment]
+  NODE_VERSION = "20"
