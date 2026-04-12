@@ -1,0 +1,13 @@
+{
+  "name": "remindrr-reminders",
+  "version": "1.0.0",
+  "description": "Remindrr sync server and reminder engine",
+  "main": "reminder-sync.js",
+  "scripts": {
+    "start": "node reminder-sync.js",
+    "remind": "node reminder-engine.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
