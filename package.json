@@ -1,8 +1,0 @@
-{
-  "name": "remindrr",
-  "version": "1.0.0",
-  "scripts": {
-    "build": "echo 'no build needed'",
-    "start": "node reminders/reminder-sync.js"
-  }
-}

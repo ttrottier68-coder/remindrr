@@ -1,10 +1,14 @@
 [build]
-  command = "npm install && npx vite build"
+  command = "npm install --include=dev && npm run build"
   publish = "Remindrr/dist"
   node = "20"
 
 [build.environment]
   NODE_VERSION = "20"
+  NPM_CONFIG_PRODUCTION = "false"
+
+[build.system]
+  usePnpm = false
 
 [[redirects]]
   from = "/*"
