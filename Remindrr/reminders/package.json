@@ -1,0 +1,8 @@
+{
+  "name": "remindrr-reminders",
+  "version": "1.0.0",
+  "main": "reminder-sync.js",
+  "scripts": {
+    "start": "node reminder-sync.js"
+  }
+}
