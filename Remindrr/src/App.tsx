@@ -377,6 +377,8 @@ function NewInvoicePage() {
   const [newPhone, setNewPhone] = useState('');
   const [newEmail, setNewEmail] = useState('');
   const [amount, setAmount] = useState('');
+  const [taxRate, setTaxRate] = useState(0);
+  const [taxName, setTaxName] = useState('');
   const [description, setDescription] = useState('');
   const [dueDate, setDueDate] = useState('');
   const [useNew, setUseNew] = useState(false);
@@ -392,6 +394,9 @@ function NewInvoicePage() {
   const finalName = useNew ? newName : (selectedClient?.name || '');
   const invId = 'inv_' + Math.random().toString(36).slice(2, 11);
   // Module-level formatDate is used here
+  const subtotal = parseFloat(amount) || 0;
+  const taxAmount = subtotal * (taxRate / 100);
+  const total = subtotal + taxAmount;
   const paymentLink = `https://pay.stripe.com/pay/${invId}#demo`;
 
   const defaultSms = finalPhone
@@ -429,7 +434,7 @@ function NewInvoicePage() {
     saveInvoice({
       id: invId, invoiceNumber: invoiceNumber || undefined, clientId: finalClientId, clientName: finalClientName,
       clientPhone: finalPhone, clientEmail: finalEmail,
-      amount: parseFloat(amount), description, dueDate, status: 'pending',
+    amount: total, taxRate, taxName, subtotal, description, dueDate, status: 'pending',
       paymentLink, createdAt: new Date().toISOString(),
     });
     // Sync to server after creating invoice
@@ -559,7 +564,7 @@ function NewInvoicePage() {
             <input type="number" value={amount} onChange={e => setAmount(e.target.value)} placeholder="850.00"
               className="w-full border border-slate-300 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-orange-500" /></div>
           <div><label className="block text-sm font-medium text-slate-700 mb-1">Due Date</label>
-            <input type="date" value={dueDate} onChange={e => setDueDate(e.target.value)}
+            <input type="date" value={dueDate} onChange={e => setDueDate(e.target.value)}undefine
               className="w-full border border-slate-300 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-orange-500" /></div>
         </div>
         <div><label className="block text-sm font-medium text-slate-700 mb-1">Description</label>
