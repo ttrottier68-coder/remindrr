@@ -566,7 +566,7 @@ function NewInvoicePage() {
           <div><label className="block text-sm font-medium text-slate-700 mb-1">Due Date</label>
             <input type="date" value={dueDate} onChange={e => setDueDate(e.target.value)}
               className="w-full border border-slate-300 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-orange-500" /></div>
-          undefined
+        undefined  
         </div>
         <div><label className="block text-sm font-medium text-slate-700 mb-1">Description</label>
           <input value={description} onChange={e => setDescription(e.target.value)} placeholder="Plumbing repair - 123 Main St"
