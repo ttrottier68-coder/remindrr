@@ -16,6 +16,9 @@ export interface Invoice {
   clientPhone: string;
   clientEmail: string;
   amount: number;
+  taxRate: number;
+  taxName: string;
+  subtotal: number;
   description: string;
   dueDate: string;
   status: 'pending' | 'paid' | 'overdue';
@@ -24,13 +27,6 @@ export interface Invoice {
   createdAt: string;
   reminderSent?: boolean;
   reminderMethod?: 'sms' | 'email' | 'both';
-}
-
-export interface Reminder {
-  id: string;
-  invoiceId: string;
-  sentAt: string;
-  type: 'due_soon' | 'overdue';
 }
 
 export interface UserSettings {
