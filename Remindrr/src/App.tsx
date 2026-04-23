@@ -399,8 +399,8 @@ function NewInvoicePage() {
   const total = subtotal + taxAmount;
   const paymentLink = `https://pay.stripe.com/pay/${invId}#demo`;
 
-  const defaultSms = finalPhone
-    ? `Hi ${finalName} 👋 Reminder: Your invoice of $${amount || '0'} for "${description || 'your service'}" is due on ${formatDate(dueDate)}. Pay now: ${paymentLink}`
+    const defaultEmailBody = finalEmail
+    ? `Hi ${finalName},\n\nJust a friendly reminder that your invoice of $${total.toFixed(2)} for "${description || 'your service'}"${taxRate > 0 ? ` (incl. ${taxName})` : ''} is due on ${formatDate(dueDate)}.\n\nPay now: ${paymentLink}\n\nThanks for your business!`
     : '';
   const defaultEmailSubject = finalEmail ? `Payment Reminder: Invoice for ${description || 'your service'}` : '';
   const defaultEmailBody = finalEmail
