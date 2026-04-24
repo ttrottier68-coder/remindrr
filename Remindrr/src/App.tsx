@@ -1,4 +1,4 @@
-port { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { getSettings, saveSettings, getDashboardStats, getInvoices, getClients, saveInvoice, saveClient, markInvoicePaid, deleteInvoice, syncInvoicesToServer } from './lib/store';
 import { isAuthenticated, logout, ensureDemoAccount } from './lib/auth';
