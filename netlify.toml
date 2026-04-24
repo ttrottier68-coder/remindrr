@@ -1,0 +1,4 @@
+[build]
+base = "Remindrr"
+command = "npm install && npm run build"
+publish = "dist"
