@@ -358,7 +358,7 @@ function InvoicesPage() {
           <p className="text-slate-400 text-lg">No {filter !== 'all' ? filter : ''} invoices</p>
           <button onClick={() => navigate('/invoices/new')} className="text-orange-500 font-bold mt-3 hover:underline">Create one →</button>
         </div>
-      ) : (
+      ) : null}
       )}
     </div>
   );
