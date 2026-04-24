@@ -388,23 +388,24 @@ function NewInvoicePage() {
   const [editSms, setEditSms] = useState(false);
   const [editEmail, setEditEmail] = useState(false);
 
+  const subtotal = parseFloat(amount) || 0;
+  const taxAmount = subtotal * (taxRate / 100);
+  const total = subtotal + taxAmount;
+
   const selectedClient = clients.find(c => c.id === clientId);
   const finalPhone = useNew ? newPhone : (selectedClient?.phone || '');
   const finalEmail = useNew ? newEmail : (selectedClient?.email || '');
   const finalName = useNew ? newName : (selectedClient?.name || '');
   const invId = 'inv_' + Math.random().toString(36).slice(2, 11);
   // Module-level formatDate is used here
-  const subtotal = parseFloat(amount) || 0;
-  const taxAmount = subtotal * (taxRate / 100);
-  const total = subtotal + taxAmount;
   const paymentLink = `https://pay.stripe.com/pay/${invId}#demo`;
 
-    const defaultEmailBody = finalEmail
-    ? `Hi ${finalName},\n\nJust a friendly reminder that your invoice of $${total.toFixed(2)} for "${description || 'your service'}"${taxRate > 0 ? ` (incl. ${taxName})` : ''} is due on ${formatDate(dueDate)}.\n\nPay now: ${paymentLink}\n\nThanks for your business!`
+  const defaultSms = finalPhone
+    ? `Hi ${finalName} 👋 Reminder: Your invoice of $${total.toFixed(2)} for "${description || 'your service'}"${taxRate > 0 ? ` (incl. ${taxName})` : ''} is due on ${formatDate(dueDate)}. Pay now: ${paymentLink}`
     : '';
   const defaultEmailSubject = finalEmail ? `Payment Reminder: Invoice for ${description || 'your service'}` : '';
   const defaultEmailBody = finalEmail
-    ? `Hi ${finalName},\n\nJust a friendly reminder that your invoice of $${amount || '0'} for "${description || 'your service'}" is due on ${formatDate(dueDate)}.\n\nPay now: ${paymentLink}\n\nThanks for your business!`
+    ? `Hi ${finalName},\n\nJust a friendly reminder that your invoice of $${total.toFixed(2)} for "${description || 'your service'}"${taxRate > 0 ? ` (incl. ${taxName})` : ''} is due on ${formatDate(dueDate)}.\n\nPay now: ${paymentLink}\n\nThanks for your business!`
     : '';
 
   const [smsText, setSmsText] = useState('');
@@ -434,7 +435,8 @@ function NewInvoicePage() {
     saveInvoice({
       id: invId, invoiceNumber: invoiceNumber || undefined, clientId: finalClientId, clientName: finalClientName,
       clientPhone: finalPhone, clientEmail: finalEmail,
-    amount: total, taxRate, taxName, subtotal, description, dueDate, status: 'pending',
+      amount: total, taxRate, taxName, subtotal,
+      description, dueDate, status: 'pending',
       paymentLink, createdAt: new Date().toISOString(),
     });
     // Sync to server after creating invoice
@@ -515,6 +517,13 @@ function NewInvoicePage() {
             </div>
           </div>
         )}
+        {taxRate > 0 && (
+          <div className="p-3 bg-green-50 border border-green-200 rounded-xl text-sm">
+            <span className="font-semibold text-green-800">Invoice Total:</span>{' '}
+            <span className="font-bold text-green-800">${total.toFixed(2)}</span>
+            <span className="text-green-600"> (${subtotal.toFixed(2)} + {taxName} ${taxAmount.toFixed(2)})</span>
+          </div>
+        )}
         <button onClick={handleConfirm} disabled={saving}
           className="w-full bg-gradient-to-r from-green-500 to-green-600 text-white font-bold py-3 rounded-xl shadow-lg disabled:opacity-50">
           {saving ? 'Creating...' : '✅ Confirm & Create Invoice'}
@@ -566,7 +575,22 @@ function NewInvoicePage() {
           <div><label className="block text-sm font-medium text-slate-700 mb-1">Due Date</label>
             <input type="date" value={dueDate} onChange={e => setDueDate(e.target.value)}
               className="w-full border border-slate-300 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-orange-500" /></div>
-        undefined  
+        </div>
+        <div><label className="block text-sm font-medium text-slate-700 mb-1">Tax Rate</label>
+          <select value={taxRate} onChange={e => { setTaxRate(Number(e.target.value)); setTaxName(e.target.options[e.target.selectedIndex].dataset.label || ''); }}
+            className="w-full border border-slate-300 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-orange-500">
+            <option value={0} data-label="">No tax (0%)</option>
+            <option value={5} data-label="GST 5%">GST 5% (Canada federal)</option>
+            <option value={7} data-label="GST + BC PST 7%">GST + BC PST 7%</option>
+            <option value={12.975} data-label="GST + QST 12.975%">GST + QST 12.975% (Quebec)</option>
+            <option value={13} data-label="HST 13%">HST 13% (Ontario/Atlantic)</option>
+            <option value={12} data-label="GST + Manitoba PST 12%">GST + Manitoba PST 12%</option>
+            <option value={11} data-label="GST + Saskatchewan PST 11%">GST + Saskatchewan PST 11%</option>
+            <option value={8.25} data-label="US Sales Tax 8.25%">US Sales Tax 8.25%</option>
+          </select>
+          {taxRate > 0 && (
+            <p className="text-sm text-slate-500 mt-1">Subtotal: ${subtotal.toFixed(2)} → Total: ${total.toFixed(2)}</p>
+          )}
         </div>
         <div><label className="block text-sm font-medium text-slate-700 mb-1">Description</label>
           <input value={description} onChange={e => setDescription(e.target.value)} placeholder="Plumbing repair - 123 Main St"
@@ -740,3 +764,5 @@ export default function App() {
   );
 }
 // force fresh build 1776030705
+
+
