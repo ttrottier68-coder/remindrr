@@ -15,7 +15,6 @@ import ResetPage from './pages/ResetPage';
 import PlansPage from './pages/PlansPage';
 import TermsPage from './pages/TermsPage';
 import PrivacyPage from './pages/PrivacyPage';
-import { InvoiceCard } from './components/InvoiceCard';
 
 // ─── Icons ──────────────────────────────────────────────────────────────────
 const PlusIcon = () => <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" /></svg>;
@@ -360,7 +359,6 @@ function InvoicesPage() {
           <button onClick={() => navigate('/invoices/new')} className="text-orange-500 font-bold mt-3 hover:underline">Create one →</button>
         </div>
       ) : (
-        <div className="space-y-3">{filtered.map(inv => <InvoiceCard key={inv.id} invoice={inv} onRefresh={() => setTick(t => t + 1)} />)}</div>
       )}
     </div>
   );
