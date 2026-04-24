@@ -1,4 +1,8 @@
-cd /workspace/remindrr
-git add netlify.toml
-git commit -m "Fix netlify.toml syntax"
-git push origin main
+[build]
+command = "cd Remindrr && npm install && npm run build"
+publish = "dist"
+
+[[redirects]]
+from = "/*"
+to = "/index.html"
+status = 200
