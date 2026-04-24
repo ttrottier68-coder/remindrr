@@ -359,7 +359,6 @@ function InvoicesPage() {
           <button onClick={() => navigate('/invoices/new')} className="text-orange-500 font-bold mt-3 hover:underline">Create one →</button>
         </div>
       ) : null}
-      )}
     </div>
   );
 }
