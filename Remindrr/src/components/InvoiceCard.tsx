@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { getClients, deleteInvoice, markInvoicePaid, syncInvoicesToServer, sendReminderNow, getInvoices } from "../lib/store";
+import { getClients, deleteInvoice, markInvoicePaid, syncInvoicesToServer, sendReminderNow, getInvoices } from "../lib/data-store
 import type { Invoice } from "../types";
 
 interface Props {
