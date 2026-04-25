@@ -353,16 +353,9 @@ function InvoicesPage() {
           </button>
         ))}
       </div>
-      {filtered.length === 0 ? (
-        <div className="bg-white rounded-xl p-12 text-center border border-slate-100">
-          <p className="text-slate-400 text-lg">No {filter !== 'all' ? filter : ''} invoices</p>
-          <button onClick={() => navigate('/invoices/new')} className="text-orange-500 font-bold mt-3 hover:underline">Create one →</button>
-        </div>
-      ) : null}
-    </div>
-  );
-}
+     {filtered.length === 0 ? (
 
+      
 // ─── New Invoice Page ───────────────────────────────────────────────────────
 function NewInvoicePage() {
   const navigate = useNavigate();
