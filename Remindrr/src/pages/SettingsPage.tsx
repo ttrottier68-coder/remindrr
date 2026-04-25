@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getSettings, saveSettings } from from '../lib/reminder-data';
+import { getSettings, saveSettings } from '../lib/reminder-data';
 import type { UserSettings } from '../types';
 
 const BackIcon = () => <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>;
