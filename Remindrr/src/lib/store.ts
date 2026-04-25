@@ -1,11 +1,10 @@
-export const getInvoices = () => [];
-export const getSettings = () => ({});
-export const saveSettings = (s: any) => {};
-export const getDashboardStats = () => ({ total: 0, paid: 0, pending: 0, overdue: 0, clients: 0 });
-export const getInvoices = () => [];
-export const getClients = () => [];
-export const saveInvoice = (inv: any) => inv;
-export const saveClient = (client: any) => client;
-export const markInvoicePaid = (id: string) => {};
-export const deleteInvoice = (id: string) => {};
-export const syncInvoicesToServer = (invs: any[]) => Promise.resolve();
+import type { Invoice, Client, UserSettings } from '../types';
+
+export type { UserSettings };
+
+const SETTINGS_KEY = 'remindrr_settings';
+const INVOICES_KEY = 'remindrr_invoices';
+const CLIENTS_KEY  = 'remindrr_clients';
+const DATA_SERVER  = 'https://remindrr.onrender.com';
+
+function
