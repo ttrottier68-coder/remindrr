@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { saveInvoice, saveClient, saveSettings, getSettings } from '../lib/store';
+import { saveInvoice, saveClient, saveSettings, getSettings } from ''../lib/data-store;
 import type { Invoice, Client } from '../types';
 
 // ─── Icons ──────────────────────────────────────────────────────────────────
