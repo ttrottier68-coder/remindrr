@@ -443,6 +443,7 @@ function NewInvoicePage() {
     setDone(true);
     await new Promise(r => setTimeout(r, 1200));
     navigate('/invoices');
+    window.location.reload()
   };
 
   if (done) return (
