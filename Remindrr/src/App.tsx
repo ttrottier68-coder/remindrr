@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
-import { getSettings, saveSettings, getDashboardStats, getInvoices, getClients, saveInvoice, saveClient, markInvoicePaid, deleteInvoice, syncInvoicesToServer } from './lib/store';
+import { getSettings, saveSettings, getDashboardStats, getInvoices, getClients, saveInvoice, saveClient, markInvoicePaid, deleteInvoice, syncInvoicesToServer } from ./lib/data-store
 import { isAuthenticated, logout, ensureDemoAccount } from './lib/auth';
 import type { Invoice, Client } from './types';
 import SettingsPage from './pages/SettingsPage';
