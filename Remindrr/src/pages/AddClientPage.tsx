@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { saveClient, getClients } from '../lib/data-store';
+import { saveClient, getClients } from '../lib/reminder-data';
 import type { Client } from '../types';
 
 export default function AddClientPage() {
