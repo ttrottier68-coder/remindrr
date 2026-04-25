@@ -11,21 +11,25 @@ export default function LoginPage() {
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!email || !password) { setError('Please fill in all fields'); return; }
-    setLoading(true);
-    setError('');
+  e.preventDefault();
+  if (!email || !password) { setError('Please fill in all fields'); return; }
+  setLoading(true);
+  setError('');
+  try {
     const err = await login(email, password);
     setLoading(false);
     if (err) { setError(err); return; }
-    // Hard-redirect so App re-reads localStorage fresh on every login
     const freshSettings = getSettings();
     if (freshSettings?.ownerName) {
       window.location.href = '/';
     } else {
       window.location.href = '/onboarding';
     }
-  };
+  } catch (err) {
+    setLoading(false);
+    setError('An error occurred. Please try again.');
+  }
+};
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 to-slate-100 flex items-center justify-center p-4">
