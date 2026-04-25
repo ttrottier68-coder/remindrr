@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import AuthLayout from '../components/AuthLayout';
 import { register } from '../lib/auth';
-import { saveSettings } from '../lib/data-store
+import { saveSettings } from from '../lib/reminder-data';
 
 export default function SignupPage() {
   const [searchParams] = useSearchParams();
