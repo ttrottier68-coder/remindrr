@@ -442,8 +442,8 @@ function NewInvoicePage() {
     setSaving(false);
     setDone(true);
     await new Promise(r => setTimeout(r, 1200));
+    setTick(t => t + 1);
     navigate('/invoices');
-    window.location.reload()
   };
 
   if (done) return (
