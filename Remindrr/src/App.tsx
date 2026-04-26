@@ -168,7 +168,7 @@ function SetupPage() {
   );
 }
 
-// ─── Upgrade Banner ────────────────────────────────────────────────────────────
+// ─── Upgrade Banner ────────────────────────────────────────────────────────────────
 function UpgradeBanner() {
   const [dismissed, setDismissed] = useState(false);
   if (dismissed) return null;
@@ -353,9 +353,43 @@ function InvoicesPage() {
           </button>
         ))}
       </div>
-     {filtered.length === 0 ? (
+      {filtered.length === 0 ? (
+        <div className="bg-white rounded-xl p-12 text-center border border-slate-100">
+          <p className="text-slate-400 text-lg">No {filter !== 'all' ? filter : ''} invoices</p>
+          <button onClick={() => navigate('/invoices/new')} className="text-orange-500 font-bold mt-3 hover:underline">Create one →</button>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {filtered.map(inv => {
+            const client = getClients().find(c => c.id === inv.clientId);
+            const st = getStatus(inv);
+            return (
+              <div key={inv.id} className="bg-white rounded-xl p-5 border border-slate-100 shadow-sm hover:shadow-md transition-all">
+                <div className="flex items-center justify-between">
+                  <div className="flex-1">
+                    <p className="font-bold text-slate-800 text-lg">{client?.name || inv.clientName}</p>
+                    <p className="text-sm text-slate-500">{inv.description || 'No description'}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-bold text-slate-800 text-xl">${inv.amount.toLocaleString()}</p>
+                    <p className="text-sm text-slate-500">Due {formatDate(inv.dueDate)}</p>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-100">
+                  <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${st.color}`}>{st.label}</span>
+                  <button onClick={() => navigate(`/invoices/${inv.id}/edit`)} className="text-sm text-orange-500 font-medium hover:underline">
+                    View →
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
 
-      
 // ─── New Invoice Page ───────────────────────────────────────────────────────
 function NewInvoicePage() {
   const navigate = useNavigate();
@@ -666,7 +700,7 @@ function RequireAuth({ children }: { children: JSX.Element }) {
 // Track when a user just finished registering so we don't kick them back to /signup
 const REGISTERED_KEY = 'remindrr_just_registered';
 
-// ─── Demo seed data ─────────────────────────────────────────────────────────
+// ─── Demo seed data ──────────────────────────────────────────────────────────
 async function seedDemoData() {
   const existing = getSettings();
   if (existing?.ownerName) return; // don't overwrite
@@ -754,5 +788,4 @@ export default function App() {
     </BrowserRouter>
   );
 }
-// force fresh build 1776030705
-
+// force fresh build
