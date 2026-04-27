@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getSettings, saveSettings } from '../lib/reminder-data';
+import { getSettings, saveSettings } from '../lib/store';
 import type { UserSettings } from '../types';
 
 const BackIcon = () => <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>;
@@ -96,7 +96,7 @@ function TwilioGuide() {
           <div className="bg-purple-500 text-white text-xs font-bold px-2 py-1 rounded">TWILIO</div>
           <div>
             <p className="font-semibold text-slate-800 text-sm">How to set up Twilio (step by step)</p>
-            <p className="text-slate-500 text-xs mt-0.5">Takes about 5 minutes · $1/month for a phone number</p>
+            <p className="text-slate-500 text-xs mt-0.5">Takes about 5 minutes · \$1/month for a phone number</p>
           </div>
         </div>
         <ChevronIcon open={open} />
@@ -106,7 +106,7 @@ function TwilioGuide() {
           <div className="bg-white rounded-lg p-4 border border-purple-100">
             <p className="font-bold text-slate-800 mb-2">📱 What is Twilio?</p>
             <p className="text-slate-600 leading-relaxed">
-              Twilio is the service that sends the SMS text messages to your customers. You&apos;ll buy a phone number from them for $1/month—the same number shows in the &quot;From&quot; field on all your reminders.
+              Twilio is the service that sends the SMS text messages to your customers. You&apos;ll buy a phone number from them for \$1/month—the same number shows in the &quot;From&quot; field on all your reminders.
             </p>
           </div>
 
@@ -128,8 +128,8 @@ function TwilioGuide() {
             <div className="flex gap-3">
               <div className="w-6 h-6 bg-purple-500 text-white rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0">3</div>
               <div>
-                <p className="font-semibold text-slate-800">Buy an SMS phone number ($1/month)</p>
-                <p className="text-slate-500 text-xs mt-1">After you log in, go to <strong>Phone Numbers → Buy a number</strong>. Pick any US/Canadian number—local or toll-free. It costs about $1/month.</p>
+                <p className="font-semibold text-slate-800">Buy an SMS phone number (\$1/month)</p>
+                <p className="text-slate-500 text-xs mt-1">After you log in, go to <strong>Phone Numbers → Buy a number</strong>. Pick any US/Canadian number—local or toll-free. It costs about \$1/month.</p>
               </div>
             </div>
             <div className="flex gap-3">
@@ -240,64 +240,6 @@ function StatusBadge({ label, connected, fields }: { label: string; connected: b
   );
 }
 
-// ─── Account Debug ───────────────────────────────────────────────────────────
-function AccountDebug() {
-  const [show, setShow] = useState(false);
-  const email = localStorage.getItem('remindrr_user_email') || '';
-  const storedPw = email ? localStorage.getItem(`remindrr账号${email}`) : '';
-  const isDemo = email === 'demo@demo.com';
-  return (
-    <div className="bg-amber-50 border border-amber-200 rounded-xl overflow-hidden">
-      <button
-        onClick={() => setShow(!show)}
-        className="w-full flex items-center justify-between p-4 text-left hover:bg-amber-100/50 transition-colors"
-      >
-        <div className="flex items-center gap-3">
-          <span className="text-lg">🔧</span>
-          <div>
-            <p className="font-semibold text-slate-800 text-sm">Account Debug</p>
-            <p className="text-slate-500 text-xs">Troubleshoot login issues</p>
-          </div>
-        </div>
-        <span className="text-slate-400 text-sm">{show ? 'Hide' : 'Show'}</span>
-      </button>
-      {show && (
-        <div className="px-4 pb-4 border-t border-amber-200 pt-3 space-y-2 text-xs">
-          <div className="bg-white rounded-lg p-3 space-y-1.5">
-            <div className="flex justify-between"><span className="text-slate-500">Logged in as:</span><span className="font-mono text-slate-700">{email || '(none)'}</span></div>
-            <div className="flex justify-between"><span className="text-slate-500">Stored password:</span><span className="font-mono text-slate-700">{storedPw ? '✅ stored' : '❌ missing'}</span></div>
-            <div className="flex justify-between"><span className="text-slate-500">Demo account:</span><span className="font-mono text-slate-700">{isDemo ? '✅ yes' : '❌ no'}</span></div>
-          </div>
-          {!email && (
-            <div className="bg-amber-100 border border-amber-300 rounded-lg p-3 text-amber-800">
-              <p className="font-semibold mb-1">No account found.</p>
-              <p>Go to <strong>/signup</strong> and register with your email to create an account.</p>
-            </div>
-          )}
-          {email && !isDemo && storedPw && (
-            <div className="bg-green-50 border border-green-200 rounded-lg p-3 text-green-800">
-              <p className="font-semibold mb-1">✅ Account looks correct!</p>
-              <p>Try logging out and back in with email: <strong>{email}</strong></p>
-            </div>
-          )}
-          {email && !storedPw && !isDemo && (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-red-800">
-              <p className="font-semibold mb-1">⚠️ No password found for this account.</p>
-              <p>Clear browser data or use the same browser you registered with.</p>
-            </div>
-          )}
-          <button
-            onClick={() => { localStorage.removeItem('remindrr_session'); localStorage.removeItem('remindrr_user_email'); window.location.href = '/login'; }}
-            className="w-full bg-red-100 hover:bg-red-200 text-red-700 font-semibold py-2 rounded-lg transition-colors text-xs"
-          >
-            Sign Out & Clear Session
-          </button>
-        </div>
-      )}
-    </div>
-  );
-}
-
 // ─── Main Settings Page ──────────────────────────────────────────────────────
 export default function SettingsPage() {
   const navigate = useNavigate();
@@ -336,9 +278,6 @@ export default function SettingsPage() {
           {saved ? 'Saved!' : 'Save Changes'}
         </button>
       </div>
-
-      {/* ── Account Debug ── */}
-      <AccountDebug />
 
       {/* ── Business Info ── */}
       <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
@@ -423,7 +362,7 @@ export default function SettingsPage() {
           </div>
           <div>
             <label className="block text-xs font-medium text-slate-500 mb-1.5">Twilio Phone Number (with +1)</label>
-            <input value={form.twilioPhone} onChange={e => set('twilioPhone', e.target.value)} placeholder="+15550001234"
+            <input value={form.twilioPhone} onChange={e => set('twilioPhone', e.target.value)} placeholder="+155****1234"
               className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-purple-400 transition-all" />
           </div>
           <div className="bg-purple-50 border border-purple-100 rounded-xl p-4 text-xs text-purple-700 leading-relaxed">
@@ -438,7 +377,7 @@ export default function SettingsPage() {
         <div className="space-y-4">
           <div>
             <label className="block text-xs font-medium text-slate-500 mb-1.5">SendGrid API Key</label>
-            <input type="password" value={form.sendgridApiKey} onChange={e => set('sendgridApiKey', e.target.value)} placeholder="SG.your_sendgrid_api_key"
+            <input type="password" value={form.sendgridApiKey} onChange={e => set('sendgridApiKey', e.target.value)} placeholder="SG.you..._key"
               className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-green-400 transition-all" />
             <p className="text-xs text-slate-400 mt-1">Found at: Settings → API Keys → Create API Key → Full Access</p>
           </div>
@@ -471,7 +410,7 @@ export default function SettingsPage() {
                 className={`p-4 rounded-xl border-2 text-center cursor-pointer transition-all ${form.plan === plan ? 'border-orange-500 bg-orange-50' : 'border-slate-200 hover:border-slate-300'}`}
               >
                 <div className="text-base font-bold text-slate-800 capitalize">{plan}</div>
-                <div className="text-xs text-slate-400 mt-1">{plan === 'starter' ? '$29/mo' : plan === 'pro' ? '$59/mo' : '$129/mo'}</div>
+                <div className="text-xs text-slate-400 mt-1">{plan === 'starter' ? '\$29/mo' : plan === 'pro' ? '\$59/mo' : '\$129/mo'}</div>
                 {form.plan !== plan && <div className="text-xs text-orange-500 mt-1 font-medium">Upgrade →</div>}
               </button>
             );
