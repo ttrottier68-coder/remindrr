@@ -559,6 +559,7 @@ function NewInvoicePage() {
       </div>
     </div>
   );
+    }
    
     return (
     <div className="max-w-xl mx-auto p-6">
