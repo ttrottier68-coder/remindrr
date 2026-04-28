@@ -437,16 +437,22 @@ function NewInvoicePage() {
   const [emailBody, setEmailBody] = useState('');
 
   // Populate preview text when preview screen first opens
-  useEffect(() => {
-    if (preview) {
-      if (finalPhone) setSmsText(defaultSms);
-      if (finalEmail) {
-        setEmailSubj(defaultEmailSubject);
-        setEmailBody(defaultEmailBody);
-      }
+ useEffect(() => {
+  if (preview) {
+    if (finalPhone) setSmsText(defaultSms);
+    if (finalEmail) {
+      setEmailSubj(defaultEmailSubject);
+      setEmailBody(defaultEmailBody);
     }
-  }, [preview]);
+  }
+}, [preview]);
+  useEffect(() => {
+  if (done) navigate('/invoices');
+}, [done]);
 
+useEffect(() => {
+  if (done) navigate('/invoices');
+}, [done]);
   const handleConfirm = async () => {
     setSaving(true);
     let finalClientId = clientId;
@@ -465,13 +471,12 @@ function NewInvoicePage() {
     });
     // Sync to server after creating invoice
     syncInvoicesToServer(getInvoices());
-    await new Promise(r => setTimeout(r, 900));
+    
     setSaving(false);
     setDone(true);
-    await new Promise(r => setTimeout(r, 1200));
-    setTick(t => t + 1);
-    navigate('/invoices');
-  };
+   
+    
+ 
 
   if (done) return (
     <div className="max-w-lg mx-auto p-6 text-center">
