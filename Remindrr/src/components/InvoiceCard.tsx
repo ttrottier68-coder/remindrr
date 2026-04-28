@@ -157,7 +157,7 @@ Due: dueDate</p>∣∣</div>∣∣</div>∣∣</div>∣∣∣∣<tableclass="tab
 ′
  ⋅Duetoday 
 ′
- :‘⋅{days}d left)}| |          </p>| |        </div>| |        <div className="flex items-center gap-2 flex-wrap">| |          {invoice.status !== 'paid' && (| |            <button onClick={handleSendReminder} disabled={sendingReminder}| |              className={text-sm font-bold px-4 py-2 rounded-lg transition-colors {reminderSent ? 'bg-green-500 text-white' : 'bg-orange-50 text-orange-700 hover:bg-orange-100'}`}>|
+className={`text-sm font-bold px-4 py-2 rounded-lg transition-colors ${reminderSent ? 'bg-green-500 text-white' : 'bg-orange-50 text-orange-700 hover:bg-orange-100'}`}
 |              {sendingReminder ? 'Sending...' : reminderSent ? 'Sent! ✓' : 'Send Reminder 🔔'}|
 |            </button>|
 |          )}|
