@@ -446,14 +446,12 @@ function NewInvoicePage() {
     }
   }
 }, [preview]);
-  useEffect(() => {
+ useEffect(() => {
   if (done) navigate('/invoices');
 }, [done]);
-
-useEffect(() => {
-  if (done) navigate('/invoices');
-}, [done]);
+  
   const handleConfirm = async () => {
+    
     setSaving(true);
     let finalClientId = clientId;
     let finalClientName = finalName;
