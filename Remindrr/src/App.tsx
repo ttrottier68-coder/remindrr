@@ -324,8 +324,11 @@ function InvoicesPage() {
   const [sendingId, setSendingId] = useState<string | null>(null);
   const navigate = useNavigate();
   const handleSendReminder = async (inv: Invoice) => {
+    console.log('button clicked for invoice:', inv.id);
     setSendingId(inv.id);
+    console.log('now calling sendReminderNow...');
     const result = await sendReminderNow(inv);
+    console.log('result:', result);
     setSendingId(null);
     if (!result.success) {
       alert(result.message);
