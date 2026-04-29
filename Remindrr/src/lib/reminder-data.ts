@@ -16,7 +16,7 @@ function persist(key: string, data: unknown) {
 }
 
 export function getSettings(): UserSettings {
-  return safe(SETTINGS_KEY, { businessName: '', ownerName: '', email: '', phone: '', plan: 'starter' });
+  return safe(SETTINGS_KEY, { businessName: '', ownerName: '', email: '', phone: '', plan: 'starter', twilioSid: '', twilioToken: '', twilioPhone: '' });
 }
 
 export function saveSettings(s: Partial<UserSettings>) {
