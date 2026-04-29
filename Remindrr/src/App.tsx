@@ -322,17 +322,17 @@ function InvoicesPage() {
   const [filter, setFilter] = useState('all');
   const [tick, setTick] = useState(0);
   const [sendingId, setSendingId] = useState<string | null>(null);
+  const [lastMessage, setLastMessage] = useState<string | null>(null);
   const navigate = useNavigate();
   const handleSendReminder = async (inv: Invoice) => {
     console.log('button clicked for invoice:', inv.id);
     setSendingId(inv.id);
+    setLastMessage(null);
     console.log('now calling sendReminderNow...');
     const result = await sendReminderNow(inv);
     console.log('result:', result);
     setSendingId(null);
-    if (!result.success) {
-      alert(result.message);
-    }
+    setLastMessage(result.message);
   };
   // Refresh invoices when tick changes
   useEffect(() => {}, [tick]);
@@ -359,6 +359,11 @@ function InvoicesPage() {
           <PlusIcon /> New Invoice
         </button>
       </div>
+      {lastMessage && (
+        <div className="bg-blue-50 border border-blue-200 text-blue-700 px-4 py-2 rounded-lg text-sm">
+          {lastMessage}
+        </div>
+      )}
       <div className="flex gap-2 flex-wrap">
         {tabs.map(t => (
           <button key={t} onClick={() => setFilter(t)}
