@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
-import { getSettings, saveSettings, getDashboardStats, getInvoices, getClients, saveInvoice, saveClient, markInvoicePaid, deleteInvoice, syncInvoicesToServer } from './lib/reminder-data';
+import { getSettings, saveSettings, getDashboardStats, getInvoices, getClients, saveInvoice, saveClient, markInvoicePaid, deleteInvoice, syncInvoicesToServer, sendReminderNow } from './lib/reminder-data';
 import { isAuthenticated, logout, ensureDemoAccount } from './lib/auth';
 import type { Invoice, Client } from './types';
 import SettingsPage from './pages/SettingsPage';
@@ -321,7 +321,15 @@ function Dashboard() {
 function InvoicesPage() {
   const [filter, setFilter] = useState('all');
   const [tick, setTick] = useState(0);
+  const [sendingId, setSendingId] = useState<string | null>(null);
   const navigate = useNavigate();
+  const handleSendReminder = async (inv: Invoice) => {
+    setSendingId(inv.id);
+    await sendReminderNow(inv);
+    setSendingId(null);
+  };
+  // Refresh invoices when tick changes
+  useEffect(() => {}, [tick]);
   const all = getInvoices().reverse();
   const filtered = all.filter(inv => {
     if (filter === 'paid') return inv.status === 'paid';
@@ -376,7 +384,21 @@ function InvoicesPage() {
                   </div>
                 </div>
                 <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-100">
-                  <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${st.color}`}>{st.label}</span>
+                  <div className="flex items-center gap-2">
+                    <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${st.color}`}>{st.label}</span>
+                    {inv.status !== 'paid' && (
+                      <>
+                        <button onClick={() => handleSendReminder(inv)} disabled={sendingId === inv.id}
+                          className="text-xs bg-orange-50 text-orange-700 font-bold px-3 py-1 rounded-lg hover:bg-orange-100 disabled:opacity-50">
+                          {sendingId === inv.id ? 'Sending...' : 'Send Reminder 🔔'}
+                        </button>
+                        <button onClick={() => { markInvoicePaid(inv.id); syncInvoicesToServer(getInvoices()); setTick(t => t + 1); }}
+                          className="text-xs bg-green-500 text-white font-bold px-3 py-1 rounded-lg hover:bg-green-600">
+                          Mark Paid ✓
+                        </button>
+                      </>
+                    )}
+                  </div>
                   <button onClick={() => navigate(`/invoices/${inv.id}/edit`)} className="text-sm text-orange-500 font-medium hover:underline">
                     View →
                   </button>
