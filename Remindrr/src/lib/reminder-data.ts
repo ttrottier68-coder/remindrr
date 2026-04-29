@@ -62,9 +62,9 @@ export async function sendReminderNow(invoice: Invoice): Promise<{ success: bool
   const settings = getSettings();
   
   // Check if Twilio is configured
-  const twilioSid = (settings as any).twilioSid;
-  const twilioToken = (settings as any).twilioToken;
-  const twilioPhone = (settings as any).twilioPhone;
+  const twilioSid = settings.twilioSid;
+  const twilioToken = settings.twilioToken;
+  const twilioPhone = settings.twilioPhone;
   
   if (!twilioSid || !twilioToken || !twilioPhone) {
     return { success: false, message: 'Twilio not configured. Go to Settings to set up SMS.' };
@@ -77,9 +77,9 @@ export async function sendReminderNow(invoice: Invoice): Promise<{ success: bool
     return { success: false, message: 'No phone number found for this client.' };
   }
 
-  // Use Netlify function to send SMS
+  // Use Vercel function to send SMS
   try {
-    const response = await fetch(`https://remindrr-data.netlify.app/.netlify/functions/send-sms`, {
+    const response = await fetch(`https://tct2yftdd31s.space.minimax.io/api/send-sms`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -90,14 +90,16 @@ export async function sendReminderNow(invoice: Invoice): Promise<{ success: bool
         authToken: twilioToken,
       }),
     });
+    const data = await response.json();
     if (response.ok) {
       return { success: true, message: 'Reminder sent!' };
+    } else {
+      return { success: false, message: data.error || 'Failed to send reminder' };
     }
   } catch (e) {
     // Server not available
     return { success: true, message: 'Reminder triggered (offline mode)' };
   }
-  return { success: false, message: 'Failed to send reminder' };
 }
 
 export function deleteInvoice(id: string) {
