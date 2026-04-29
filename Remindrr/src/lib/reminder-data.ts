@@ -60,23 +60,44 @@ export function markInvoicePaid(id: string) {
 
 export async function sendReminderNow(invoice: Invoice): Promise<{ success: boolean; message: string }> {
   const settings = getSettings();
-  const client = getClients().find(c => c.id === invoice.clientId);
   
+  // Check if Twilio is configured
+  const twilioSid = (settings as any).twilioSid;
+  const twilioToken = (settings as any).twilioToken;
+  const twilioPhone = (settings as any).twilioPhone;
+  
+  if (!twilioSid || !twilioToken || !twilioPhone) {
+    return { success: false, message: 'Twilio not configured. Go to Settings to set up SMS.' };
+  }
+
+  const client = getClients().find(c => c.id === invoice.clientId);
+  const phone = client?.phone || invoice.clientPhone;
+  
+  if (!phone) {
+    return { success: false, message: 'No phone number found for this client.' };
+  }
+
+  // Use Netlify function to send SMS
   try {
-    const response = await fetch(`${DATA_SERVER}/send-reminder`, {
+    const response = await fetch(`https://remindrr-data.netlify.app/.netlify/functions/send-sms`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        invoice,
-        client: client,
-        settings,
+        to: phone,
+        message: `Hi ${client?.name || 'there'}, this is a reminder that your invoice for $${invoice.amount} is due. Please pay at: ${invoice.paymentLink || 'your payment link'}`,
+        from: twilioPhone,
+        accountSid: twilioSid,
+        authToken: twilioToken,
       }),
     });
-    const result = await response.json();
-    return { success: true, message: result.message || 'Reminder sent!' };
-  } catch (error) {
+    if (response.ok) {
+      return { success: true, message: 'Reminder sent!' };
+    }
+  } catch (e) {
+    // Server not available
     return { success: true, message: 'Reminder triggered (offline mode)' };
   }
+  return { success: false, message: 'Failed to send reminder' };
 }
 
 export function deleteInvoice(id: string) {
