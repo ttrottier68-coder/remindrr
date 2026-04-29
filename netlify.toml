@@ -1,4 +1,4 @@
 [build]
 base = "Remindrr"
-command = "npm install && npm run build"
+command = "cd Remindrr && npm install && npm run build && cp public/_redirects dist/"
 publish = "dist"

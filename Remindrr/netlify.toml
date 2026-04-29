@@ -1,6 +1,6 @@
 [build]
-  command = "echo 'No build needed'"
-  publish = "public"
+  command = "npm install && npm run build && cp public/_redirects dist/"
+  publish = "dist"
 
 [functions]
   directory = "netlify/functions"
