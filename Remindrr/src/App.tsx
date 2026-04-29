@@ -404,7 +404,7 @@ function InvoicesPage() {
                     <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${st.color}`}>{st.label}</span>
                     {inv.status !== 'paid' && (
                       <>
-                        <button onClick={() => handleSendReminder(inv)} disabled={sendingId === inv.id}
+                        <button type="button" onClick={() => handleSendReminder(inv)} disabled={sendingId === inv.id}
                           className="text-xs bg-orange-50 text-orange-700 font-bold px-3 py-1 rounded-lg hover:bg-orange-100 disabled:opacity-50">
                           {sendingId === inv.id ? 'Sending...' : 'Send Reminder 🔔'}
                         </button>
