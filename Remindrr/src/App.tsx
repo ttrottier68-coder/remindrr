@@ -324,20 +324,19 @@ function InvoicesPage() {
   const [sendingId, setSendingId] = useState<string | null>(null);
   const [lastMessage, setLastMessage] = useState<string | null>(null);
   const navigate = useNavigate();
-  const handleSendReminder = async (inv: Invoice) => {
+  const handleSendReminder = (inv: Invoice) => {
     console.log('button clicked for invoice:', inv.id);
     setSendingId(inv.id);
-    setLastMessage(null);
-    try {
-      console.log('now calling sendReminderNow...');
-      const result = await sendReminderNow(inv);
+    setLastMessage('Processing...');
+    sendReminderNow(inv).then(result => {
       console.log('result:', result);
+      setSendingId(null);
       setLastMessage(result.message);
-    } catch (err) {
+    }).catch(err => {
       console.error('Error:', err);
+      setSendingId(null);
       setLastMessage('Error: ' + err);
-    }
-    setSendingId(null);
+    });
   };
   // Refresh invoices when tick changes
   useEffect(() => {}, [tick]);
