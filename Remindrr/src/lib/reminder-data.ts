@@ -93,15 +93,19 @@ export async function sendReminderNow(invoice: Invoice): Promise<{ success: bool
         To: phone,
       }),
     });
-    const data = await response.json();
-    console.log('Twilio response:', response.status, response.statusText, data);
-    
-    if (response.ok || response.status === 201) {
-      return { success: true, message: 'Reminder sent!' };
-    } else {
-      return { success: false, message: data.message || 'Failed to send reminder' };
+    try {
+      const data = await response.json();
+      console.log('Twilio response:', response.status, response.statusText, data);
+      
+      if (response.ok || response.status === 201) {
+        return { success: true, message: 'Reminder sent!' };
+      } else {
+        return { success: false, message: data.message || 'Failed to send reminder' };
+      }
+    } catch (e) {
+      console.log('Twilio error:', e);
+      return { success: false, message: 'Twilio auth failed - check credentials' };
     }
-  } catch (e) {
     // Network error or CORS issue
     return { success: false, message: 'Could not connect. Check CORS settings in Twilio.' };
   }
