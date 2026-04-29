@@ -485,13 +485,11 @@ function NewInvoicePage() {
       description, dueDate, status: 'pending',
       paymentLink, createdAt: new Date().toISOString(),
     });
-    // Sync to server after creating invoice
+    // Sync to server (no await - runs in background)
     syncInvoicesToServer(getInvoices());
-    await new Promise(r => setTimeout(r, 900));
     setSaving(false);
     setDone(true);
-    await new Promise(r => setTimeout(r, 1200));
-    setTick(t => t + 1);
+    await new Promise(r => setTimeout(r, 800));
     navigate('/invoices');
   };
 
