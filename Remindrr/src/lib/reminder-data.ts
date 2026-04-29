@@ -77,28 +77,31 @@ export async function sendReminderNow(invoice: Invoice): Promise<{ success: bool
     return { success: false, message: 'No phone number found for this client.' };
   }
 
-  // Use Vercel function to send SMS
+  // Call Twilio API directly from browser
   try {
-    const response = await fetch(`https://tct2yftdd31s.space.minimax.io/api/send-sms`, {
+    const auth = btoa(`${twilioSid}:${twilioToken}`);
+    const response = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${twilioSid}/Messages.json`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        to: phone,
-        message: `Hi ${client?.name || 'there'}, this is a reminder that your invoice for $${invoice.amount} is due. Please pay at: ${invoice.paymentLink || 'your payment link'}`,
-        from: twilioPhone,
-        accountSid: twilioSid,
-        authToken: twilioToken,
+      headers: {
+        'Authorization': `Basic ${auth}`,
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: new URLSearchParams({
+        Body: `Hi ${client?.name || 'there'}, this is a reminder that your invoice for $${invoice.amount} is due. Please pay at: ${invoice.paymentLink || 'your payment link'}`,
+        From: twilioPhone,
+        To: phone,
       }),
     });
-    const data = await response.json();
-    if (response.ok) {
+    
+    if (response.ok || response.status === 201) {
       return { success: true, message: 'Reminder sent!' };
     } else {
-      return { success: false, message: data.error || 'Failed to send reminder' };
+      const data = await response.json();
+      return { success: false, message: data.message || 'Failed to send reminder' };
     }
   } catch (e) {
-    // Server not available
-    return { success: true, message: 'Reminder triggered (offline mode)' };
+    // Network error or CORS issue
+    return { success: false, message: 'Could not connect. Check CORS settings in Twilio.' };
   }
 }
 
