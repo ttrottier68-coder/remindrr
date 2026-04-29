@@ -325,8 +325,11 @@ function InvoicesPage() {
   const navigate = useNavigate();
   const handleSendReminder = async (inv: Invoice) => {
     setSendingId(inv.id);
-    await sendReminderNow(inv);
+    const result = await sendReminderNow(inv);
     setSendingId(null);
+    if (!result.success) {
+      alert(result.message);
+    }
   };
   // Refresh invoices when tick changes
   useEffect(() => {}, [tick]);
