@@ -328,11 +328,16 @@ function InvoicesPage() {
     console.log('button clicked for invoice:', inv.id);
     setSendingId(inv.id);
     setLastMessage(null);
-    console.log('now calling sendReminderNow...');
-    const result = await sendReminderNow(inv);
-    console.log('result:', result);
+    try {
+      console.log('now calling sendReminderNow...');
+      const result = await sendReminderNow(inv);
+      console.log('result:', result);
+      setLastMessage(result.message);
+    } catch (err) {
+      console.error('Error:', err);
+      setLastMessage('Error: ' + err);
+    }
     setSendingId(null);
-    setLastMessage(result.message);
   };
   // Refresh invoices when tick changes
   useEffect(() => {}, [tick]);
