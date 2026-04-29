@@ -78,6 +78,7 @@ export async function sendReminderNow(invoice: Invoice): Promise<{ success: bool
   }
 
   // Call Twilio API directly from browser
+  console.log('Twilio config:', { twilioSid, twilioPhone, phone });
   try {
     const auth = btoa(`${twilioSid}:${twilioToken}`);
     const response = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${twilioSid}/Messages.json`, {
@@ -92,11 +93,12 @@ export async function sendReminderNow(invoice: Invoice): Promise<{ success: bool
         To: phone,
       }),
     });
+    const data = await response.json();
+    console.log('Twilio response:', response.status, response.statusText, data);
     
     if (response.ok || response.status === 201) {
       return { success: true, message: 'Reminder sent!' };
     } else {
-      const data = await response.json();
       return { success: false, message: data.message || 'Failed to send reminder' };
     }
   } catch (e) {
