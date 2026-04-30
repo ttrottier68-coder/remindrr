@@ -16,7 +16,7 @@ const plans = [
     description: 'Perfect for solo contractors getting started.',
     features: [
       'Up to 25 invoices/month',
-      'Automated SMS & email reminders',
+      'Automated email reminders',
       'Up to 50 clients',
       'Payment link generation',
       'Invoice tracking dashboard',
@@ -33,7 +33,7 @@ const plans = [
     description: 'For growing businesses with more clients.',
     features: [
       'Unlimited invoices',
-      'Automated SMS & email reminders',
+      'Automated email reminders',
       'Unlimited clients',
       'Payment link generation',
       'Invoice tracking dashboard',

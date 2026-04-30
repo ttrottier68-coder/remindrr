@@ -34,9 +34,9 @@ function HeroSection() {
           <span className="text-blue-400">Without Chasing Customers</span>
         </h1>
         <p className="text-xl text-blue-100 max-w-2xl mx-auto mb-4">
-          Remindrr automatically sends friendly SMS and email payment reminders so contractors and small business owners get paid on time — without awkward follow-ups.
+          Remindrr automatically sends friendly email payment reminders so contractors and small business owners get paid on time — without awkward follow-ups.
         </p>
-        <p className="text-blue-300/60 text-sm mb-10">Automatic SMS, Email, or Both · No credit card required</p>
+        <p className="text-blue-300/60 text-sm mb-10">Automatic Email Reminders · No credit card required</p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <Link to="/signup" className="bg-blue-500 hover:bg-blue-600 text-white font-bold px-8 py-4 rounded-xl text-lg transition-colors shadow-lg shadow-blue-500/30 flex items-center justify-center gap-2">
             Create Free Account →
@@ -105,7 +105,7 @@ function HowItWorks() {
       num: '02',
       emoji: '⚙️',
       title: 'Remindrr handles the follow-ups',
-      desc: 'Automatic SMS and email reminders go out before and after the due date — so you never have to chase.',
+      desc: 'Automatic email reminders go out before and after the due date — so you never have to chase.',
     },
     {
       num: '03',
@@ -184,20 +184,20 @@ function WhoItFor() {
   );
 }
 
-// ─── SMS Preview ─────────────────────────────────────────────────────────────
-function SmsPreview() {
+// ─── Email Preview ─────────────────────────────────────────────────────────────
+function EmailPreview() {
   return (
     <section className="py-20 px-6 bg-slate-900">
       <div className="max-w-3xl mx-auto text-center text-white">
         <h2 className="text-3xl font-bold mb-4">What Your Customer Sees</h2>
         <p className="text-slate-400 mb-10">Friendly, professional, and effective.</p>
         <div className="bg-white/10 backdrop-blur rounded-2xl p-8 border border-white/20 text-left">
-          <div className="text-slate-400 text-sm mb-3 font-mono">SMS · From Remindrr</div>
+          <div className="text-slate-400 text-sm mb-3 font-mono">Email · From Your Business</div>
           <p className="text-lg text-white leading-relaxed">
             "Hey John, just a reminder your invoice for <strong>$420</strong> is due today. You can pay here: <span className="text-blue-300 underline">pay.remindrr.app/invite</span> — thanks!"
           </p>
           <div className="mt-6 bg-green-500/20 border border-green-400/30 rounded-lg px-4 py-2 inline-flex items-center gap-2 text-sm text-green-300">
-            ✅ Paid in 2 taps — money in your account
+            ✅ Paid with one click — money in your account
           </div>
         </div>
       </div>
@@ -208,7 +208,7 @@ function SmsPreview() {
 // ─── Features ──────────────────────────────────────────────────────────────
 function FeaturesSection() {
   const features = [
-    { emoji: '📱', title: 'Automated SMS & Email Reminders', desc: 'Never forget to follow up again. Choose SMS, email, or both — reminders sent before, on, and after due date.' },
+    { emoji: '📧', title: 'Automated Email Reminders', desc: 'Never forget to follow up again. Reminders sent before, on, and after due date.' },
     { emoji: '💳', title: 'Instant Payment Links', desc: 'Customers pay in 2 taps. No chasing, no awkwardness.' },
     { emoji: '📊', title: 'Invoice Tracking', desc: 'See paid, pending, and overdue invoices at a glance.' },
     { emoji: '⚡', title: 'Simple Setup', desc: 'Start sending invoices and getting paid in minutes.' },
@@ -283,7 +283,7 @@ function Pricing() {
               'Unlimited invoices',
               'Automated reminders (before, on & after due)',
               'Unlimited clients',
-              'SMS & email notifications',
+              'email notifications',
               'Payment tracking',
               'Priority support',
               '📲 Replace all your follow-ups automatically',
@@ -434,7 +434,7 @@ export default function LandingPage() {
       <HowItWorks />
       <Benefits />
       <WhoItFor />
-      <SmsPreview />
+      <EmailPreview />
       <FeaturesSection />
       <Testimonials />
       <Pricing />
