@@ -73,17 +73,26 @@ export async function sendReminderNow(invoice: Invoice): Promise<{ success: bool
   const client = getClients().find(c => c.id === invoice.clientId);
   const phone = client?.phone || invoice.clientPhone;
   
+  // Ensure phone number is in E.164 format
+  const formatPhone = (p: string) => {
+    const digits = p.replace(/\D/g, '');
+    return digits.startsWith('1') ? `+${digits}` : `+1${digits}`;
+  };
+  
+  const fromNumber = formatPhone(twilioPhone);
+  const toNumber = formatPhone(phone);
+  
   if (!phone) {
     return { success: false, message: 'No phone number found for this client.' };
   }
-
+  
   // Don't send if To and From are the same
-  if (phone.replace(/\D/g, '') === twilioPhone.replace(/\D/g, '')) {
+  if (toNumber === fromNumber) {
     return { success: false, message: 'Cannot send to your own number. Add a different client phone.' };
   }
 
   // Call Twilio API directly from browser
-  console.log('Twilio config:', { twilioSid, twilioPhone, phone });
+  console.log('Twilio config:', { twilioSid, fromNumber, toNumber });
   try {
     const auth = btoa(`${twilioSid}:${twilioToken}`);
     const response = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${twilioSid}/Messages.json`, {
@@ -94,8 +103,8 @@ export async function sendReminderNow(invoice: Invoice): Promise<{ success: bool
       },
       body: new URLSearchParams({
         Body: `Hi ${client?.name || 'there'}, this is a reminder that your invoice for $${invoice.amount} is due. Please pay at: ${invoice.paymentLink || 'your payment link'}`,
-        From: twilioPhone,
-        To: phone,
+        From: fromNumber,
+        To: toNumber,
       }),
     });
     try {
