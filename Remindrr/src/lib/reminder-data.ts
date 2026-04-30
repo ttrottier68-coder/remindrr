@@ -77,6 +77,11 @@ export async function sendReminderNow(invoice: Invoice): Promise<{ success: bool
     return { success: false, message: 'No phone number found for this client.' };
   }
 
+  // Don't send if To and From are the same
+  if (phone.replace(/\D/g, '') === twilioPhone.replace(/\D/g, '')) {
+    return { success: false, message: 'Cannot send to your own number. Add a different client phone.' };
+  }
+
   // Call Twilio API directly from browser
   console.log('Twilio config:', { twilioSid, twilioPhone, phone });
   try {
