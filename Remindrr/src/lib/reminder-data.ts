@@ -5,7 +5,6 @@ export type { UserSettings };
 const SETTINGS_KEY = 'remindrr_settings';
 const INVOICES_KEY = 'remindrr_invoices';
 const CLIENTS_KEY  = 'remindrr_clients';
-const DATA_SERVER  = 'https://remindrr.onrender.com';
 
 function safe<T>(key: string, fallback: T): T {
   try { const r = localStorage.getItem(key); return r ? JSON.parse(r) : fallback; }
@@ -16,32 +15,22 @@ function persist(key: string, data: unknown) {
 }
 
 export function getSettings(): UserSettings {
-  return safe(SETTINGS_KEY, { businessName: '', ownerName: '', email: '', phone: '', plan: 'starter', twilioSid: '', twilioToken: '', twilioPhone: '' });
+  return safe(SETTINGS_KEY, {
+    businessName: '',
+    ownerName: '',
+    email: '',
+    phone: '',
+    plan: 'starter',
+    sendgridApiKey: '',
+    sendgridFromEmail: '',
+  });
 }
 
 export function saveSettings(s: Partial<UserSettings>) {
   const prev = getSettings();
   const next = { ...prev, ...s };
   persist(SETTINGS_KEY, next);
-  syncSettingsToServer(next);
   return next;
-}
-
-function syncSettingsToServer(settings: UserSettings) {
-  fetch(`${DATA_SERVER}/invoices`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ invoices: [], settings }),
-  }).catch(() => {});
-}
-
-export function syncInvoicesToServer(invoices: Invoice[]) {
-  const settings = getSettings();
-  fetch(`${DATA_SERVER}/invoices`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ invoices, settings }),
-  }).catch(() => {});
 }
 
 export function getInvoices(): Invoice[] {
@@ -60,69 +49,68 @@ export function markInvoicePaid(id: string) {
 
 export async function sendReminderNow(invoice: Invoice): Promise<{ success: boolean; message: string }> {
   const settings = getSettings();
-  
-  // Check if Twilio is configured
-  const twilioSid = settings.twilioSid;
-  const twilioToken = settings.twilioToken;
-  const twilioPhone = settings.twilioPhone;
-  
-  if (!twilioSid || !twilioToken || !twilioPhone) {
-    return { success: false, message: 'Twilio not configured. Go to Settings to set up SMS.' };
+
+  if (!settings.sendgridApiKey || !settings.sendgridFromEmail) {
+    return { success: false, message: 'Email not configured. Go to Settings to set up SendGrid.' };
   }
 
   const client = getClients().find(c => c.id === invoice.clientId);
-  const phone = client?.phone || invoice.clientPhone;
-  
-  // Ensure phone number is in E.164 format
-  const formatPhone = (p: string) => {
-    const digits = p.replace(/\D/g, '');
-    return digits.startsWith('1') ? `+${digits}` : `+1${digits}`;
-  };
-  
-  const fromNumber = formatPhone(twilioPhone);
-  const toNumber = formatPhone(phone);
-  
-  if (!phone) {
-    return { success: false, message: 'No phone number found for this client.' };
-  }
-  
-  // Don't send if To and From are the same
-  if (toNumber === fromNumber) {
-    return { success: false, message: 'Cannot send to your own number. Add a different client phone.' };
+  const clientEmail = client?.email || invoice.clientEmail;
+
+  if (!clientEmail) {
+    return { success: false, message: 'No email found for this client.' };
   }
 
-  // Call Twilio API directly from browser
-  console.log('Twilio config:', { twilioSid, fromNumber, toNumber });
   try {
-    const auth = btoa(`${twilioSid}:${twilioToken}`);
-    const response = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${twilioSid}/Messages.json`, {
+    const response = await fetch('/.netlify/functions/send-email', {
       method: 'POST',
-      headers: {
-        'Authorization': `Basic ${auth}`,
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      body: new URLSearchParams({
-        Body: `Hi ${client?.name || 'there'}, this is a reminder that your invoice for $${invoice.amount} is due. Please pay at: ${invoice.paymentLink || 'your payment link'}`,
-        From: fromNumber,
-        To: toNumber,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        apiKey: settings.sendgridApiKey,
+        fromEmail: settings.sendgridFromEmail,
+        toEmail: clientEmail,
+        subject: `Payment Reminder: Invoice #${invoice.id.slice(0, 8)} for $${invoice.amount}`,
+        html: buildEmailHtml(invoice, client, settings.businessName),
       }),
     });
-    try {
-      const data = await response.json();
-      console.log('Twilio response:', response.status, response.statusText, data);
-      
-      if (response.ok || response.status === 201) {
-        return { success: true, message: 'Reminder sent!' };
-      } else {
-        return { success: false, message: data.message || 'Failed to send reminder' };
-      }
-    } catch (e) {
-      console.log('Twilio error:', e);
-      return { success: false, message: 'Twilio auth failed - check credentials' };
+
+    if (response.ok) {
+      return { success: true, message: 'Reminder sent!' };
+    } else {
+      const data = await response.json().catch(() => ({}));
+      return { success: false, message: data.message || 'Failed to send reminder.' };
     }
-    // Network error or CORS issue
-    return { success: false, message: 'Could not connect. Check CORS settings in Twilio.' };
+  } catch {
+    return { success: false, message: 'Could not connect. Check your SendGrid settings.' };
   }
+}
+
+function buildEmailHtml(invoice: Invoice, client: Client | undefined, businessName: string) {
+  const due = new Date(invoice.dueDate).toLocaleDateString();
+  const amount = invoice.amount.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
+  const payLink = invoice.paymentLink || 'https://pay.remindrr.app';
+  return `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"></head>
+<body style="font-family:Arial,sans-serif;max-width:600px;margin:40px auto;padding:0 20px;color:#1e293b;">
+  <div style="background:#6366f1;padding:32px 24px;text-align:center;border-radius:16px 16px 0 0;">
+    <h1 style="margin:0;color:#fff;font-size:24px;">${businessName || 'Invoice Reminder'}</h1>
+  </div>
+  <div style="background:#fff;border:1px solid #e2e8f0;border-top:none;padding:32px 24px 40px;border-radius:0 0 16px 16px;">
+    <p style="margin:0 0 16px;font-size:16px;">Hi ${client?.name || 'there'},</p>
+    <p style="margin:0 0 24px;font-size:16px;">This is a friendly reminder that your invoice is due.</p>
+    <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:24px;text-align:center;margin:0 0 24px;">
+      <p style="margin:0 0 8px;font-size:14px;color:#64748b;">Amount Due</p>
+      <p style="margin:0;font-size:36px;font-weight:bold;color:#6366f1;">${amount}</p>
+      <p style="margin:8px 0 0;font-size:14px;color:#64748b;">Due: ${due}</p>
+    </div>
+    <p style="margin:0 0 24px;font-size:16px;">${invoice.description}</p>
+    <a href="${payLink}" style="display:block;text-align:center;background:#6366f1;color:#fff;padding:16px;border-radius:12px;text-decoration:none;font-weight:bold;font-size:16px;">Pay Now →</a>
+    <p style="margin:24px 0 0;font-size:13px;color:#94a3b8;text-align:center;">Powered by Remindrr</p>
+  </div>
+</body>
+</html>`;
 }
 
 export function deleteInvoice(id: string) {
