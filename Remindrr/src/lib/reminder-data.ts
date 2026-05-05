@@ -75,6 +75,11 @@ export async function sendReminderNow(invoice: Invoice): Promise<{ success: bool
     });
 
     if (response.ok) {
+      // Track that reminder was sent
+      const invoices = getInvoices();
+      const updated = invoices.map(i => i.id === invoice.id ? { ...i, reminderSent: true, lastReminderSentAt: new Date().toISOString() } : i);
+      persist(INVOICES_KEY, updated);
+      syncInvoicesToServer(updated);
       return { success: true, message: 'Reminder sent!' };
     } else {
       const data = await response.json().catch(() => ({}));
