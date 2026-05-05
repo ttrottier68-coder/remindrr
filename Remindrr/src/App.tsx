@@ -513,7 +513,6 @@ function NewInvoicePage() {
   const [invoiceNumber, setInvoiceNumber] = useState('');
   const [reminderMethod, setReminderMethod] = useState<'sms' | 'email' | 'both'>('email');
   const [newName, setNewName] = useState('');
-  const [newPhone, setNewPhone] = useState('');
   const [newEmail, setNewEmail] = useState('');
   const [amount, setAmount] = useState('');
   const [taxRate, setTaxRate] = useState(0);
@@ -533,7 +532,6 @@ function NewInvoicePage() {
   const total = subtotal + taxAmount;
 
   const selectedClient = clients.find(c => c.id === clientId);
-  const finalPhone = useNew ? newPhone : (selectedClient?.phone || '');
   const finalEmail = useNew ? newEmail : (selectedClient?.email || '');
   const finalName = useNew ? newName : (selectedClient?.name || '');
   const invId = 'inv_' + Math.random().toString(36).slice(2, 11);
@@ -570,12 +568,12 @@ function NewInvoicePage() {
     let finalClientName = finalName;
     if (useNew && newName) {
       finalClientId = 'cl_' + Math.random().toString(36).slice(2, 11);
-      saveClient({ id: finalClientId, name: newName, phone: newPhone, email: newEmail, createdAt: new Date().toISOString() });
+      saveClient({ id: finalClientId, name: newName, email: newEmail, createdAt: new Date().toISOString() });
       finalClientName = newName;
     }
     saveInvoice({
       id: invId, invoiceNumber: invoiceNumber || undefined, clientId: finalClientId, clientName: finalClientName,
-      clientPhone: finalPhone, clientEmail: finalEmail,
+      clientPhone: '', clientEmail: finalEmail,
       amount: total, taxRate, taxName, subtotal,
       description, dueDate, status: 'pending',
       paymentLink, createdAt: new Date().toISOString(),
@@ -691,10 +689,7 @@ function NewInvoicePage() {
             <div><label className="block text-sm font-medium text-slate-700 mb-1">Client Name</label>
               <input value={newName} onChange={e => setNewName(e.target.value)} placeholder="Acme Contracting"
                 className="w-full border border-slate-300 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-orange-500" /></div>
-            <div><label className="block text-sm font-medium text-slate-700 mb-1">Phone (for SMS reminders)</label>
-              <input type="tel" value={newPhone} onChange={e => setNewPhone(e.target.value)} placeholder="+1 (555) 000-0000"
-                className="w-full border border-slate-300 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-orange-500" /></div>
-            <div><label className="block text-sm font-medium text-slate-700 mb-1">Email (for email reminders)</label>
+            <div><label className="block text-sm font-medium text-slate-700 mb-1">Email</label>
               <input type="email" value={newEmail} onChange={e => setNewEmail(e.target.value)} placeholder="client@example.com"
                 className="w-full border border-slate-300 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-orange-500" /></div>
           </div>

@@ -1,11 +1,10 @@
 export interface Client {
   id: string;
   name: string;
-  phone: string;
   email: string;
   company?: string;
   createdAt: string;
-  preferredReminder?: 'sms' | 'email' | 'both';
+  preferredReminder?: 'email';
 }
 
 export interface Invoice {
@@ -13,7 +12,6 @@ export interface Invoice {
   invoiceNumber?: string;
   clientId: string;
   clientName: string;
-  clientPhone: string;
   clientEmail: string;
   amount: number;
   taxRate: number;
@@ -25,13 +23,8 @@ export interface Invoice {
   paymentLink?: string;
   paidAt?: string;
   createdAt: string;
-  // Manual reminder
   reminderSent?: boolean;
-  // Automated reminder tracking
-  lastReminderSentAt?: string;
-  lastReminderType?: string;  // 'before' | 'on' | 'after' | 'followup'
-  followupCount?: number;
-  reminderMethod?: 'sms' | 'email' | 'both';
+  reminderMethod?: 'email';
 }
 
 export interface UserSettings {
