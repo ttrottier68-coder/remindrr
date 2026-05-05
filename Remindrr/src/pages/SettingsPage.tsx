@@ -259,7 +259,14 @@ export default function SettingsPage() {
 
       {/* ── SendGrid ── */}
       <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
-        <h2 className="font-bold text-slate-700 text-base border-b border-slate-100 pb-3 mb-4">📧 SendGrid Email Setup</h2>
+        <div className="flex items-center gap-3 mb-4">
+          <div className="bg-gradient-to-br from-green-500 to-green-600 text-white text-xs font-bold px-3 py-1.5 rounded-lg">📧</div>
+          <div>
+            <h2 className="font-bold text-slate-700 text-base">SendGrid Email Setup</h2>
+            <p className="text-slate-400 text-xs mt-0.5">Sends reminders when invoices are due</p>
+          </div>
+        </div>
+        <SendGridGuide />
         <div className="space-y-4">
           <div>
             <label className="block text-xs font-medium text-slate-500 mb-1.5">SendGrid API Key</label>
