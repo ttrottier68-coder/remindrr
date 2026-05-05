@@ -423,7 +423,9 @@ export default function OnboardingFlow() {
   const navigate = useNavigate();
   const settings = getSettings();
 
-  const [step, setStep] = useState(0);
+  // If user already has a plan, skip to setup step (step 2)
+  const initialStep = settings?.plan && settings.plan !== 'starter' ? 2 : settings?.ownerName ? 2 : 0;
+  const [step, setStep] = useState(initialStep);
   const TOTAL_STEPS = 6; // Added subscription step
 
   const [setupData, setSetupData] = useState<{ ownerName: string; businessName: string; phone: string }>({
