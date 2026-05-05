@@ -72,9 +72,11 @@ function NavBar() {
   const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
   const handleLogout = () => {
+    console.log('Logging out...');
     logout();
     // Clear onboarding flag so next login goes to onboarding, not loops back to landing
     try { localStorage.removeItem('remindrr_onboarding_complete'); } catch {}
+    console.log('Session cleared, redirecting to /login');
     // Replace the current page so back-button doesn't undo logout
     window.location.replace('/login');
   };
