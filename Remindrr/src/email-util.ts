@@ -1,10 +1,11 @@
 export async function sendReminderNow(invoice: Invoice): Promise<{ success: boolean; message: string }> {
   const settings = getSettings();
   
-  alert('sendReminderNow: sendgridApiKey=' + (settings?.sendgridApiKey ? 'set (' + settings.sendgridApiKey.substring(0,10) + '...)' : 'EMPTY') + ', sendgridFromEmail=' + (settings?.sendgridFromEmail || 'EMPTY'));
+  console.log('sendReminderNow settings:', settings);
+  alert('DEBUG: sendgridApiKey=' + (settings?.sendgridApiKey ? 'SET (' + settings.sendgridApiKey.substring(0,10) + ')' : 'EMPTY') + ', sendgridFromEmail=' + (settings?.sendgridFromEmail || 'EMPTY') + ', full settings object: ' + JSON.stringify(settings));
 
   if (!settings?.sendgridApiKey || !settings?.sendgridFromEmail) {
-    return { success: false, message: 'Email not configured. Go to Settings to set up SendGrid.' };
+    return { success: false, message: 'Email not configured. Go to Settings to set up SendGrid. apiKey=' + settings?.sendgridApiKey + ', fromEmail=' + settings?.sendgridFromEmail };
   }
 
   const client = getClients().find(c => c.phaseId === invoice.clientId);
