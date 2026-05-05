@@ -132,6 +132,7 @@ export async function register(
 /** Log in with email + password. Returns error string or null on success. */
 export async function login(email: string, password: string): Promise<string | null> {
   const normalizedEmail = email.toLowerCase().trim();
+  console.log('login() starting for:', normalizedEmail);
 
   // ── Hardcoded demo account (works on any URL, no localStorage needed) ──────
   if (normalizedEmail === DEMO_EMAIL && password === DEMO_PASSWORD) {

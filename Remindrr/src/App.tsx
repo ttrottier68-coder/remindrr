@@ -889,19 +889,26 @@ const REGISTERED_KEY = 'remindrr_just_registered';
 
 // ─── Demo seed data ──────────────────────────────────────────────────────────
 async function seedDemoData() {
+  console.log('seedDemoData running...');
   const existing = getSettings();
+  console.log('  existing settings:', existing);
   
   // If user already has real settings, just ensure demo exists
   if (existing?.ownerName && existing.ownerName !== 'Demo User') {
+    console.log('  has real settings, just ensure demo');
     await ensureDemoAccount();
     return;
   }
   
-  // Skip demo seeding if user is already authenticated (they should have been onboarded already)
-  if (isAuthenticated()) return;
+  // Skip demo seeding if user is authenticated (they should have been onboarded already)
+  if (isAuthenticated()) {
+    console.log('  authenticated but no settings - will show onboarding');
+    return;
+  }
   
   // For visitors: create demo settings
   if (!existing?.ownerName) {
+    console.log('  creating demo settings');
     saveSettings({
       businessName: 'Demo Business',
       ownerName: 'Demo User',
