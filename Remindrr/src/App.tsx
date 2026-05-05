@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
-import { getSettings, saveSettings, getDashboardStats, getInvoices, getClients, saveInvoice, saveClient, markInvoicePaid, deleteInvoice, syncInvoicesToServer, sendReminderNow } from './lib/reminder-data';
+import { getSettings, saveSettings, getDashboardStats, getInvoices, getClients, saveInvoice, saveClient, markInvoicePaid, deleteInvoice, sendReminderNow } from './lib/reminder-data';
 import { isAuthenticated, logout, ensureDemoAccount } from './lib/auth';
 import type { Invoice, Client } from './types';
 import SettingsPage from './pages/SettingsPage';
@@ -407,7 +407,7 @@ function InvoicesPage() {
                           className="text-xs bg-orange-50 text-orange-700 font-bold px-3 py-1 rounded-lg hover:bg-orange-100 disabled:opacity-50">
                           {sendingId === inv.id ? 'Sending...' : 'Send Reminder 🔔'}
                         </button>
-                        <button onClick={() => { markInvoicePaid(inv.id); syncInvoicesToServer(getInvoices()); setTick(t => t + 1); }}
+                        markInvoicePaid(inv.id); setTick(t => t + 1);
                           className="text-xs bg-green-500 text-white font-bold px-3 py-1 rounded-lg hover:bg-green-600">
                           Mark Paid ✓
                         </button>
@@ -501,7 +501,7 @@ function NewInvoicePage() {
       paymentLink, createdAt: new Date().toISOString(),
     });
     // Sync to server (no await - runs in background)
-    syncInvoicesToServer(getInvoices());
+    
     setSaving(false);
     setDone(true);
     await new Promise(r => setTimeout(r, 800));
