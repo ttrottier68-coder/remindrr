@@ -55,7 +55,7 @@ export default function EditInvoicePage() {
             className="w-full border border-slate-300 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-orange-500" />
         </div>
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1">Phone (for SMS)</label>
+          <label className="block text-sm font-medium text-slate-700 mb-1">Phone</label>
           <input type="tel" value={clientPhone} onChange={e => setClientPhone(e.target.value)}
             placeholder="+1 (555) 000-0000"
             className="w-full border border-slate-300 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-orange-500" />

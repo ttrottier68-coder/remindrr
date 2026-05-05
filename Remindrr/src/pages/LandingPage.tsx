@@ -39,7 +39,7 @@ function HeroSection() {
         <p className="text-blue-300/60 text-sm mb-10">Automatic Email Reminders · No credit card required</p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <Link to="/signup" className="bg-blue-500 hover:bg-blue-600 text-white font-bold px-8 py-4 rounded-xl text-lg transition-colors shadow-lg shadow-blue-500/30 flex items-center justify-center gap-2">
-            Create Free Account →
+            Create Account →
           </Link>
           <Link to="/login" className="border border-blue-400/40 text-blue-200 hover:text-white hover:border-blue-300 px-8 py-4 rounded-xl text-lg font-medium transition-colors">
             Sign In
@@ -268,7 +268,7 @@ function Pricing() {
     <section className="py-20 px-6 bg-white">
       <div className="max-w-3xl mx-auto text-center">
         <h2 className="text-3xl font-bold text-slate-800 mb-4">Simple Pricing. No Surprises.</h2>
-        <p className="text-slate-500 mb-12">Start free. Upgrade when you're ready.</p>
+        <p className="text-slate-500 mb-12">Start your free account today.</p>
 
         {/* STARTER — Featured */}
         <div className="bg-slate-900 rounded-2xl p-8 text-white max-w-md mx-auto mb-6 relative overflow-hidden">
@@ -295,7 +295,7 @@ function Pricing() {
             ))}
           </ul>
           <Link to="/signup" className="block text-center bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 rounded-xl transition-colors shadow-lg shadow-blue-500/30">
-            Get Started — Free →
+            Get Started →
           </Link>
           <p className="text-center text-xs text-slate-500 mt-4">No credit card required</p>
         </div>
@@ -325,11 +325,11 @@ function FAQ() {
   const faqs = [
     {
       q: 'How do reminders work?',
-      a: "Remindrr automatically sends SMS and email reminders before and after the invoice due date. You choose the method when creating the invoice — it runs on autopilot.",
+      a: "Remindrr automatically sends email reminders before and after the invoice due date. You choose when creating the invoice — it runs on autopilot.",
     },
     {
       q: 'Can customers pay online?',
-      a: "Yes! Customers receive a secure payment link via SMS, email, or both. They can pay in 2 taps on their phone — no accounts or logins needed on their end.",
+      a: "Yes! Customers receive a secure payment link via email. They can pay in 2 taps on their phone — no accounts or logins needed on their end.",
     },
     {
       q: 'Is this easy to set up?',
@@ -348,8 +348,8 @@ function FAQ() {
       a: "That makes sense—most people say that until they realize how much time they spend following up. This just automates that completely. If it helps you collect even one late payment, it pays for itself.",
     },
     {
-      q: 'Is there a free trial?',
-      a: "No free trial — cancel anytime. Plans start at $29/mo and pay for themselves the first time you collect an overdue invoice.",
+      q: 'How much does it cost?',
+      a: "Just $29/month — cancel anytime. No contracts, no hidden fees. It pays for itself the first time you collect an overdue invoice.",
     },
   ];
   return (
@@ -393,7 +393,7 @@ function FinalCTA() {
           <span className="bg-white/10 text-blue-200 text-sm px-4 py-1.5 rounded-full">💰 If it saves you one unpaid invoice, it pays for itself</span>
         </div>
         <Link to="/signup" className="bg-blue-500 hover:bg-blue-600 text-white font-bold text-lg px-10 py-4 rounded-xl transition-colors shadow-lg shadow-blue-500/30 inline-block">
-          Get Started Now — It's Free →
+          Get Started Now →
         </Link>
         <p className="mt-4 text-sm text-slate-400">No credit card required</p>
       </div>

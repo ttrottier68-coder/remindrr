@@ -218,14 +218,14 @@ export default function SettingsPage() {
               className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 transition-all" />
           </div>
           <div>
-            <label className="block text-xs font-medium text-slate-500 mb-1.5">Phone Number (for SMS sender ID)</label>
+            <label className="block text-xs font-medium text-slate-500 mb-1.5">Phone Number</label>
             <input type="tel" value={form.phone} onChange={e => set('phone', e.target.value)} placeholder="+1 555 000 1234"
               className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 transition-all" />
           </div>
         </div>
       </div>
 
-      {/* ── Payment & SMS Status ── */}
+      {/* ── Payment Status ── */}
       <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
         <h2 className="font-bold text-slate-700 text-base border-b border-slate-100 pb-3 mb-4">⚡ Connection Status</h2>
         <div className="flex flex-wrap gap-3">
@@ -240,7 +240,7 @@ export default function SettingsPage() {
           <div className="bg-gradient-to-br from-blue-500 to-indigo-600 text-white text-xs font-bold px-3 py-1.5 rounded-lg">💳</div>
           <div>
             <h2 className="font-bold text-slate-700 text-base">Stripe Payment Setup</h2>
-            <p className="text-slate-400 text-xs mt-0.5">Accept payments when customers tap the link in their SMS</p>
+            <p className="text-slate-400 text-xs mt-0.5">Accept payments when customers tap the link in email</p>
           </div>
         </div>
         <StripeGuide />

@@ -293,7 +293,7 @@ function PreviewStep({
             </svg>
           </div>
           <div>
-            <p className="text-sm text-slate-500 mb-1">SMS Reminder</p>
+            <p className="text-sm text-slate-500 mb-1">Email Reminder</p>
             <p className="text-slate-800 text-sm leading-relaxed">
               Hi {invoiceData.customerName || 'Customer'} 👋 Your invoice of ${invoiceData.amount || '0'} for "
               {invoiceData.description || 'service'}" is due on {formatDate(invoiceData.dueDate)}. 📱 Send to: {invoiceData.customerPhone || 'no phone number'}
