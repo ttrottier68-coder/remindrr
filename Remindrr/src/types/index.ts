@@ -25,7 +25,12 @@ export interface Invoice {
   paymentLink?: string;
   paidAt?: string;
   createdAt: string;
+  // Manual reminder
   reminderSent?: boolean;
+  // Automated reminder tracking
+  lastReminderSentAt?: string;
+  lastReminderType?: string;  // 'before' | 'on' | 'after' | 'followup'
+  followupCount?: number;
   reminderMethod?: 'sms' | 'email' | 'both';
 }
 
