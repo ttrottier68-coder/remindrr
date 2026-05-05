@@ -83,6 +83,27 @@ export default function EditInvoicePage() {
           <input value={description} onChange={e => setDescription(e.target.value)}
             className="w-full border border-slate-300 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-orange-500" />
         </div>
+        {/* Reminder History - Show if reminders have been sent */}
+        {(invoice.lastReminderSentAt || invoice.reminderSent) && (
+          <div className="bg-green-50 border border-green-200 rounded-xl p-4">
+            <p className="text-sm font-bold text-green-700 mb-2">📞 Reminder History</p>
+            {invoice.lastReminderSentAt && (
+              <p className="text-sm text-green-600">
+                Last automated reminder sent: {new Date(invoice.lastReminderSentAt).toLocaleString()}
+              </p>
+            )}
+            {invoice.reminderSent && (
+              <p className="text-sm text-green-600 mt-1">
+                Manual reminder has been sent
+              </p>
+            )}
+            {invoice.followupCount ? (
+              <p className="text-sm text-green-600 mt-1">
+                Follow-up reminders sent: {invoice.followupCount}
+              </p>
+            ) : null}
+          </div>
+        )}
         <div className="flex gap-3 pt-2">
           <button onClick={() => navigate('/invoices')} className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold py-3 rounded-xl transition-colors">
             Cancel
