@@ -15,6 +15,11 @@ function persist(key: string, data: unknown) {
 }
 
 export function getSettings(): UserSettings {
+  // Debug: log what's in localStorage
+  try {
+    const stored = localStorage.getItem(SETTINGS_KEY);
+    console.log('getSettings() - stored in localStorage:', stored ? 'YES' : 'NO', stored ? JSON.parse(stored) : null);
+  } catch {}
   return safe(SETTINGS_KEY, {
     businessName: '',
     ownerName: '',

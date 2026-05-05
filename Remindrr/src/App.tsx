@@ -891,32 +891,31 @@ const REGISTERED_KEY = 'remindrr_just_registered';
 async function seedDemoData() {
   console.log('seedDemoData running...');
   const existing = getSettings();
-  console.log('  existing settings:', existing);
+  console.log('  existing settings - ownerName:', existing?.ownerName, '| plan:', existing?.plan);
   
-  // If user already has real settings, just ensure demo exists
-  if (existing?.ownerName && existing.ownerName !== 'Demo User') {
+  // If user has real settings (non-empty ownerName that's not demo), just ensure demo exists
+  if (existing?.ownerName && existing.ownerName.trim() && existing.ownerName !== 'Demo User') {
     console.log('  has real settings, just ensure demo');
     await ensureDemoAccount();
     return;
   }
   
-  // Skip demo seeding if user is authenticated (they should have been onboarded already)
+  // For authenticated users with demo/no settings: create real settings or go to onboarding
   if (isAuthenticated()) {
-    console.log('  authenticated but no settings - will show onboarding');
+    console.log('  authenticated but needs onboarding');
+    // Don't create demo settings - let them go through onboarding
     return;
   }
   
   // For visitors: create demo settings
-  if (!existing?.ownerName) {
-    console.log('  creating demo settings');
-    saveSettings({
-      businessName: 'Demo Business',
-      ownerName: 'Demo User',
-      email: 'demo@remindrr.app',
-      phone: '',
-      plan: 'starter',
-    });
-  }
+  console.log('  creating demo settings');
+  saveSettings({
+    businessName: 'Demo Business',
+    ownerName: 'Demo User',
+    email: 'demo@remindrr.app',
+    phone: '',
+    plan: 'starter',
+  });
   await ensureDemoAccount();
 }
 
@@ -952,9 +951,11 @@ export default function App() {
 
 // Case 1: Has settings AND is logged in → show the app
   // Has settings (any kind - could have starter plan already or be in onboarding to get one)
-  const hasSettings = !!settings?.ownerName;
+  const hasSettings = !!settings?.ownerName?.trim();
   const hasSubscription = settings?.plan && ['starter', 'pro', 'business'].includes(settings.plan);
-  
+
+  console.log('Route decision:', { hasSettings, hasSubscription, ownerName: settings?.ownerName, plan: settings?.plan });
+
   // User is logged in and has settings → full app access
   if (isAuthenticated() && hasSettings) {
     return (
