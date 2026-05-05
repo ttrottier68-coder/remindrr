@@ -599,6 +599,7 @@ function NewInvoicePage() {
   );
 }
 
+{
   // Main form
   return (
     <div className="max-w-xl mx-auto p-6">
@@ -670,6 +671,7 @@ function NewInvoicePage() {
       </div>
     </div>
   );
+}
 
 function ClientsPage() {
   const navigate = useNavigate();
