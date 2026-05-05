@@ -230,9 +230,8 @@ export default function SettingsPage() {
         <h2 className="font-bold text-slate-700 text-base border-b border-slate-100 pb-3 mb-4">⚡ Connection Status</h2>
         <div className="flex flex-wrap gap-3">
           <StatusBadge label="Stripe" connected={!!form.stripeAccountId} fields={[form.stripeAccountId]} />
-          <StatusBadge label="Twilio SMS" connected={!!(form.twilioSid && form.twilioToken && form.twilioPhone)} fields={[form.twilioSid, form.twilioToken, form.twilioPhone]} />
         </div>
-        <p className="text-xs text-slate-400 mt-3">Configure both below to enable automated payment collection and SMS reminders.</p>
+        <p className="text-xs text-slate-400 mt-3">Configure below to enable automated payment collection.</p>
       </div>
 
       {/* ── Stripe Setup ── */}
