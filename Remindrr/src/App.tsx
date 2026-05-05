@@ -937,7 +937,8 @@ export default function App() {
   }
 
   // Case 1b: Has settings AND has subscription → show the app
-  return (
+  if (settings?.ownerName && hasSubscription) {
+    return (
     <BrowserRouter>
       <div className="min-h-screen bg-slate-50">
         <NavBar />
@@ -957,7 +958,7 @@ export default function App() {
         </Routes>
       </div>
     </BrowserRouter>
-);
+  );
   }
 
   // Case 2: No settings yet → show landing page + auth
