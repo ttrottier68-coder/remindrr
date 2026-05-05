@@ -176,6 +176,7 @@ export default function SettingsPage() {
   const handleSave = () => {
     saveSettings(form);
     setSaved(true);
+    alert('Settings saved! sendgridApiKey=' + form.sendgridApiKey?.substring(0,10) + '..., sendgridFromEmail=' + form.sendgridFromEmail);
     setTimeout(() => setSaved(false), 2500);
   };
 
