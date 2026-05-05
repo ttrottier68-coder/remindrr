@@ -468,7 +468,7 @@ function NewInvoicePage() {
   const [preview, setPreview] = useState(false);
   const [done, setDone] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [editSms, setEditSms] = useState(false);
+  const [editMessage, setEditMessage] = useState(false);
   const [editEmail, setEditEmail] = useState(false);
 
   const subtotal = parseFloat(amount) || 0;
@@ -491,20 +491,17 @@ function NewInvoicePage() {
     ? `Hi ${finalName},\n\nJust a friendly reminder that your invoice of $${total.toFixed(2)} for "${description || 'your service'}"${taxRate > 0 ? ` (incl. ${taxName})` : ''} is due on ${formatDate(dueDate)}.\n\nPay now: ${paymentLink}\n\nThanks for your business!`
     : '';
 
-  const [smsText, setSmsText] = useState('');
+  const [messageText, setMessageText] = useState('');
   const [emailSubj, setEmailSubj] = useState('');
   const [emailBody, setEmailBody] = useState('');
 
-  // Populate preview text when preview screen first opens
- useEffect(() => {
-  if (preview) {
-    if (finalPhone) setSmsText(defaultSms);
-    if (finalEmail) {
+// Populate preview text when preview screen first opens
+  useEffect(() => {
+    if (preview && finalEmail) {
       setEmailSubj(defaultEmailSubject);
-      setEmailBody(defaultEmailBody);
+      setMessageText(defaultEmailBody);
     }
-  }
-}, [preview]);
+  }, [preview, finalEmail]);
  useEffect(() => {
   if (done) navigate('/invoices');
 }, [done]);
@@ -549,22 +546,22 @@ function NewInvoicePage() {
       </button>
       <h1 className="text-2xl font-bold text-slate-800 mb-6">Confirm & Send</h1>
       <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 space-y-6">
-        {finalPhone && (
+        {finalEmail && (
           <div className="p-4 bg-slate-50 rounded-xl border border-slate-200">
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2">
-                <span className="text-xl">💬</span>
+                <span className="text-xl">📧</span>
                 <p className="text-xs font-bold text-slate-500 uppercase">Message Preview</p>
               </div>
-              <button onClick={() => setEditSms(!editSms)} className="text-xs text-orange-500 font-semibold hover:underline">
-                {editSms ? 'Done' : '✏️ Edit'}
+              <button onClick={() => setEditMessage(!editMessage)} className="text-xs text-orange-500 font-semibold hover:underline">
+                {editMessage ? 'Done' : '✏️ Edit'}
               </button>
             </div>
-            {editSms ? (
-              <textarea value={smsText} onChange={e => setSmsText(e.target.value)} rows={3}
+            {editMessage ? (
+              <textarea value={messageText} onChange={e => setMessageText(e.target.value)} rows={3}
                 className="w-full border border-orange-300 rounded-xl px-3 py-2 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-orange-400" />
             ) : (
-              <p className="text-sm text-slate-700 leading-relaxed">{smsText}</p>
+              <p className="text-sm text-slate-700 leading-relaxed">{messageText}</p>
             )}
           </div>
         )}
@@ -573,34 +570,31 @@ function NewInvoicePage() {
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2">
                 <span className="text-xl">📧</span>
-                <p className="text-xs font-bold text-slate-500 uppercase">Email Preview</p>
+                <p className="text-xs font-bold text-slate-500 uppercase">Message Preview</p>
               </div>
-              <button onClick={() => setEditEmail(!editEmail)} className="text-xs text-orange-500 font-semibold hover:underline">
-                {editEmail ? 'Done' : '✏️ Edit'}
+              <button onClick={() => setEditMessage(!editMessage)} className="text-xs text-orange-500 font-semibold hover:underline">
+                {editMessage ? 'Done' : '✏️ Edit'}
               </button>
             </div>
-            {editEmail ? (
+            {editMessage ? (
               <div className="space-y-3">
                 <input value={emailSubj} onChange={e => setEmailSubj(e.target.value)}
                   className="w-full border border-orange-300 rounded-xl px-3 py-2 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-orange-400" />
-                <textarea value={emailBody} onChange={e => setEmailBody(e.target.value)} rows={5}
+                <textarea value={messageText} onChange={e => setMessageText(e.target.value)} rows={5}
                   className="w-full border border-orange-300 rounded-xl px-3 py-2 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-orange-400" />
               </div>
             ) : (
               <div>
                 <p className="text-xs text-slate-600 font-semibold mb-1">Subject: {emailSubj}</p>
-                <p className="text-sm text-slate-700 leading-relaxed whitespace-pre-line">{emailBody}</p>
+                <p className="text-sm text-slate-700 leading-relaxed whitespace-pre-line">{messageText}</p>
               </div>
             )}
           </div>
         )}
-        {!finalPhone && !finalEmail && (
+{!finalEmail && (
           <div className="flex items-start gap-3 p-4 bg-amber-50 rounded-xl border border-amber-200">
             <div className="text-2xl">⚠️</div>
-            <div>
-              <p className="text-sm font-semibold text-amber-800">No contact info</p>
-              <p className="text-sm text-amber-600">Add a phone or email above so Remindrr can send reminders.</p>
-            </div>
+            <p className="text-sm text-amber-700">Add an email above so Remindrr can send reminders.</p>
           </div>
         )}
         {taxRate > 0 && (
@@ -617,6 +611,7 @@ function NewInvoicePage() {
       </div>
     </div>
   );
+}
 
   // Main form
   return (
