@@ -951,7 +951,7 @@ export default function App() {
       <BrowserRouter>
         <div className="min-h-screen bg-slate-50">
           <NavBar />
-        <Routes>
+          <Routes>
           <Route path="/reset" element={<ResetPage />} />
           <Route path="/plans" element={<PlansPage />} />
           <Route path="/" element={<Dashboard />} />
@@ -970,13 +970,14 @@ export default function App() {
   );
   }
 
-  // Case 2: No settings yet → show landing page + auth
+  // Case 2: No settings yet → show landing page + auth (or onboarding if logged in)
   return (
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/signup" element={<SignupPage />} />
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/onboarding" element={<OnboardingFlow />} />
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="/reset" element={<ResetPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
