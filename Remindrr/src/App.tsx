@@ -599,6 +599,7 @@ function NewInvoicePage() {
   );
 }
 
+  // Main form
   return (
     <div className="max-w-xl mx-auto p-6">
       <button onClick={() => navigate('/invoices')} className="flex items-center gap-1 text-slate-500 hover:text-slate-800 mb-4 text-sm">
