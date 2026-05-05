@@ -545,11 +545,6 @@ export default function OnboardingFlow() {
         )}
       </div>
 
-      {/* Debug - testing */}
-      <div className="bg-yellow-100 text-black text-xs p-2 text-center">
-        Debug: step={step}, ownerName="{setupData.ownerName}"
-      </div>
-
       {/* Content */}
       <div className="flex-1 flex items-center justify-center px-6 py-12">
         <div className="w-full max-w-md">
