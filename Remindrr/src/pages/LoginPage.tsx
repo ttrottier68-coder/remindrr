@@ -23,7 +23,8 @@ export default function LoginPage() {
     if (freshSettings?.ownerName) {
       window.location.href = '/';
     } else {
-      window.location.href = '/onboarding';
+      // No settings yet → go through signup to create them first
+      window.location.href = '/signup';
     }
   } catch (err) {
     setLoading(false);
