@@ -407,7 +407,7 @@ function InvoicesPage() {
                           className="text-xs bg-orange-50 text-orange-700 font-bold px-3 py-1 rounded-lg hover:bg-orange-100 disabled:opacity-50">
                           {sendingId === inv.id ? 'Sending...' : 'Send Reminder 🔔'}
                         </button>
-                        markInvoicePaid(inv.id); setTick(t => t + 1);
+                        
                           className="text-xs bg-green-500 text-white font-bold px-3 py-1 rounded-lg hover:bg-green-600">
                           Mark Paid ✓
                         </button>
