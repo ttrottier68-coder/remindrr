@@ -42,6 +42,25 @@ function getStatus(inv: Invoice) {
   return { label: 'PENDING', color: 'bg-slate-100 text-slate-600' };
 }
 
+// State/Province tax rates data
+const stateRates: Record<string, number> = {
+  'AL': 9.0, 'AK': 0, 'AZ': 8.25, 'AR': 9.0, 'CA': 8.68, 'CO': 7.0, 'CT': 6.35, 'DE': 0,
+  'FL': 6.5, 'GA': 7.0, 'HI': 4.0, 'ID': 6.0, 'IL': 8.25, 'IN': 7.0, 'IA': 6.0, 'KS': 8.0,
+  'KY': 6.0, 'LA': 9.0, 'ME': 5.5, 'MD': 6.0, 'MA': 6.25, 'MI': 6.0, 'MN': 6.875, 'MS': 7.0,
+  'MO': 8.0, 'MT': 0, 'NE': 6.5, 'NV': 6.85, 'NH': 0, 'NJ': 6.625, 'NM': 7.0, 'NY': 8.0,
+  'NC': 6.0, 'ND': 6.5, 'OH': 7.0, 'OK': 8.0, 'OR': 0, 'PA': 6.0, 'RI': 7.0, 'SC': 7.0,
+  'SD': 5.5, 'TN': 7.0, 'TX': 6.25, 'UT': 6.85, 'VT': 6.0, 'VA': 5.75, 'WA': 6.5, 'WV': 6.5,
+  'WI': 5.5, 'WY': 4.0,
+  'CA-BC': 12, 'CA-ON': 13, 'CA-QC': 14.975, 'CA-AB': 5, 'CA-MB': 12, 'CA-SK': 11, 'CA-NS': 15,
+  'CA-NB': 15, 'CA-PE': 15, 'CA-NL': 15, 'CA-NT': 5, 'CA-YU': 5, 'CA-NU': 5
+};
+
+const stateLabels: Record<string, string> = {
+  'CA-BC': 'BC PST', 'CA-ON': 'HST', 'CA-QC': 'QST', 'CA-AB': 'GST', 'CA-MB': 'Manitoba PST',
+  'CA-SK': 'Sask PST', 'CA-NS': 'HST', 'CA-NB': 'HST', 'CA-PE': 'HST', 'CA-NL': 'HST',
+  'CA-NT': 'GST', 'CA-YU': 'GST', 'CA-NU': 'GST'
+};
+
 
 // Format a date string (YYYY-MM-DD) to "Jan 15, 2024"
 function formatDate(dateStr: string): string {
@@ -442,6 +461,7 @@ function NewInvoicePage() {
   const [amount, setAmount] = useState('');
   const [taxRate, setTaxRate] = useState(0);
   const [taxName, setTaxName] = useState('');
+  const [selectedState, setSelectedState] = useState('');
   const [description, setDescription] = useState('');
   const [dueDate, setDueDate] = useState('');
   const [useNew, setUseNew] = useState(false);
@@ -643,22 +663,110 @@ function NewInvoicePage() {
             <input type="date" value={dueDate} onChange={e => setDueDate(e.target.value)}
               className="w-full border border-slate-300 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-orange-500" /></div>
         </div>
-        <div><label className="block text-sm font-medium text-slate-700 mb-1">Tax Rate</label>
-          <select value={taxRate} onChange={e => { setTaxRate(Number(e.target.value)); setTaxName(e.target.options[e.target.selectedIndex].dataset.label || ''); }}
-            className="w-full border border-slate-300 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-orange-500">
-            <option value={0} data-label="">No tax (0%)</option>
-            <option value={5} data-label="GST 5%">GST 5% (Canada federal)</option>
-            <option value={7} data-label="GST + BC PST 7%">GST + BC PST 7%</option>
-            <option value={12.975} data-label="GST + QST 12.975%">GST + QST 12.975% (Quebec)</option>
-            <option value={13} data-label="HST 13%">HST 13% (Ontario/Atlantic)</option>
-            <option value={12} data-label="GST + Manitoba PST 12%">GST + Manitoba PST 12%</option>
-            <option value={11} data-label="GST + Saskatchewan PST 11%">GST + Saskatchewan PST 11%</option>
-            <option value={8.25} data-label="US Sales Tax 8.25%">US Sales Tax 8.25%</option>
-          </select>
-          {taxRate > 0 && (
-            <p className="text-sm text-slate-500 mt-1">Subtotal: ${subtotal.toFixed(2)} → Total: ${total.toFixed(2)}</p>
-          )}
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">State</label>
+            <select value={selectedState} onChange={e => {
+              const state = e.target.value;
+              setSelectedState(state);
+              if (state && state !== 'custom') {
+                const rate = stateRates[state];
+                setTaxRate(rate);
+                setTaxName(stateLabels[state] || state);
+              }
+            }}
+              className="w-full border border-slate-300 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-orange-500">
+              <option value="">Select state...</option>
+              <optgroup label="US States">
+                <option value="AL">Alabama (4-11%)</option>
+                <option value="AK">Alaska (0%)</option>
+                <option value="AZ">Arizona (5.6-11.2%)</option>
+                <option value="AR">Arkansas (6.5-11%)</option>
+                <option value="CA">California (7.25-10.25%)</option>
+                <option value="CO">Colorado (2.9-10%)</option>
+                <option value="CT">Connecticut (6.35%)</option>
+                <option value="DE">Delaware (0%)</option>
+                <option value="FL">Florida (6-7%)</option>
+                <option value="GA">Georgia (4-8%)</option>
+                <option value="HI">Hawaii (4-11%)</option>
+                <option value="ID">Idaho (6-9%)</option>
+                <option value="IL">Illinois (6.25-11%)</option>
+                <option value="IN">Indiana (7%)</option>
+                <option value="IA">Iowa (6-7%)</option>
+                <option value="KS">Kansas (6.5-10.5%)</option>
+                <option value="KY">Kentucky (6%)</option>
+                <option value="LA">Louisiana (4.45-11%)</option>
+                <option value="ME">Maine (5.5-7%)</option>
+                <option value="MD">Maryland (6%)</option>
+                <option value="MA">Massachusetts (6.25%)</option>
+                <option value="MI">Michigan (6%)</option>
+                <option value="MN">Minnesota (6.875-11%)</option>
+                <option value="MS">Mississippi (7-9%)</option>
+                <option value="MO">Missouri (4.225-10%)</option>
+                <option value="MT">Montana (0%)</option>
+                <option value="NE">Nebraska (5.5-8%)</option>
+                <option value="NV">Nevada (6.85-8.1%)</option>
+                <option value="NH">New Hampshire (0%)</option>
+                <option value="NJ">New Jersey (6.625-9.9%)</option>
+                <option value="NM">New Mexico (4.875-9%)</option>
+                <option value="NY">New York (4-8.875%)</option>
+                <option value="NC">North Carolina (4.75-7%)</option>
+                <option value="ND">North Dakota (5-8%)</option>
+                <option value="OH">Ohio (5.75-8%)</option>
+                <option value="OK">Oklahoma (4.5-11%)</option>
+                <option value="OR">Oregon (0%)</option>
+                <option value="PA">Pennsylvania (6-8%)</option>
+                <option value="RI">Rhode Island (7%)</option>
+                <option value="SC">South Carolina (6-9%)</option>
+                <option value="SD">South Dakota (4.5-6%)</option>
+                <option value="TN">Tennessee (7-9.75%)</option>
+                <option value="TX">Texas (6.25-8.2%)</option>
+                <option value="UT">Utah (6.1-8.35%)</option>
+                <option value="VT">Vermont (6-7%)</option>
+                <option value="VA">Virginia (5.3-6%)</option>
+                <option value="WA">Washington (6.5-10.4%)</option>
+                <option value="WV">West Virginia (6-7%)</option>
+                <option value="WI">Wisconsin (5-8%)</option>
+                <option value="WY">Wyoming (4-6%)</option>
+              </optgroup>
+              <optgroup label="Canada">
+                <option value="CA-BC">BC (GST + PST 12%)</option>
+                <option value="CA-ON">Ontario (HST 13%)</option>
+                <option value="CA-QC">Quebec (GST + QST 14.975%)</option>
+                <option value="CA-AB">Alberta (GST 5%)</option>
+                <option value="CA-MB">Manitoba (GST + PST 12%)</option>
+                <option value="CA-SK">Saskatchewan (GST + PST 11%)</option>
+                <option value="CA-NS">Nova Scotia (HST 15%)</option>
+                <option value="CA-NB">New Brunswick (HST 15%)</option>
+                <option value="CA-PE">Prince Edward Island (HST 15%)</option>
+                <option value="CA-NL">Newfoundland (HST 15%)</option>
+                <option value="CA-NT">Northwest Territories (GST 5%)</option>
+                <option value="CA-YU">Yukon (GST 5%)</option>
+                <option value="CA-NU">Nunavut (GST 5%)</option>
+              </optgroup>
+              <option value="custom">Custom rate...</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Tax Rate %</label>
+            <input 
+              type="number" 
+              step="0.01"
+              value={taxRate} 
+              onChange={e => {
+                setTaxRate(Number(e.target.value));
+                if (selectedState === 'custom') {
+                  setTaxName('Custom');
+                }
+              }}
+              placeholder="0"
+              className="w-full border border-slate-300 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-orange-500" 
+            />
+          </div>
         </div>
+        {taxRate > 0 && (
+          <p className="text-sm text-slate-500 mt-1">Subtotal: ${subtotal.toFixed(2)} → Total: ${total.toFixed(2)}</p>
+        )}
         <div><label className="block text-sm font-medium text-slate-700 mb-1">Description</label>
           <input value={description} onChange={e => setDescription(e.target.value)} placeholder="Plumbing repair - 123 Main St"
             className="w-full border border-slate-300 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-orange-500" /></div>
