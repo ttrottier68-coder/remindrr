@@ -922,12 +922,13 @@ export default function App() {
     );
   }
 
-  // Case 1: Has settings AND is logged in → show the app
-  // Check if user has paid (has a plan set in settings)
-const hasSubscription = settings?.plan && ['starter', 'pro', 'business'].includes(settings.plan);
+// Case 1: Has settings AND is logged in → show the app
+  // Has settings (any kind - could have starter plan already or be in onboarding to get one)
+  const hasSettings = !!settings?.ownerName;
+  const hasSubscription = settings?.plan && ['starter', 'pro', 'business'].includes(settings.plan);
   
-  // User is logged in and has a paid plan → full app access
-  if (isAuthenticated() && settings?.ownerName && hasSubscription) {
+  // User is logged in and has settings → full app access
+  if (isAuthenticated() && hasSettings) {
     return (
       <BrowserRouter>
         <div className="min-h-screen bg-slate-50">
