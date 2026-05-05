@@ -669,9 +669,7 @@ function NewInvoicePage() {
       </div>
     </div>
   );
-}
 
-// ─── Clients Page ────────────────────────────────────────────────────────────
 function ClientsPage() {
   const navigate = useNavigate();
   const clients = getClients();
