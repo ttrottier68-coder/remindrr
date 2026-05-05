@@ -25,7 +25,8 @@ export async function sendReminderNow(invoice: Invoice): Promise<{ success: bool
       text: 'Invoice reminder',
     };
     alert('DEBUG: businessName=' + settings.businessName + ', html length=' + requestBody.html.length);
-    alert('Sending to function: ' + JSON.stringify(requestBody));
+    const keyPreview = settings.sendgridApiKey ? settings.sendgridApiKey.substring(0, 15) + '...' : 'MISSING';
+    alert('Sending: key=' + keyPreview + ', from=' + settings.sendgridFromEmail + ', to=' + clientEmail + ', subject=' + requestBody.subject);
     
     const response = await fetch(`/.netlify/functions/send-email`, {
       method: 'POST',
