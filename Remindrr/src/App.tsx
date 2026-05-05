@@ -921,10 +921,10 @@ export default function App() {
   }
 
   // Case 1: Has settings AND is logged in → show the app
-  // Check if user has paid (has a plan set)
+  // Check if user has paid (has a plan set in settings)
   const hasSubscription = settings?.plan && ['starter', 'pro', 'business'].includes(settings.plan);
   
-  // Redirect authenticated users without subscription to pay
+  // Redirect users without subscription to onboarding/pay
   if (isAuthenticated() && !hasSubscription) {
     return (
       <BrowserRouter>
