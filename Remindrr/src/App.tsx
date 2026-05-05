@@ -506,16 +506,6 @@ function NewInvoicePage() {
       description, dueDate, status: 'pending',
       paymentLink, createdAt: new Date().toISOString(),
     });
-<<<<<<< HEAD
-    // Sync to server after creating invoice
-    syncInvoicesToServer(getInvoices());
-    
-    setSaving(false);
-    setDone(true);
-   
-    
- 
-=======
     // Sync to server (no await - runs in background)
     
     setSaving(false);
@@ -523,7 +513,6 @@ function NewInvoicePage() {
     await new Promise(r => setTimeout(r, 800));
     navigate('/invoices');
   };
->>>>>>> f04ad9e2a03758ad4d7490840fa7799c7534c8e3
 
   if (done) return (
     <div className="max-w-lg mx-auto p-6 text-center">
