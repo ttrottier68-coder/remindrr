@@ -74,13 +74,11 @@ function NavBar() {
   const handleLogout = () => {
     console.log('Logging out...');
     logout();
-    // Clear session and demo flag
+    // Only clear session - keep settings so user can log back in without re-onboarding
+    // Also clear demo flag and redirect to login (NOT landing)
     try { localStorage.removeItem('remindrr_onboarding_complete'); } catch {}
-    // Clear demo settings so next visit shows landing page
-    try { localStorage.removeItem('remindrr_settings'); } catch {}
-    console.log('Session cleared, redirecting to /');
-    // Go to landing page (replace so back-button doesn't undo logout)
-    window.location.replace('/');
+    console.log('Session cleared, redirecting to /login');
+    window.location.replace('/login');
   };
   const navItems = [
     { label: 'Dashboard', to: '/', icon: <DollarIcon /> },
