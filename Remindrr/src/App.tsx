@@ -935,30 +935,30 @@ export default function App() {
       </BrowserRouter>
     );
   }
-  if (settings?.ownerName && isAuthenticated()) {
-    return (
-      <BrowserRouter>
-        <div className="min-h-screen bg-slate-50">
-          <NavBar />
-          <Routes>
-            {!onboardingComplete && <Route path="/onboarding" element={<OnboardingFlow />} />}
-            <Route path="/reset" element={<ResetPage />} />
-            <Route path="/plans" element={<PlansPage />} />
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/invoices" element={<InvoicesPage />} />
-            <Route path="/invoices/new" element={<NewInvoicePage />} />
-            <Route path="/invoices/:id/edit" element={<EditInvoicePage />} />
-            <Route path="/clients" element={<ClientsPage />} />
-            <Route path="/clients/new" element={<AddClientPage />} />
-            <Route path="/settings" element={<SettingsPage />} />
-            <Route path="/terms" element={<TermsPage />} />
-            <Route path="/privacy-policy" element={<PrivacyPage />} />
-            <Route path="*" element={<Navigate to={onboardingComplete ? '/' : '/onboarding'} replace />} />
-          </Routes>
-        </div>
-      </BrowserRouter>
-    );
-  }
+
+  // Case 1b: Has settings AND has subscription → show the app
+  return (
+    <BrowserRouter>
+      <div className="min-h-screen bg-slate-50">
+        <NavBar />
+        <Routes>
+          <Route path="/reset" element={<ResetPage />} />
+          <Route path="/plans" element={<PlansPage />} />
+          <Route path="/" element={<Dashboard />} />
+          <Route path="/invoices" element={<InvoicesPage />} />
+          <Route path="/invoices/new" element={<NewInvoicePage />} />
+          <Route path="/invoices/:id/edit" element={<EditInvoicePage />} />
+          <Route path="/clients" element={<ClientsPage />} />
+          <Route path="/clients/new" element={<AddClientPage />} />
+          <Route path="/settings" element={<SettingsPage />} />
+          <Route path="/terms" element={<TermsPage />} />
+          <Route path="/privacy-policy" element={<PrivacyPage />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </div>
+    </BrowserRouter>
+  );
+}
 
   // Case 2: No settings yet → show landing page + auth
   return (
