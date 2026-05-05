@@ -19,13 +19,23 @@ export default function LoginPage() {
     const err = await login(email, password);
     setLoading(false);
     if (err) { setError(err); return; }
+    
+    // After successful login, ensure settings exist in localStorage for this browser
     const freshSettings = getSettings();
-    console.log('After login - ownerName:', freshSettings?.ownerName, '| plan:', freshSettings?.plan);
+    console.log('After login - settings in localStorage:', freshSettings);
     if (freshSettings?.ownerName) {
       window.location.href = '/';
     } else {
-      // No settings yet → go through signup to create them first
-      window.location.href = '/signup';
+      // No settings yet in this browser → save basic settings from login, then go to onboarding
+      console.log('No localStorage settings, saving defaults...');
+      saveSettings({
+        ownerName: '',
+        businessName: '',
+        email: email.toLowerCase().trim(),
+        phone: '',
+        plan: 'starter',
+      });
+      window.location.href = '/onboarding';
     }
   } catch (err) {
     setLoading(false);
