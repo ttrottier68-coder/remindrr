@@ -36,7 +36,7 @@ function HeroSection() {
         <p className="text-xl text-blue-100 max-w-2xl mx-auto mb-4">
           Remindrr automatically sends friendly email payment reminders so contractors and small business owners get paid on time — without awkward follow-ups.
         </p>
-        <p className="text-blue-300/60 text-sm mb-10">Automatic Email Reminders · No credit card required</p>
+        <p className="text-blue-300/60 text-sm mb-10">Automatic Email Reminders</p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <Link to="/signup" className="bg-blue-500 hover:bg-blue-600 text-white font-bold px-8 py-4 rounded-xl text-lg transition-colors shadow-lg shadow-blue-500/30 flex items-center justify-center gap-2">
             Create Account →
@@ -45,7 +45,7 @@ function HeroSection() {
             Sign In
           </Link>
         </div>
-        <p className="text-slate-400 text-sm mt-4">No credit card required · Set up in under 5 minutes</p>
+        <p className="text-slate-400 text-sm mt-4">Set up in under 5 minutes</p>
       </div>
     </section>
   );
@@ -303,7 +303,7 @@ function Pricing() {
           <Link to="/signup" className="block text-center bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 rounded-xl transition-colors shadow-lg shadow-blue-500/30">
             Get Started →
           </Link>
-          <p className="text-center text-xs text-slate-500 mt-4">No credit card required</p>
+          
         </div>
 
         {/* Value props */}
@@ -401,7 +401,7 @@ function FinalCTA() {
         <Link to="/signup" className="bg-blue-500 hover:bg-blue-600 text-white font-bold text-lg px-10 py-4 rounded-xl transition-colors shadow-lg shadow-blue-500/30 inline-block">
           Get Started Now →
         </Link>
-        <p className="mt-4 text-sm text-slate-400">No credit card required</p>
+        <p className="mt-4 text-sm text-slate-400">Set up in 5 minutes</p>
       </div>
     </section>
   );
@@ -436,8 +436,8 @@ export default function LandingPage() {
       <WhoItFor />
       <EmailPreview />
       <FeaturesSection />
-      <Testimonials />
       <Pricing />
+      <Testimonials />
       <FAQ />
       <FinalCTA />
       <Footer />

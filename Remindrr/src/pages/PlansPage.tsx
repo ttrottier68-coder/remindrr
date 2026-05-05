@@ -171,7 +171,7 @@ export default function PlansPage() {
         <div className="mt-8 flex flex-wrap items-center justify-center gap-6 text-sm text-slate-400">
           <span>🔒 Secured by Stripe</span>
           <span>✅ Cancel anytime</span>
-          <span>💳 No credit card required to start</span>
+          <span>💳 Set up in 5 minutes</span>
         </div>
       </div>
     </div>

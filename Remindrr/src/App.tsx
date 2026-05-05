@@ -166,7 +166,7 @@ function SetupPage() {
         )}
         {step === 2 && (
           <div className="space-y-3">
-            <p className="text-slate-600 text-sm mb-3">Choose your plan. No credit card required.</p>
+            <p className="text-slate-600 text-sm mb-3">Choose your plan.</p>
             {[['starter','Starter','$29.99/mo','50 clients · 200 SMS'],['pro','Pro','$59.99/mo','Unlimited clients & SMS'],['business','Business','$129/mo','Multi-user + API']].map(([id,label,price,desc]) => (
               <div key={id} onClick={() => setS(ss => ({ ...ss, plan: id as typeof ss.plan }))}
                 className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${s.plan === id ? 'border-orange-500 bg-orange-50' : 'border-slate-200 hover:border-slate-300'}`}>
@@ -261,9 +261,9 @@ function Dashboard() {
         <p className="text-slate-400 text-sm mb-6">Built for tradespeople who are tired of chasing money.</p>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {[
-            { icon: '⚡', title: 'Get paid faster', desc: 'Friendly SMS reminders mean you get paid 3x faster.' },
+            { icon: '⚡', title: 'Get paid faster', desc: 'Friendly email reminders mean you get paid 3x faster.' },
             { icon: '🛡️', title: 'No awkward calls', desc: 'Automated reminders. No confrontation, no favour asking.' },
-            { icon: '💳', title: 'Instant payments', desc: 'Clients tap a Stripe link in the SMS. Pays in 2 days.' },
+            { icon: '💳', title: 'Instant payments', desc: 'Clients tap a Stripe link in email. Pays in 2 days.' },
             { icon: '💰', title: 'Affordable', desc: 'From $29.99/mo. A fraction of what collection agencies take.' },
           ].map(item => (
             <div key={item.title} className="bg-slate-800/50 rounded-xl p-4">
@@ -281,7 +281,7 @@ function Dashboard() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {[
             { step: '1', title: 'Create an invoice', desc: 'Add your client and the amount they owe. Takes 30 seconds.' },
-            { step: '2', title: 'Send a reminder', desc: 'Pick SMS, email, or both. Remindrr sends a friendly reminder automatically.' },
+            { step: '2', title: 'Send a reminder', desc: 'Pick email. Remindrr sends a friendly reminder automatically.' },
             { step: '3', title: 'Client pays online', desc: 'Your client taps the link in the message and pays via Stripe. Money lands in your account in 2 days.' },
           ].map(s => (
             <div key={s.step} className="flex flex-col items-center text-center">

@@ -226,13 +226,14 @@ export default function SettingsPage() {
       </div>
 
       {/* ── Payment Status ── */}
+      {form.stripeAccountId && (
       <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
         <h2 className="font-bold text-slate-700 text-base border-b border-slate-100 pb-3 mb-4">⚡ Connection Status</h2>
         <div className="flex flex-wrap gap-3">
           <StatusBadge label="Stripe" connected={!!form.stripeAccountId} fields={[form.stripeAccountId]} />
         </div>
-        <p className="text-xs text-slate-400 mt-3">Configure below to enable automated payment collection.</p>
       </div>
+      )}
 
       {/* ── Stripe Setup ── */}
       <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
