@@ -189,7 +189,6 @@ function QuickSetupStep({
       </div>
       <button
         onClick={() => {
-          alert('Continue clicked! ownerName=' + ownerName);
           if (ownerName) {
             onNext({ ownerName, businessName, phone });
           }
@@ -428,7 +427,7 @@ export default function OnboardingFlow() {
   const navigate = useNavigate();
   const settings = getSettings();
 
-  // If user already has a plan or settings, skip subscription step
+  // If user already has a plan or settings, start at step 2 (skip payment step)
   const initialStep = settings?.plan ? 2 : settings?.ownerName ? 2 : 0;
   const [step, setStep] = useState(initialStep);
   const TOTAL_STEPS = 6; // Added subscription step
@@ -474,18 +473,15 @@ export default function OnboardingFlow() {
   };
 
   const handleSetupNext = (data: typeof setupData) => {
-    console.log('handleSetupNext called with:', data);
     setSetupData(data);
     // Save settings immediately with all fields
     const current = getSettings();
-    console.log('Current settings before save:', current);
     saveSettings({ 
       ...current, 
       ownerName: data.ownerName, 
       businessName: data.businessName,
       phone: data.phone 
     });
-    console.log('Saved settings, now setting step to 3');
     setStep(3); // Go to invoice step
   };
 
@@ -543,6 +539,11 @@ export default function OnboardingFlow() {
             {step} of {TOTAL_STEPS}
           </span>
         )}
+      </div>
+
+      {/* Debug - testing */}
+      <div className="bg-yellow-100 text-black text-xs p-2 text-center">
+        Debug: step={step}, ownerName="{setupData.ownerName}"
       </div>
 
       {/* Content */}

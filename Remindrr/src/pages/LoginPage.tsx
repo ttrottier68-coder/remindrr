@@ -33,12 +33,10 @@ export default function LoginPage() {
       
       // After successful login, ensure settings exist in localStorage for this browser
       const freshSettings = getSettings();
-      console.log('After login - settings in localStorage:', freshSettings);
       if (freshSettings?.ownerName) {
         window.location.href = '/';
       } else {
         // No settings yet in this browser → save basic settings from login, then go to onboarding
-        console.log('No localStorage settings, saving defaults...');
         saveSettings({
           ownerName: '',
           businessName: '',
