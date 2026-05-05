@@ -141,8 +141,34 @@ function NavBar() {
 function SetupPage() {
   const [s, setS] = useState({ ownerName: '', businessName: '', phone: '', email: '', plan: 'starter' as const });
   const [step, setStep] = useState(1);
+  const [paymentComplete, setPaymentComplete] = useState(false);
   const set = (k: string, v: string) => setS(ss => ({ ...ss, [k]: v }));
-  const submit = () => { saveSettings(s as any); window.location.reload(); };
+
+  // Plan payment links
+  const paymentLinks: Record<string, string> = {
+    starter: 'https://buy.stripe.com/4gM9AU3nIaoE26YdS21wY01',
+    pro: 'https://buy.stripe.com/fZu8wQe2mcwMfXOaFQ1wY02',
+    business: 'https://buy.stripe.com/8x28wQ0bw0O46neg0a1wY03'
+  };
+
+  const handlePlanSelect = (plan: string) => {
+    setS(ss => ({ ...ss, plan: plan as typeof ss.plan }));
+  };
+
+  const handlePayment = () => {
+    // Open Stripe payment in new tab
+    window.open(paymentLinks[s.plan], '_blank');
+    // Show confirmation message
+    setPaymentComplete(true);
+  };
+
+  const submit = () => {
+    if (!paymentComplete) {
+      alert('Please complete payment first by clicking the button above and verifying your subscription.');
+      return;
+    }
+    saveSettings(s as any); window.location.reload();
+  };
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg p-8">
@@ -176,9 +202,25 @@ function SetupPage() {
                 </div>
               </div>
             ))}
+            {/* Payment Section */}
+            <div className="mt-6 p-4 bg-slate-50 rounded-xl border border-slate-200">
+              <p className="text-sm font-semibold text-slate-700 mb-2">💳 Subscribe to use Remindrr</p>
+              <button onClick={handlePayment}
+                className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white font-bold py-3 rounded-xl shadow-lg mb-3">
+                Pay {s.plan === 'starter' ? '$29.99/mo' : s.plan === 'pro' ? '$59.99/mo' : '$129/mo'} with Stripe →
+              </button>
+              {paymentComplete && (
+                <label className="flex items-center gap-2 text-sm text-green-600">
+                  <input type="checkbox" checked readOnly className="w-4 h-4" />
+                  I've completed my payment
+                </label>
+              )}
+              <p className="text-xs text-slate-400 mt-2">Click above to pay via Stripe, then check the box to confirm.</p>
+            </div>
             <button onClick={submit}
-              className="w-full bg-gradient-to-r from-orange-500 to-orange-600 text-white font-bold py-3 rounded-xl shadow-lg shadow-orange-500/30 mt-2">
-              Get Started Free →
+              className="w-full bg-gradient-to-r from-orange-500 to-orange-600 text-white font-bold py-3 rounded-xl shadow-lg shadow-orange-500/30 mt-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={!paymentComplete}>
+              Get Started →
             </button>
           </div>
         )}

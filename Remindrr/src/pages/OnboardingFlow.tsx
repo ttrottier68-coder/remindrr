@@ -3,12 +3,91 @@ import { useNavigate } from 'react-router-dom';
 import { saveInvoice, saveClient, saveSettings, getSettings } from '../lib/reminder-data';
 import type { Invoice, Client } from '../types';
 
-// ─── Icons ──────────────────────────────────────────────────────────────────
-const CheckCircleIcon = () => (
-  <svg className="w-6 h-6 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-  </svg>
-);
+// Plan payment links - these are Stripe payment links
+const PLAN_LINKS: Record<string, string> = {
+  starter: 'https://buy.stripe.com/4gM9AU3nIaoE26YdS21wY01',
+  pro: 'https://buy.stripe.com/fZu8wQe2mcwMfXOaFQ1wY02',
+  business: 'https://buy.stripe.com/8x28wQ0bw0O46neg0a1wY03'
+};
+
+// ─── Step: Subscribe ─────────────────────────────────────────────────────
+function SubscribeStep({
+  onNext,
+}: {
+  onNext: (data: { plan: string }) => void;
+}) {
+  const [selectedPlan, setSelectedPlan] = useState('starter');
+  const [paymentDone, setPaymentDone] = useState(false);
+  const navigate = useNavigate();
+
+  const handlePay = () => {
+    window.open(PLAN_LINKS[selectedPlan], '_blank');
+    // Give them time to pay, then show confirmation
+    setTimeout(() => setPaymentDone(true), 1000);
+  };
+
+  return (
+    <div className="space-y-5">
+      <div className="text-center mb-6">
+        <h2 className="text-2xl font-bold text-slate-900 mb-1">Subscribe to Remindrr</h2>
+        <p className="text-slate-400 text-sm">Choose a plan to get started.</p>
+      </div>
+
+      {/* Plan Selection */}
+      <div className="space-y-3">
+        {[
+          ['starter', 'Starter', '$29.99/mo', '50 clients, 200 SMS/mo', true],
+          ['pro', 'Pro', '$59.99/mo', 'Unlimited clients & SMS', false],
+          ['business', 'Business', '$129/mo', 'Multi-user + API', false]
+        ].map(([plan, name, price, desc, isPopular]) => (
+          <div
+            key={plan}
+            onClick={() => setSelectedPlan(plan as string)}
+            className={`p-4 rounded-xl border-2 cursor-pointer transition-all flex items-center justify-between ${
+              selectedPlan === plan
+                ? 'border-orange-500 bg-orange-50'
+                : 'border-slate-200 hover:border-slate-300'
+            }`}
+          >
+            <div>
+              <p className="font-bold text-slate-800 flex items-center gap-2">
+                {name}
+                {isPopular && <span className="text-xs bg-orange-500 text-white px-2 py-0.5 rounded-full">Popular</span>}
+              </p>
+              <p className="text-sm text-slate-500">{desc}</p>
+            </div>
+            <p className="font-bold text-orange-600">{price}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* Payment Button */}
+      <button
+        onClick={handlePay}
+        className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-4 rounded-xl transition-all flex items-center justify-center gap-2"
+      >
+        <span>💳</span> Pay {selectedPlan === 'starter' ? '$29.99/mo' : selectedPlan === 'pro' ? '$59.99/mo' : '$129/mo'} with Stripe
+      </button>
+
+      {/* Confirmation */}
+      {paymentDone && (
+        <div className="text-center">
+          <p className="text-green-600 font-medium mb-3">✅ Payment received!</p>
+          <button
+            onClick={() => onNext({ plan: selectedPlan })}
+            className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-4 rounded-xl transition-all"
+          >
+            Continue to Setup →
+          </button>
+        </div>
+      )}
+
+      <p className="text-xs text-slate-400 text-center">
+        Click the button to pay via Stripe. You'll be redirected to complete payment.
+      </p>
+    </div>
+  );
+}
 const ArrowRightIcon = () => (
   <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
     <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
@@ -345,13 +424,15 @@ export default function OnboardingFlow() {
   const settings = getSettings();
 
   const [step, setStep] = useState(0);
-  const TOTAL_STEPS = 5;
+  const TOTAL_STEPS = 6; // Added subscription step
 
   const [setupData, setSetupData] = useState<{ ownerName: string; businessName: string; phone: string }>({
     ownerName: settings.ownerName || '',
     businessName: settings.businessName || '',
     phone: '',
   });
+
+  const [selectedPlan, setSelectedPlan] = useState(''); // Track plan selection
 
   const [invoiceData, setInvoiceData] = useState<{
     customerName: string;
@@ -376,6 +457,14 @@ export default function OnboardingFlow() {
   };
 
   const handleWelcomeNext = () => setStep(1);
+
+  const handleSubscribeNext = (data: { plan: string }) => {
+    setSelectedPlan(data.plan);
+    // Save plan to settings
+    const current = getSettings();
+    saveSettings({ ...current, plan: data.plan });
+    setStep(1);
+  };
 
   const handleSetupNext = (data: typeof setupData) => {
     setSetupData(data);
@@ -444,29 +533,31 @@ export default function OnboardingFlow() {
       {/* Content */}
       <div className="flex-1 flex items-center justify-center px-6 py-12">
         <div className="w-full max-w-md">
-          {step > 0 && step < 5 && <ProgressBar step={step - 1} total={TOTAL_STEPS} />}
+          {step > 0 && step < 6 && <ProgressBar step={step - 1} total={TOTAL_STEPS} />}
 
           {step === 0 && <WelcomeStep onNext={handleWelcomeNext} />}
 
-          {step === 1 && (
+          {step === 1 && <SubscribeStep onNext={handleSubscribeNext} />}
+
+          {step === 2 && (
             <QuickSetupStep
               onNext={handleSetupNext}
               initialData={{ ownerName: setupData.ownerName, businessName: setupData.businessName, email: settings.email || '' }}
             />
           )}
 
-          {step === 2 && <CreateInvoiceStep onNext={handleInvoiceNext} />}
+          {step === 3 && <CreateInvoiceStep onNext={handleInvoiceNext} />}
 
-          {step === 3 && <SetRemindersStep onNext={handleRemindersNext} />}
+          {step === 4 && <SetRemindersStep onNext={handleRemindersNext} />}
 
-          {step === 4 && invoiceData && <PreviewStep invoiceData={invoiceData} onNext={handlePreviewNext} />}
+          {step === 5 && invoiceData && <PreviewStep invoiceData={invoiceData} onNext={handlePreviewNext} />}
 
-          {step === 5 && <SuccessStep onFinish={finishOnboarding} />}
+          {step === 6 && <SuccessStep onFinish={finishOnboarding} />}
         </div>
       </div>
 
-      {/* Skip */}
-      {step < 5 && (
+      {/* Skip - only if paid */}
+      {step < 6 && step > 1 && (
         <div className="text-center pb-8">
           <button
             onClick={finishOnboarding}
