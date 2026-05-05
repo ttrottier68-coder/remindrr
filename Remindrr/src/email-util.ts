@@ -16,18 +16,22 @@ export async function sendReminderNow(invoice: Invoice): Promise<{ success: bool
   }
 
   try {
+    const requestBody = {
+      apiKey: settings.sendgridApiKey,
+      fromEmail: settings.sendgridFromEmail,
+      toEmail: clientEmail,
+      subject: `Invoice Reminder: $${invoice.amount} due ${new Date(invoice.dueDate).toLocaleDateString()}`,
+      html: buildEmailHtml(invoice, client, settings.businessName),
+    };
+    alert('Sending to function: ' + JSON.stringify(requestBody));
+    
     const response = await fetch(`/.netlify/functions/send-email`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        apiKey: settings.sendgridApiKey,
-        fromEmail: settings.sendgridFromEmail,
-        toEmail: clientEmail,
-        subject: `Invoice Reminder: $${invoice.amount} due ${new Date(invoice.dueDate).toLocaleDateString()}`,
-        html: buildEmailHtml(invoice, client, settings.businessName),
-      }),
+      body: JSON.stringify(requestBody),
     });
 
+    alert('Response status: ' + response.status);
     if (response.ok) {
       return { success: true, message: 'Reminder sent!' };
     } else {
