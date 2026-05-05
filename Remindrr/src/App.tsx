@@ -74,11 +74,13 @@ function NavBar() {
   const handleLogout = () => {
     console.log('Logging out...');
     logout();
-    // Only clear onboarding flag - keep settings/invoices/clients so user can sign back in
+    // Clear session and demo flag
     try { localStorage.removeItem('remindrr_onboarding_complete'); } catch {}
-    console.log('Session cleared, redirecting to /login');
-    // Replace the current page so back-button doesn't undo logout
-    window.location.replace('/login');
+    // Clear demo settings so next visit shows landing page
+    try { localStorage.removeItem('remindrr_settings'); } catch {}
+    console.log('Session cleared, redirecting to /');
+    // Go to landing page (replace so back-button doesn't undo logout)
+    window.location.replace('/');
   };
   const navItems = [
     { label: 'Dashboard', to: '/', icon: <DollarIcon /> },
@@ -891,13 +893,16 @@ const REGISTERED_KEY = 'remindrr_just_registered';
 async function seedDemoData() {
   const existing = getSettings();
   
-  // If user already has real settings, don't overwrite
-  if (existing?.ownerName && existing.ownerName !== 'Demo User') return;
+  // If user already has real settings, just ensure demo exists
+  if (existing?.ownerName && existing.ownerName !== 'Demo User') {
+    await ensureDemoAccount();
+    return;
+  }
   
-  // Only create demo data for visitors (not logged in)
+  // Skip demo seeding if user is already authenticated (they should have been onboarded already)
   if (isAuthenticated()) return;
   
-  // Create demo settings for visitors
+  // For visitors: create demo settings
   if (!existing?.ownerName) {
     saveSettings({
       businessName: 'Demo Business',
