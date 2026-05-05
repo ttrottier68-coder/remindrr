@@ -266,6 +266,7 @@ function UpgradeBanner() {
 // ─── Dashboard ──────────────────────────────────────────────────────────────
 function Dashboard() {
   const navigate = useNavigate();
+  const settings = getSettings();
   const stats = getDashboardStats();
   const all = getInvoices();
   const clients = getClients();
@@ -287,6 +288,19 @@ function Dashboard() {
       </div>
 
       <UpgradeBanner />
+      
+      {/* Complete Setup CTA - if business name or phone missing */}
+      {(!settings?.businessName || !settings?.phone) && (
+        <div className="bg-orange-50 border border-orange-200 rounded-xl p-5">
+          <h3 className="font-bold text-orange-800 mb-1">Complete your setup</h3>
+          <p className="text-sm text-orange-700 mb-3">Add your business name and phone to start sending invoices.</p>
+          <button onClick={() => navigate('/onboarding')}
+            className="bg-orange-500 hover:bg-orange-600 text-white font-medium px-4 py-2 rounded-lg transition-colors">
+            Complete Setup
+          </button>
+        </div>
+      )}
+
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {cards.map(c => (
           <div key={c.label} className="bg-white rounded-xl p-5 shadow-sm border border-slate-100">
