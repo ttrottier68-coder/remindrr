@@ -51,10 +51,10 @@ exports.handler = async (event) => {
       };
     } else {
       const errorText = await response.text();
-      console.log('SendGrid error:', errorText);
+      console.log('SendGrid error response:', errorText);
       return {
         statusCode: response.status,
-        body: JSON.stringify({ success: false, message: 'SendGrid error: ' + response.status }),
+        body: JSON.stringify({ success: false, message: 'SendGrid 403 - check API key permissions AND verify sender email in SendGrid settings. Raw: ' + errorText.substring(0, 200) }),
       };
     }
   } catch (error) {
