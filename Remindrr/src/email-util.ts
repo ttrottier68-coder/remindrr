@@ -21,7 +21,8 @@ export async function sendReminderNow(invoice: Invoice): Promise<{ success: bool
       fromEmail: settings.sendgridFromEmail,
       toEmail: clientEmail,
       subject: `Invoice Reminder: $${invoice.amount} due ${new Date(invoice.dueDate).toLocaleDateString()}`,
-      html: buildEmailHtml(invoice, client, settings.businessName),
+      html: buildEmailHtml(invoice, client, settings.businessName) || '<p>Test</p>',
+      text: 'Invoice reminder',
     };
     alert('Sending to function: ' + JSON.stringify(requestBody));
     
@@ -47,21 +48,24 @@ function buildEmailHtml(invoice: Invoice, client: Client | undefined, businessNa
   const due = new Date(invoice.dueDate).toLocaleDateString();
   const amount = invoice.amount.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
   const payLink = invoice.paymentLink || 'https://pay.remindrr.app';
+  const business = businessName || 'Invoice Reminder';
+  const clientName = client?.name || 'there';
+  const description = invoice.description || 'your invoice';
   return `<!DOCTYPE html>
 <html><head><meta charset="utf-8"></head>
 <body style="font-family:Arial,sans-serif;max-width:600px;margin:40px auto;padding:0 20px;color:#1e293b;">
   <div style="background:#6b21a8;padding:32px 24px;text-align:center;border-radius:16px 16px 0 0;">
-    <h1 style="margin:0;color:#fff;font-size:24px;">${businessName || 'Invoice Reminder'}</h1>
+    <h1 style="margin:0;color:#fff;font-size:24px;">${business}</h1>
   </div>
   <div style="background:#fff;border:1px solid #e2e8f0;border-top:none;padding:32px 24px 40px;border-radius:0 0 16px 16px;">
-    <p style="margin:0 0 16px;font-size:16px;">Hi ${client?.name || 'there'},</p>
+    <p style="margin:0 0 16px;font-size:16px;">Hi ${clientName},</p>
     <p style="margin:0 0 24px;font-size:16px;">This is a friendly reminder that your invoice is due.</p>
     <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:24px;text-align:center;margin:0 0 24px;">
       <p style="margin:0 0 8px;font-size:14px;color:#64748b;">Amount Due</p>
       <p style="margin:0;font-size:36px;font-weight:bold;color:#6b21a8;">${amount}</p>
       <p style="margin:8px 0 0;font-size:14px;color:#64748b;">Due: ${due}</p>
     </div>
-    <p style="margin:0 0 24px;font-size:16px;">${invoice.description}</p>
+    <p style="margin:0 0 24px;font-size:16px;">${description}</p>
     <a href="${payLink}" style="display:block;text-align:center;background:#6b21a8;color:#fff;padding:16px;border-radius:12px;text-decoration:none;font-weight:bold;font-size:16px;">Pay Now →</a>
     <p style="margin:24px 0 0;font-size:13px;color:#94a3b8;text-align:center;">Powered by Remindrr</p>
   </div>
