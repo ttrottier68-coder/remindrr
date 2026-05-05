@@ -21,9 +21,10 @@ export async function sendReminderNow(invoice: Invoice): Promise<{ success: bool
       fromEmail: settings.sendgridFromEmail,
       toEmail: clientEmail,
       subject: `Invoice Reminder: $${invoice.amount} due ${new Date(invoice.dueDate).toLocaleDateString()}`,
-      html: buildEmailHtml(invoice, client, settings.businessName) || '<p>Test</p>',
+      html: (buildEmailHtml(invoice, client, settings.businessName) || '<p>Test</p>'),
       text: 'Invoice reminder',
     };
+    alert('DEBUG: businessName=' + settings.businessName + ', html length=' + requestBody.html.length);
     alert('Sending to function: ' + JSON.stringify(requestBody));
     
     const response = await fetch(`/.netlify/functions/send-email`, {
