@@ -14,6 +14,11 @@ const DATA_DIR = '/tmp/remindrr-data';
 const DATA_FILE = path.join(DATA_DIR, 'invoices.json');
 const LOG_FILE  = path.join(DATA_DIR, 'reminder-log.txt');
 
+// Reminder configuration
+const DAYS_BEFORE = 3;   // Send reminder X days before due
+const DAYS_AFTER = 3;      // Send reminder X days after due (for overdue)
+const RECUR_EVERY = 3;    // Send additional reminders every X days for stubborn overdue invoices
+
 if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
 
 // ── Twilio helpers ──────────────────────────────────────────────────────────────
@@ -59,7 +64,8 @@ function sendEmail(sendgridKey, from, to, subject, text) {
 // ── Main reminder logic ────────────────────────────────────────────────────────
 async function runReminders() {
   const now = new Date();
-  const today = now.toISOString().split('T')[0]; // YYYY-MM-DD
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const todayStr = today.toISOString().split('T')[0]; // YYYY-MM-DD
   const log = [`\n=== Reminder run: ${now.toISOString()} ===`];
 
   // Load invoice data
@@ -81,11 +87,45 @@ async function runReminders() {
   let sent = 0, failed = 0;
 
   for (const inv of invoices) {
-    // Skip if no due date, already sent, or paid
-    if (!inv.dueDate || inv.reminderSent || inv.status === 'paid') continue;
+    // Skip if already paid
+    if (inv.status === 'paid') continue;
+    if (!inv.dueDate) continue;
 
-    // Check if due today or overdue
-    if (inv.dueDate !== today) continue; // Only remind on due date
+    const dueDate = new Date(inv.dueDate);
+    const dueDateOnly = new Date(dueDate.getFullYear(), dueDate.getMonth(), dueDate.getDate());
+    const daysUntilDue = Math.round((dueDateOnly.getTime() - today.getTime()) / 86400000);
+    
+    // Determine which reminder to send based on days until due
+    let reminderType = null;
+    
+    if (daysUntilDue === DAYS_BEFORE) {
+      reminderType = 'before';
+    } else if (daysUntilDue === 0) {
+      reminderType = 'on';
+    } else if (daysUntilDue < 0 && daysUntilDue >= -DAYS_AFTER) {
+      // Check if we should send overdue reminder
+      const daysOverdue = Math.abs(daysUntilDue);
+      const lastReminder = inv.lastReminderSentAt ? new Date(inv.lastReminderSentAt) : null;
+      
+      if (!lastReminder) {
+        reminderType = 'after';
+      } else {
+        // Send follow-up reminders every X days for stubborn overdue
+        const daysSinceLastReminder = Math.round((today.getTime() - lastReminder.getTime()) / 86400000);
+        if (daysSinceLastReminder >= RECUR_EVERY) {
+          reminderType = 'followup';
+        }
+      }
+    }
+    
+    // Skip if no reminder needed today
+    if (!reminderType) continue;
+    
+    // Skip if already sent this type of reminder (for before/on)
+    if (inv.lastReminderType === reminderType && reminderType !== 'followup') continue;
+    
+    // Skip if already sent max follow-ups after due
+    if (reminderType === 'followup' && inv.followupCount >= 3) continue;
 
     const clientName  = inv.clientName  || 'there';
     const amount      = inv.amount      ? `$${inv.amount.toFixed(2)}` : '';
@@ -94,8 +134,28 @@ async function runReminders() {
     const payLink     = inv.paymentLink || '';
 
     const reminderMethod = inv.reminderMethod || (inv.clientPhone ? 'sms' : 'email');
-    const defaultSms = `Hi ${clientName} — friendly reminder that ${amount} for "${desc}" (Invoice #${invNum}) is due today. Pay now: ${payLink}`;
-    const defaultEmailText = `Hi ${clientName},\n\nThis is a friendly reminder that ${amount} for "${desc}" (Invoice #${invNum}) is due today.\n\n${payLink ? `Pay now: ${payLink}\n\n` : ''}Thank you,\n${fromName}`;
+    
+    // Build message based on reminder type
+    let smsText = '';
+    let emailSubject = '';
+    let emailText = '';
+    
+    if (reminderType === 'before') {
+      const daysUntilDue = DAYS_BEFORE;
+      smsText = `Hi ${clientName} 👋 Reminder: Your invoice of ${amount} for "${desc}" (Invoice #${invNum}) is due in ${daysUntilDue} days. Pay now to avoid late fees: ${payLink}`;
+      emailSubject = `Upcoming: Invoice #${invNum} due in ${daysUntilDue} days`;
+      emailText = `Hi ${clientName},\n\nThis is a friendly reminder that your invoice of ${amount} for "${desc}" (Invoice #${invNum}) is due in ${daysUntilDue} days.\n\nPay now to avoid late fees: ${payLink}\n\nThanks,\n${fromName}`;
+    } else if (reminderType === 'on') {
+      smsText = `Hi ${clientName} — friendly reminder that ${amount} for "${desc}" (Invoice #${invNum}) is due today. Pay now: ${payLink}`;
+      emailSubject = `Payment Reminder: Invoice #${invNum} due today`;
+      emailText = `Hi ${clientName},\n\nThis is a friendly reminder that ${amount} for "${desc}" (Invoice #${invNum}) is due today.\n\n${payLink ? `Pay now: ${payLink}\n\n` : ''}Thank you,\n${fromName}`;
+    } else if (reminderType === 'after' || reminderType === 'followup') {
+      const daysOverdue = Math.abs(daysUntilDue);
+      const isFirstAfter = reminderType === 'after';
+      smsText = `Hi ${clientName} ⚠️ Invoice #${invNum} of ${amount} is ${daysOverdue} day${daysOverdue > 1 ? 's' : ''} overdue. Please pay now to avoid additional fees: ${payLink}`;
+      emailSubject = `OVERDUE: Invoice #${invNum} - ${daysOverdue} day${daysOverdue > 1 ? 's' : ''} past due`;
+      emailText = `Hi ${clientName},\n\nThis is an important reminder that your invoice of ${amount} for "${desc}" (Invoice #${invNum}) is now ${daysOverdue} day${daysOverdue > 1 ? 's' : ''} overdue.\n\nPlease pay as soon as possible to avoid additional fees or service interruptions.\n\nPay now: ${payLink}\n\nThank you,\n${fromName}`;
+    }
 
     let smsOk = true, emailOk = true;
     let smsError = '', emailError = '';
@@ -103,9 +163,9 @@ async function runReminders() {
     // Send SMS if method includes SMS
     if (reminderMethod === 'sms' || reminderMethod === 'both') {
       if (inv.clientPhone) {
-        const r = await sendSMS(twilioSid, twilioToken, twilioPhone, inv.clientPhone, defaultSms);
+        const r = await sendSMS(twilioSid, twilioToken, twilioPhone, inv.clientPhone, smsText);
         smsOk = r.success; smsError = r.error || '';
-        log.push(`SMS → ${inv.clientPhone}: ${r.success ? 'OK (SID: ' + r.sid + ')' : 'FAIL: ' + r.error}`);
+        log.push(`SMS (${reminderType}) → ${inv.clientPhone}: ${r.success ? 'OK (SID: ' + r.sid + ')' : 'FAIL: ' + r.error}`);
       } else {
         log.push(`SMS skipped for ${inv.clientName}: no phone number`);
         smsOk = null;
@@ -115,24 +175,27 @@ async function runReminders() {
     // Send Email if method includes Email
     if (reminderMethod === 'email' || reminderMethod === 'both') {
       if (inv.clientEmail) {
-        const r = await sendEmail(sendgridApiKey, sendgridFromEmail, inv.clientEmail,
-          `Payment Reminder: Invoice #${invNum} due today`, defaultEmailText);
+        const r = await sendEmail(sendgridApiKey, sendgridFromEmail, inv.clientEmail, emailSubject, emailText);
         emailOk = r.success; emailError = r.error || '';
-        log.push(`Email → ${inv.clientEmail}: ${r.success ? 'OK' : 'FAIL: ' + r.error}`);
+        log.push(`Email (${reminderType}) → ${inv.clientEmail}: ${r.success ? 'OK' : 'FAIL: ' + r.error}`);
       } else {
         log.push(`Email skipped for ${inv.clientName}: no email address`);
         emailOk = null;
       }
     }
 
-    if (smsOk !== false && emailOk !== false) {
-      // Mark as reminder sent (only if at least one was sent successfully or skipped intentionally)
-      inv.reminderSent = true;
-      inv.reminderSentAt = new Date().toISOString();
+    if (smsOk !== false || emailOk !== false) {
+      // Track reminder sent
+      inv.lastReminderSentAt = new Date().toISOString();
+      inv.lastReminderType = reminderType;
+      if (reminderType === 'followup') {
+        inv.followupCount = (inv.followupCount || 0) + 1;
+      }
       sent++;
+      log.push(`✓ ${reminderType} reminder sent for ${invNum}`);
     } else {
       failed++;
-      log.push(`WARNING: Some reminders failed for invoice ${inv.id} - will retry tomorrow`);
+      log.push(`WARNING: Some reminders failed for invoice ${invNum} - will retry tomorrow`);
     }
   }
 
