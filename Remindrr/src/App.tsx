@@ -983,6 +983,7 @@ export default function App() {
           <Route path="/reset" element={<ResetPage />} />
           <Route path="/plans" element={<PlansPage />} />
           <Route path="/" element={<Dashboard />} />
+          <Route path="/onboarding" element={<OnboardingFlow />} />
           <Route path="/invoices" element={<InvoicesPage />} />
           <Route path="/invoices/new" element={<NewInvoicePage />} />
           <Route path="/invoices/:id/edit" element={<EditInvoicePage />} />
