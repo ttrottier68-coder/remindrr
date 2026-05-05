@@ -189,7 +189,7 @@ function QuickSetupStep({
       </div>
       <button
         onClick={() => {
-          console.log('Continue clicked - ownerName:', ownerName);
+          alert('Continue clicked! ownerName=' + ownerName);
           if (ownerName) {
             onNext({ ownerName, businessName, phone });
           }
