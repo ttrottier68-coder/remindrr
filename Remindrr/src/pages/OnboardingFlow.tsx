@@ -427,6 +427,8 @@ function SuccessStep({ onFinish }: { onFinish: () => void }) {
 export default function OnboardingFlow() {
   const navigate = useNavigate();
   const settings = getSettings();
+  
+  alert('OnboardingFlow: ownerName=' + (settings?.ownerName || 'empty') + ', businessName=' + (settings?.businessName || 'empty') + ', plan=' + (settings?.plan || 'none'));
 
   // If user already has a plan and businessName + phone, they're fully onboarded - show skip option
   // Otherwise, show appropriate step based on what's missing
