@@ -313,13 +313,7 @@ function Pricing() {
           </div>
         </div>
 
-        <div className="mt-8 pt-8 border-t border-slate-100">
-          <p className="font-medium text-slate-600 mb-3">Also available:</p>
-          <div className="inline-block bg-slate-100 rounded-xl px-6 py-4 text-left">
-            <div className="font-bold text-slate-700">Free Plan</div>
-            <div className="text-slate-500 text-sm">Up to 3 invoices/month · Basic reminders</div>
-          </div>
-        </div>
+        
       </div>
     </section>
   );
