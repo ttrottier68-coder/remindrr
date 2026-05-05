@@ -83,7 +83,7 @@ function SubscribeStep({
       )}
 
       <p className="text-xs text-slate-400 text-center">
-        Click the button to pay via Stripe. You'll be redirected to complete payment.
+        Secure payment via Stripe
       </p>
     </div>
   );
@@ -463,7 +463,7 @@ export default function OnboardingFlow() {
     // Save plan to settings
     const current = getSettings();
     saveSettings({ ...current, plan: data.plan });
-    setStep(1);
+    setStep(2); // Go to setup step
   };
 
   const handleSetupNext = (data: typeof setupData) => {
