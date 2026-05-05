@@ -294,7 +294,10 @@ function Dashboard() {
         <div className="bg-orange-50 border border-orange-200 rounded-xl p-5">
           <h3 className="font-bold text-orange-800 mb-1">Complete your setup</h3>
           <p className="text-sm text-orange-700 mb-3">Add your business name and phone to start sending invoices.</p>
-          <button onClick={() => navigate('/onboarding')}
+          <button onClick={() => {
+            alert('Complete Setup button clicked!');
+            navigate('/onboarding');
+          }}
             className="bg-orange-500 hover:bg-orange-600 text-white font-medium px-4 py-2 rounded-lg transition-colors">
             Complete Setup
           </button>
