@@ -135,7 +135,7 @@ function SendGridGuide() {
               <div className="bg-orange-500 text-white text-xs font-bold w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">4</div>
               <div>
                 <p className="font-semibold text-slate-800">Add your sender email</p>
-                <p className="text-slate-500 text-xs mt-1">Enter the email you verified with (e.g. ttrottier68@gmail.com). This is who the emails appear to come from.</p>
+                <p className="text-slate-500 text-xs mt-1">Enter the email you verified with (e.g. yourbusiness@email.com). This is who the emails appear to come from.</p>
               </div>
             </div>
           </div>
