@@ -404,8 +404,10 @@ function InvoicesPage() {
     console.log('button clicked for invoice:', inv.id);
     setSendingId(inv.id);
     setLastMessage('Processing...');
+    alert('handleSendReminder called for: ' + inv.id + ', clientEmail=' + inv.clientEmail);
     sendReminderNow(inv).then(result => {
       console.log('result:', result);
+      alert('Result: ' + JSON.stringify(result));
       setSendingId(null);
       setLastMessage(result.message);
     }).catch(err => {
