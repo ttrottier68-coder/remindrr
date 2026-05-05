@@ -36,8 +36,8 @@ function SubscribeStep({
       {/* Plan Selection */}
       <div className="space-y-3">
         {[
-          ['starter', 'Starter', '$29.99/mo', '50 clients, 200 SMS/mo', true],
-          ['pro', 'Pro', '$59.99/mo', 'Unlimited clients & SMS', false],
+          ['starter', 'Starter', '$29.99/mo', '50 clients/mo', true],
+          ['pro', 'Pro', '$59.99/mo', 'Unlimited clients', false],
           ['business', 'Business', '$129/mo', 'Multi-user + API', false]
         ].map(([plan, name, price, desc, isPopular]) => (
           <div
