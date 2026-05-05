@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getSettings } from '../lib/reminder-data';
 
@@ -67,6 +67,20 @@ export default function PlansPage() {
   const navigate = useNavigate();
   const settings = getSettings();
   const [showGuide, setShowGuide] = useState(false);
+
+  // If user already has a plan, redirect to dashboard
+  useEffect(() => {
+    if (settings?.plan && settings.plan !== 'starter') {
+      navigate('/');
+    }
+  }, [settings, navigate]);
+
+  // If user has starter plan but no settings, go to onboarding
+  useEffect(() => {
+    if (settings?.plan === 'starter' && !settings?.ownerName) {
+      navigate('/onboarding');
+    }
+  }, [settings, navigate]);
 
   return (
     <div className="min-h-screen bg-slate-50">
