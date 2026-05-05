@@ -511,7 +511,7 @@ function NewInvoicePage() {
   const clients = getClients();
   const [clientId, setClientId] = useState('');
   const [invoiceNumber, setInvoiceNumber] = useState('');
-  const [reminderMethod, setReminderMethod] = useState<'sms' | 'email' | 'both'>('email');
+  const [reminderMethod, setReminderMethod] = useState<'email'>('email');
   const [newName, setNewName] = useState('');
   const [newEmail, setNewEmail] = useState('');
   const [amount, setAmount] = useState('');
@@ -538,9 +538,6 @@ function NewInvoicePage() {
   // Module-level formatDate is used here
   const paymentLink = `https://pay.stripe.com/pay/${invId}#demo`;
 
-  const defaultSms = finalPhone
-    ? `Hi ${finalName} 👋 Reminder: Your invoice of $${total.toFixed(2)} for "${description || 'your service'}"${taxRate > 0 ? ` (incl. ${taxName})` : ''} is due on ${formatDate(dueDate)}. Pay now: ${paymentLink}`
-    : '';
   const defaultEmailSubject = finalEmail ? `Payment Reminder: Invoice for ${description || 'your service'}` : '';
   const defaultEmailBody = finalEmail
     ? `Hi ${finalName},\n\nJust a friendly reminder that your invoice of $${total.toFixed(2)} for "${description || 'your service'}"${taxRate > 0 ? ` (incl. ${taxName})` : ''} is due on ${formatDate(dueDate)}.\n\nPay now: ${paymentLink}\n\nThanks for your business!`
@@ -573,7 +570,7 @@ function NewInvoicePage() {
     }
     saveInvoice({
       id: invId, invoiceNumber: invoiceNumber || undefined, clientId: finalClientId, clientName: finalClientName,
-      clientPhone: '', clientEmail: finalEmail,
+      clientEmail: finalEmail,
       amount: total, taxRate, taxName, subtotal,
       description, dueDate, status: 'pending',
       paymentLink, createdAt: new Date().toISOString(),
