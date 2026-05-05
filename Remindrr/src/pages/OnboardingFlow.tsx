@@ -189,6 +189,7 @@ function QuickSetupStep({
       </div>
       <button
         onClick={() => {
+          alert('Continue clicked! ownerName=' + ownerName + ', businessName=' + businessName);
           if (ownerName) {
             onNext({ ownerName, businessName, phone });
           }
@@ -427,8 +428,12 @@ export default function OnboardingFlow() {
   const navigate = useNavigate();
   const settings = getSettings();
 
-  // If user already has a plan or settings, start at step 2 (skip payment step)
-  const initialStep = settings?.plan ? 2 : settings?.ownerName ? 2 : 0;
+  // If user already has a plan and businessName + phone, they're fully onboarded - show skip option
+  // Otherwise, show appropriate step based on what's missing
+  const isFullyOnboarded = settings?.plan && settings?.businessName && settings?.phone;
+  const needsSetup = !settings?.businessName || !settings?.phone;
+  
+  const initialStep = settings?.plan ? (needsSetup ? 2 : 4) : settings?.ownerName ? 2 : 0;
   const [step, setStep] = useState(initialStep);
   const TOTAL_STEPS = 6; // Added subscription step
 
