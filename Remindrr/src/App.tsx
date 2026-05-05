@@ -921,10 +921,11 @@ export default function App() {
   }
 
   // Case 1: Has settings AND is logged in → show the app
-  // Show onboarding first if not yet completed
-  const onboardingComplete = typeof window !== 'undefined' && localStorage.getItem('remindrr_onboarding_complete') === 'true';
-  // Redirect authenticated users without settings to onboarding
-  if (isAuthenticated() && !settings?.ownerName) {
+  // Check if user has paid (has a plan set)
+  const hasSubscription = settings?.plan && ['starter', 'pro', 'business'].includes(settings.plan);
+  
+  // Redirect authenticated users without subscription to pay
+  if (isAuthenticated() && !hasSubscription) {
     return (
       <BrowserRouter>
         <Routes>
