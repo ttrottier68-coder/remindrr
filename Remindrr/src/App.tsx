@@ -554,7 +554,7 @@ function NewInvoicePage() {
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2">
                 <span className="text-xl">💬</span>
-                <p className="text-xs font-bold text-slate-500 uppercase">SMS Preview</p>
+                <p className="text-xs font-bold text-slate-500 uppercase">Message Preview</p>
               </div>
               <button onClick={() => setEditSms(!editSms)} className="text-xs text-orange-500 font-semibold hover:underline">
                 {editSms ? 'Done' : '✏️ Edit'}
