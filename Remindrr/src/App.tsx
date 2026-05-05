@@ -900,6 +900,8 @@ export default function App() {
   const [settings, setSettings] = useState(() => getSettings());
   const [authed, setAuthed] = useState(() => isAuthenticated());
 
+  console.log('App state:', { ready, hasSettings: !!settings?.ownerName, authed, plan: settings?.plan });
+
   useEffect(() => {
     // Run demo seeding on first mount
     seedDemoData().then(() => {

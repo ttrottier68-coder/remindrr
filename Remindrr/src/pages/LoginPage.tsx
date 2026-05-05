@@ -20,6 +20,7 @@ export default function LoginPage() {
     setLoading(false);
     if (err) { setError(err); return; }
     const freshSettings = getSettings();
+    console.log('After login, settings:', freshSettings);
     if (freshSettings?.ownerName) {
       window.location.href = '/';
     } else {
