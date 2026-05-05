@@ -274,7 +274,7 @@ function Pricing() {
     <section className="py-20 px-6 bg-white">
       <div className="max-w-3xl mx-auto text-center">
         <h2 className="text-3xl font-bold text-slate-800 mb-4">Simple Pricing. No Surprises.</h2>
-        <p className="text-slate-500 mb-12">Start your free account today.</p>
+        <p className="text-slate-500 mb-12">Start your account today.</p>
 
         {/* STARTER — Featured */}
         <div className="bg-slate-900 rounded-2xl p-8 text-white max-w-md mx-auto mb-6 relative overflow-hidden">
