@@ -291,16 +291,13 @@ function Dashboard() {
       
       {/* Complete Setup CTA - if business name or phone missing */}
       {(!settings?.businessName || !settings?.phone) && (
-        <div className="bg-orange-50 border border-orange-200 rounded-xl p-5">
+      <a href="/onboarding" className="block bg-orange-50 border border-orange-200 rounded-xl p-5">
           <h3 className="font-bold text-orange-800 mb-1">Complete your setup</h3>
-          <p className="text-sm text-orange-700 mb-3">Add your business name and phone to start sending invoices.</p>
-          <button onClick={() => {
-            window.location.href = '/onboarding';
-          }}
-            className="bg-orange-500 hover:bg-orange-600 text-white font-medium px-4 py-2 rounded-lg transition-colors">
+          <p className="text-sm text-orange-700 mb-3">Add your phone to start sending invoices.</p>
+          <span className="inline-block bg-orange-500 hover:bg-orange-600 text-white font-medium px-4 py-2 rounded-lg transition-colors">
             Complete Setup
-          </button>
-        </div>
+          </span>
+      </a>
       )}
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
