@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
-import { getSettings, saveSettings, getDashboardStats, getInvoices, getClients, saveInvoice, saveClient, markInvoicePaid, deleteInvoice, syncInvoicesToServer } from './lib/reminder-data';
+import { getSettings, saveSettings, getDashboardStats, getInvoices, getClients, saveInvoice, saveClient, markInvoicePaid, deleteInvoice, sendReminderNow } from './lib/reminder-data';
 import { isAuthenticated, logout, ensureDemoAccount } from './lib/auth';
 import type { Invoice, Client } from './types';
 import SettingsPage from './pages/SettingsPage';
@@ -321,7 +321,25 @@ function Dashboard() {
 function InvoicesPage() {
   const [filter, setFilter] = useState('all');
   const [tick, setTick] = useState(0);
+  const [sendingId, setSendingId] = useState<string | null>(null);
+  const [lastMessage, setLastMessage] = useState<string | null>(null);
   const navigate = useNavigate();
+  const handleSendReminder = (inv: Invoice) => {
+    console.log('button clicked for invoice:', inv.id);
+    setSendingId(inv.id);
+    setLastMessage('Processing...');
+    sendReminderNow(inv).then(result => {
+      console.log('result:', result);
+      setSendingId(null);
+      setLastMessage(result.message);
+    }).catch(err => {
+      console.error('Error:', err);
+      setSendingId(null);
+      setLastMessage('Error: ' + err);
+    });
+  };
+  // Refresh invoices when tick changes
+  useEffect(() => {}, [tick]);
   const all = getInvoices().reverse();
   const filtered = all.filter(inv => {
     if (filter === 'paid') return inv.status === 'paid';
@@ -345,6 +363,11 @@ function InvoicesPage() {
           <PlusIcon /> New Invoice
         </button>
       </div>
+      {lastMessage && (
+        <div className="bg-blue-50 border border-blue-200 text-blue-700 px-4 py-2 rounded-lg text-sm">
+          {lastMessage}
+        </div>
+      )}
       <div className="flex gap-2 flex-wrap">
         {tabs.map(t => (
           <button key={t} onClick={() => setFilter(t)}
@@ -376,7 +399,23 @@ function InvoicesPage() {
                   </div>
                 </div>
                 <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-100">
-                  <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${st.color}`}>{st.label}</span>
+                  <div className="flex items-center gap-2">
+                    <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${st.color}`}>{st.label}</span>
+                    {inv.status !== 'paid' && (
+                      <>
+                        <button type="button" onClick={(e) => { e.preventDefault(); handleSendReminder(inv); }} disabled={sendingId === inv.id}
+                          className="text-xs bg-orange-50 text-orange-700 font-bold px-3 py-1 rounded-lg hover:bg-orange-100 disabled:opacity-50">
+                          {sendingId === inv.id ? 'Sending...' : 'Send Reminder 🔔'}
+                        </button>
+                        <button
+                          onClick={() => { markInvoicePaid(inv.id); setTick(t => t + 1); }}
+                          className="text-xs bg-green-500 text-white font-bold px-3 py-1 rounded-lg hover:bg-green-600"
+                        >
+                          Mark Paid ✓
+                        </button>
+                      </>
+                    )}
+                  </div>
                   <button onClick={() => navigate(`/invoices/${inv.id}/edit`)} className="text-sm text-orange-500 font-medium hover:underline">
                     View →
                   </button>
@@ -467,6 +506,7 @@ function NewInvoicePage() {
       description, dueDate, status: 'pending',
       paymentLink, createdAt: new Date().toISOString(),
     });
+<<<<<<< HEAD
     // Sync to server after creating invoice
     syncInvoicesToServer(getInvoices());
     
@@ -475,6 +515,15 @@ function NewInvoicePage() {
    
     
  
+=======
+    // Sync to server (no await - runs in background)
+    
+    setSaving(false);
+    setDone(true);
+    await new Promise(r => setTimeout(r, 800));
+    navigate('/invoices');
+  };
+>>>>>>> f04ad9e2a03758ad4d7490840fa7799c7534c8e3
 
   if (done) return (
     <div className="max-w-lg mx-auto p-6 text-center">

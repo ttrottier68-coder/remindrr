@@ -2,7 +2,7 @@
 
 |import { useNavigate } from 'react-router-dom';|
 
-|import { getSettings, getClients, getInvoices, deleteInvoice, markInvoicePaid, syncInvoicesToServer, sendReminderNow } from '../lib/store';|
+|import { getSettings, getClients, getInvoices, deleteInvoice, markInvoicePaid, sendReminderNow } from '../lib/reminder-data';|
 
 |import type { Invoice } from '../types';|
 

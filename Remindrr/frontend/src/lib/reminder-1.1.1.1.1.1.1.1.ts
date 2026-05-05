@@ -85,6 +85,11 @@ export async function sendReminderNow(invoice: Invoice): Promise<{ success: bool
   }
 }
 
+// Stub for server sync - implementation pending
+export async function syncInvoicesToServer(): Promise<{ success: boolean; message: string }> {
+  return { success: false, message: 'Server sync not yet implemented' };
+}
+
 function buildEmailHtml(invoice: Invoice, client: Client | undefined, businessName: string) {
   const due = new Date(invoice.dueDate).toLocaleDateString();
   const amount = invoice.amount.toLocaleString('en-US', { style: 'currency', currency: 'USD' });

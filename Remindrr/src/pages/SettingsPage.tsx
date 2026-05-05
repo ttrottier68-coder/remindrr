@@ -32,7 +32,7 @@ function StripeGuide() {
           <div className="bg-white rounded-lg p-4 border border-blue-100">
             <p className="font-bold text-slate-800 mb-2">💳 What is Stripe?</p>
             <p className="text-slate-600 leading-relaxed">
-              Stripe is how you accept payments online. When your customer taps the payment link in the SMS, they pay through Stripe. Money goes directly into your bank account—usually in 2 business days.
+              Stripe is how you accept payments online. When your customer taps the payment link in the email, they pay through Stripe. Money goes directly into your bank account—usually in 2 business days.
             </p>
           </div>
 
@@ -76,87 +76,6 @@ function StripeGuide() {
 
           <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-xs text-amber-700">
             <span className="font-semibold">Note:</span> Stripe has a 2-day payout delay for new accounts—this is normal and improves as you build history with them.
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
-// ─── Twilio Setup Guide ──────────────────────────────────────────────────────
-function TwilioGuide() {
-  const [open, setOpen] = useState(false);
-  return (
-    <div className="border border-purple-200 rounded-xl overflow-hidden bg-purple-50/50">
-      <button
-        onClick={() => setOpen(!open)}
-        className="w-full flex items-center justify-between p-5 text-left hover:bg-purple-100/50 transition-colors"
-      >
-        <div className="flex items-center gap-3">
-          <div className="bg-purple-500 text-white text-xs font-bold px-2 py-1 rounded">TWILIO</div>
-          <div>
-            <p className="font-semibold text-slate-800 text-sm">How to set up Twilio (step by step)</p>
-            <p className="text-slate-500 text-xs mt-0.5">Takes about 5 minutes · \$1/month for a phone number</p>
-          </div>
-        </div>
-        <ChevronIcon open={open} />
-      </button>
-      {open && (
-        <div className="px-5 pb-5 border-t border-purple-200 pt-4 space-y-4 text-sm text-slate-700">
-          <div className="bg-white rounded-lg p-4 border border-purple-100">
-            <p className="font-bold text-slate-800 mb-2">📱 What is Twilio?</p>
-            <p className="text-slate-600 leading-relaxed">
-              Twilio is the service that sends the SMS text messages to your customers. You&apos;ll buy a phone number from them for \$1/month—the same number shows in the &quot;From&quot; field on all your reminders.
-            </p>
-          </div>
-
-          <div className="space-y-3">
-            <div className="flex gap-3">
-              <div className="w-6 h-6 bg-purple-500 text-white rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0">1</div>
-              <div>
-                <p className="font-semibold text-slate-800">Go to twilio.com and click "Sign up"</p>
-                <p className="text-slate-500 text-xs mt-1">Use your email and create a password. Use your real name—it&apos;ll appear on the SMS if you verify it.</p>
-              </div>
-            </div>
-            <div className="flex gap-3">
-              <div className="w-6 h-6 bg-purple-500 text-white rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0">2</div>
-              <div>
-                <p className="font-semibold text-slate-800">Verify your email address</p>
-                <p className="text-slate-500 text-xs mt-1">Twilio will email you a verification link—click it before you can continue.</p>
-              </div>
-            </div>
-            <div className="flex gap-3">
-              <div className="w-6 h-6 bg-purple-500 text-white rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0">3</div>
-              <div>
-                <p className="font-semibold text-slate-800">Buy an SMS phone number (\$1/month)</p>
-                <p className="text-slate-500 text-xs mt-1">After you log in, go to <strong>Phone Numbers → Buy a number</strong>. Pick any US/Canadian number—local or toll-free. It costs about \$1/month.</p>
-              </div>
-            </div>
-            <div className="flex gap-3">
-              <div className="w-6 h-6 bg-purple-500 text-white rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0">4</div>
-              <div>
-                <p className="font-semibold text-slate-800">Copy your Account SID and Auth Token</p>
-                <p className="text-slate-500 text-xs mt-1">Go to the Twilio Console (your account dashboard). You&apos;ll see your <span className="bg-slate-100 px-1.5 py-0.5 rounded font-mono text-xs">Account SID</span> (starts with <span className="font-mono">AC</span>) and <span className="bg-slate-100 px-1.5 py-0.5 rounded font-mono text-xs">Auth Token</span>. Copy both into the fields on this page.</p>
-              </div>
-            </div>
-            <div className="flex gap-3">
-              <div className="w-6 h-6 bg-purple-500 text-white rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0">5</div>
-              <div>
-                <p className="font-semibold text-slate-800">Copy your Twilio phone number</p>
-                <p className="text-slate-500 text-xs mt-1">In the same Console, find your purchased number (it looks like <span className="font-mono">+1 555 000 1234</span>). Paste it into the &quot;Twilio Phone Number&quot; field on this page.</p>
-              </div>
-            </div>
-            <div className="flex gap-3">
-              <div className="w-6 h-6 bg-purple-500 text-white rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0">6</div>
-              <div>
-                <p className="font-semibold text-slate-800">Click Save on this page</p>
-                <p className="text-slate-500 text-xs mt-1">That&apos;s it! Remindrr will now send SMS reminders from your Twilio number. Test it by creating an invoice and sending a reminder.</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-xs text-amber-700">
-            <span className="font-semibold">Important:</span> Twilio requires you to verify your phone number before sending SMS. They may temporarily pause your account if you send to too many numbers too fast—this is normal and resolves in a few hours. Keep SMS volume reasonable.
           </div>
         </div>
       )}
@@ -334,39 +253,6 @@ export default function SettingsPage() {
           </div>
           <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 text-xs text-blue-700 leading-relaxed">
             <strong>Where to find your Stripe Account ID:</strong> Log into <a href="https://dashboard.stripe.com" target="_blank" rel="noreferrer" className="underline font-semibold">dashboard.stripe.com</a> — your Account ID is at the top left, next to your business name. It starts with <span className="font-mono bg-blue-100 px-1 rounded">acct_</span>
-          </div>
-        </div>
-      </div>
-
-      {/* ── Twilio SMS Setup ── */}
-      <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="bg-gradient-to-br from-purple-500 to-pink-500 text-white text-xs font-bold px-3 py-1.5 rounded-lg">📱</div>
-          <div>
-            <h2 className="font-bold text-slate-700 text-base">Twilio SMS Setup</h2>
-            <p className="text-slate-400 text-xs mt-0.5">Send automatic payment reminder texts to your customers</p>
-          </div>
-        </div>
-        <TwilioGuide />
-        <SendGridGuide />
-        <div className="mt-4 space-y-3">
-          <div>
-            <label className="block text-xs font-medium text-slate-500 mb-1.5">Twilio Account SID</label>
-            <input value={form.twilioSid} onChange={e => set('twilioSid', e.target.value)} placeholder="ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-              className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-purple-400 transition-all" />
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-slate-500 mb-1.5">Twilio Auth Token</label>
-            <input type="password" value={form.twilioToken} onChange={e => set('twilioToken', e.target.value)} placeholder="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-              className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-purple-400 transition-all" />
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-slate-500 mb-1.5">Twilio Phone Number (with +1)</label>
-            <input value={form.twilioPhone} onChange={e => set('twilioPhone', e.target.value)} placeholder="+155****1234"
-              className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-purple-400 transition-all" />
-          </div>
-          <div className="bg-purple-50 border border-purple-100 rounded-xl p-4 text-xs text-purple-700 leading-relaxed">
-            <strong>Where to find these:</strong> Log into <a href="https://console.twilio.com" target="_blank" rel="noreferrer" className="underline font-semibold">console.twilio.com</a>. Your SID and Auth Token are on the main dashboard. Your phone number is under <strong>Phone Numbers → Manage → Active Numbers</strong>.
           </div>
         </div>
       </div>
