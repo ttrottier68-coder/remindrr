@@ -889,8 +889,23 @@ const REGISTERED_KEY = 'remindrr_just_registered';
 
 // ─── Demo seed data ──────────────────────────────────────────────────────────
 async function seedDemoData() {
+  // Only create demo data for visitors (not logged in)
+  if (isAuthenticated()) return;
+  
   const existing = getSettings();
-  if (existing?.ownerName) return; // don't overwrite
+  // Don't overwrite if user already has real settings (non-empty ownerName that's not demo)
+  if (existing?.ownerName && existing.ownerName !== 'Demo User') return;
+  
+  // Create demo settings for visitors
+  if (!existing?.ownerName) {
+    saveSettings({
+      businessName: 'Demo Business',
+      ownerName: 'Demo User',
+      email: 'demo@remindrr.app',
+      phone: '',
+      plan: 'starter',
+    });
+  }
   await ensureDemoAccount();
 }
 
