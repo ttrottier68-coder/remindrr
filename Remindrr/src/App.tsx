@@ -957,8 +957,8 @@ export default function App() {
         </Routes>
       </div>
     </BrowserRouter>
-  );
-}
+);
+  }
 
   // Case 2: No settings yet → show landing page + auth
   return (
@@ -974,4 +974,3 @@ export default function App() {
     </BrowserRouter>
   );
 }
-// force fresh build
