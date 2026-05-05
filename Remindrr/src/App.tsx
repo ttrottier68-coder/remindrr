@@ -74,9 +74,12 @@ function NavBar() {
   const handleLogout = () => {
     console.log('Logging out...');
     logout();
-    // Clear onboarding flag so next login goes to onboarding, not loops back to landing
+    // Clear ALL user data so next visit starts fresh
     try { localStorage.removeItem('remindrr_onboarding_complete'); } catch {}
-    console.log('Session cleared, redirecting to /login');
+    try { localStorage.removeItem('remindrr_settings'); } catch {}
+    try { localStorage.removeItem('remindrr_invoices'); } catch {}
+    try { localStorage.removeItem('remindrr_clients'); } catch {}
+    console.log('All data cleared, redirecting to /login');
     // Replace the current page so back-button doesn't undo logout
     window.location.replace('/login');
   };
