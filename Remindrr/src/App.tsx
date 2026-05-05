@@ -408,9 +408,7 @@ function InvoicesPage() {
                           {sendingId === inv.id ? 'Sending...' : 'Send Reminder 🔔'}
                         </button>
                         
-                          className="text-xs bg-green-500 text-white font-bold px-3 py-1 rounded-lg hover:bg-green-600">
-                          Mark Paid ✓
-                        </button>
+                         undefined
                       </>
                     )}
                   </div>
