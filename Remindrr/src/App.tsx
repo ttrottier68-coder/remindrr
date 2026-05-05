@@ -889,12 +889,13 @@ const REGISTERED_KEY = 'remindrr_just_registered';
 
 // ─── Demo seed data ──────────────────────────────────────────────────────────
 async function seedDemoData() {
+  const existing = getSettings();
+  
+  // If user already has real settings, don't overwrite
+  if (existing?.ownerName && existing.ownerName !== 'Demo User') return;
+  
   // Only create demo data for visitors (not logged in)
   if (isAuthenticated()) return;
-  
-  const existing = getSettings();
-  // Don't overwrite if user already has real settings (non-empty ownerName that's not demo)
-  if (existing?.ownerName && existing.ownerName !== 'Demo User') return;
   
   // Create demo settings for visitors
   if (!existing?.ownerName) {
