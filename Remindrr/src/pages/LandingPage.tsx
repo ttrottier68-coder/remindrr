@@ -113,13 +113,19 @@ function HowItWorks() {
       title: 'Get paid without awkward calls',
       desc: 'Your customer pays via secure link in 2 taps. Money hits your account faster.',
     },
+    {
+      num: '04',
+      emoji: '✅',
+      title: 'Track everything in one place',
+      desc: 'See who paid, who\'s pending, and send manual reminders anytime.',
+    },
   ];
   return (
     <section className="py-20 px-6 bg-slate-50">
       <div className="max-w-5xl mx-auto">
         <h2 className="text-3xl font-bold text-center text-slate-800 mb-4">How It Works</h2>
         <p className="text-center text-slate-500 mb-16">This replaces all your follow-ups automatically.</p>
-        <div className="grid md:grid-cols-3 gap-8">
+        <div className="grid md:grid-cols-4 gap-8">
           {steps.map((s, i) => (
             <div key={i} className="text-center">
               <div className="text-5xl mb-4">{s.emoji}</div>
