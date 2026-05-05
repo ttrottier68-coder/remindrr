@@ -470,10 +470,15 @@ export default function OnboardingFlow() {
 
   const handleSetupNext = (data: typeof setupData) => {
     setSetupData(data);
-    // Save settings immediately
+    // Save settings immediately with all fields
     const current = getSettings();
-    saveSettings({ ...current, ownerName: data.ownerName, businessName: data.businessName });
-    setStep(2);
+    saveSettings({ 
+      ...current, 
+      ownerName: data.ownerName, 
+      businessName: data.businessName,
+      phone: data.phone 
+    });
+    setStep(3); // Go to invoice step
   };
 
   const handleInvoiceNext = (data: typeof invoiceData extends null ? never : typeof invoiceData) => {
