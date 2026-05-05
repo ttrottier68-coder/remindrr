@@ -927,26 +927,14 @@ export default function App() {
 
   // Case 1: Has settings AND is logged in → show the app
   // Check if user has paid (has a plan set in settings)
-  const hasSubscription = settings?.plan && ['starter', 'pro', 'business'].includes(settings.plan);
+const hasSubscription = settings?.plan && ['starter', 'pro', 'business'].includes(settings.plan);
   
-  // Redirect users without subscription to onboarding/pay
-  if (isAuthenticated() && !hasSubscription) {
+  // User is logged in and has a paid plan → full app access
+  if (isAuthenticated() && settings?.ownerName && hasSubscription) {
     return (
       <BrowserRouter>
-        <Routes>
-          <Route path="/onboarding" element={<OnboardingFlow />} />
-          <Route path="*" element={<Navigate to="/onboarding" replace />} />
-        </Routes>
-      </BrowserRouter>
-    );
-  }
-
-  // Case 1b: Has settings AND has subscription → show the app
-  if (settings?.ownerName && hasSubscription) {
-    return (
-    <BrowserRouter>
-      <div className="min-h-screen bg-slate-50">
-        <NavBar />
+        <div className="min-h-screen bg-slate-50">
+          <NavBar />
         <Routes>
           <Route path="/reset" element={<ResetPage />} />
           <Route path="/plans" element={<PlansPage />} />
