@@ -1,5 +1,7 @@
 export async function sendReminderNow(invoice: Invoice): Promise<{ success: boolean; message: string }> {
   const settings = getSettings();
+  
+  alert('sendReminderNow: sendgridApiKey=' + (settings?.sendgridApiKey ? 'set (' + settings.sendgridApiKey.substring(0,10) + '...)' : 'EMPTY') + ', sendgridFromEmail=' + (settings?.sendgridFromEmail || 'EMPTY'));
 
   if (!settings?.sendgridApiKey || !settings?.sendgridFromEmail) {
     return { success: false, message: 'Email not configured. Go to Settings to set up SendGrid.' };
