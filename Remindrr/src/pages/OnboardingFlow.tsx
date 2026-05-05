@@ -188,7 +188,12 @@ function QuickSetupStep({
         />
       </div>
       <button
-        onClick={() => ownerName && onNext({ ownerName, businessName, phone })}
+        onClick={() => {
+          console.log('Continue clicked - ownerName:', ownerName);
+          if (ownerName) {
+            onNext({ ownerName, businessName, phone });
+          }
+        }}
         disabled={!ownerName}
         className="w-full bg-orange-500 hover:bg-orange-600 disabled:bg-slate-200 disabled:text-slate-400 text-white font-semibold py-4 rounded-xl transition-all flex items-center justify-center gap-2 mt-2"
       >
@@ -469,15 +474,18 @@ export default function OnboardingFlow() {
   };
 
   const handleSetupNext = (data: typeof setupData) => {
+    console.log('handleSetupNext called with:', data);
     setSetupData(data);
     // Save settings immediately with all fields
     const current = getSettings();
+    console.log('Current settings before save:', current);
     saveSettings({ 
       ...current, 
       ownerName: data.ownerName, 
       businessName: data.businessName,
       phone: data.phone 
     });
+    console.log('Saved settings, now setting step to 3');
     setStep(3); // Go to invoice step
   };
 
