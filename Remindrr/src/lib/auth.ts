@@ -121,7 +121,7 @@ export async function register(email: string, password: string, name: string, bu
   }
 }
 
-/** Login - local-only mode (Firebase disabled for reliability) */
+/** Login - uses Firebase for cloud auth */
 export async function login(email: string, password: string): Promise<string | null> {
   try {
     const normalizedEmail = email.toLowerCase().trim();
@@ -139,23 +139,31 @@ export async function login(email: string, password: string): Promise<string | n
       return null;
     }
 
-    // Local-only login - check saved email
-    const savedEmail = localStorage.getItem('remindrr_login');
-    if (savedEmail === normalizedEmail) {
-      const localSettings = getSettings();
-      const now = new Date();
-      const expiry = new Date(now.getTime() + SESSION_DAYS * 24 * 60 * 60 * 1000);
-      saveSession({
-        email: normalizedEmail,
-        name: localSettings?.name || normalizedEmail.split('@')[0],
-        loggedInAt: now.toISOString(),
-        sessionExpiry: expiry.toISOString(),
-      });
-      return null;
+    // Wait for Firebase to load
+    const ready = await waitForFirebase();
+    if (!ready) {
+      // Try local fallback if Firebase hasn't loaded yet
+      const savedEmail = localStorage.getItem('remindrr_login');
+      if (savedEmail === normalizedEmail) {
+        const localSettings = getSettings();
+        const now = new Date();
+        const expiry = new Date(now.getTime() + SESSION_DAYS * 24 * 60 * 60 * 1000);
+        saveSession({
+          email: normalizedEmail,
+          name: localSettings?.name || normalizedEmail.split('@')[0],
+          loggedInAt: now.toISOString(),
+          sessionExpiry: expiry.toISOString(),
+        });
+        return null;
+      }
+      return 'Please wait a moment for the page to load, then try again.';
     }
-    
-    // Save this email for future login
-    localStorage.setItem('remindrr_login', normalizedEmail);
+
+    // Firebase login
+    const userCredential = await signInWithEmailAndPassword(normalizedEmail, password);
+    const firebaseUid = userCredential.user.uid;
+
+    // Save session with Firebase UID
     const now = new Date();
     const expiry = new Date(now.getTime() + SESSION_DAYS * 24 * 60 * 60 * 1000);
     saveSession({
@@ -163,16 +171,37 @@ export async function login(email: string, password: string): Promise<string | n
       name: normalizedEmail.split('@')[0],
       loggedInAt: now.toISOString(),
       sessionExpiry: expiry.toISOString(),
+      firebaseUid: firebaseUid,
     });
+    localStorage.setItem('remindrr_login', normalizedEmail);
+
     return null;
   } catch (error: any) {
     console.error('login error:', error);
+    if (error.code === 'auth/invalid-credential' || error.code === 'auth/wrong-password') {
+      return 'Incorrect password. Please try again.';
+    }
+    if (error.code === 'auth/user-not-found') {
+      return 'No account found with this email. Please sign up.';
+    }
+    if (error.code === 'auth/too-many-requests') {
+      return 'Too many login attempts. Please wait and try again.';
+    }
     return 'Login failed. Please try again.';
   }
 }
 
-/** Logout - clears local session and Firebase auth */
+/** Logout - clears session and signs out of Firebase */
 export async function logout(): Promise<void> {
+  // Try to sign out of Firebase
+  const ready = await waitForFirebase();
+  if (ready) {
+    try {
+      await signOut();
+    } catch (e) {
+      console.log('Firebase signOut error:', e);
+    }
+  }
   clearLocalSession();
   deleteSettings();
 }

@@ -12,7 +12,10 @@ export const firebaseConfig = {
 
 // Check if Firebase is ready (loaded in index.html)
 export function isFirebaseReady(): boolean {
-  return typeof window !== 'undefined' && !!(window as any).firebase?.auth;
+  // Check if Firebase is loaded AND initialized
+  const fb = (window as any).firebase;
+  if (!fb || !fb.apps) return false;
+  return fb.apps.length > 0;
 }
 
 // Wait for Firebase to be ready (up to 3 seconds)
