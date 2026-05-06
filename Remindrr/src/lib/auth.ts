@@ -1,6 +1,6 @@
 // ─── Auth utilities with Firebase ───────────────────────────────────────────────────
 
-import { app, auth, db, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, doc, setDoc, getDoc } from './firebase';
+import { isFirebaseReady, waitForFirebase, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, doc, setDoc, getDoc } from './firebase';
 import type { User } from 'firebase/auth';
 import { getSettings, saveSettings as saveSettingsLocal, deleteSettings } from './reminder-data';
 
@@ -120,6 +120,12 @@ export async function login(email: string, password: string): Promise<string | n
       return null;
     }
 
+    // Wait for Firebase to be ready
+    const ready = await waitForFirebase();
+    if (!ready) {
+      return 'Firebase is loading. Please wait a moment and try again.';
+    }
+
     // Try Firebase login
     const userCredential = await signInWithEmailAndPassword(normalizedEmail, password);
     const firebaseUid = userCredential.user.uid;
@@ -147,6 +153,9 @@ export async function login(email: string, password: string): Promise<string | n
     }
     if (error.code === 'auth/user-not-found') {
       return 'No account found with this email.';
+    }
+    if (error.message === 'Firebase not loaded') {
+      return 'Please refresh the page and try again.';
     }
     return 'Login failed. Please try again.';
   }

@@ -15,6 +15,15 @@ export function isFirebaseReady(): boolean {
   return typeof window !== 'undefined' && !!(window as any).firebase?.auth;
 }
 
+// Wait for Firebase to be ready (up to 3 seconds)
+export async function waitForFirebase(): Promise<boolean> {
+  for (let i = 0; i < 30; i++) {
+    if (isFirebaseReady()) return true;
+    await new Promise(r => setTimeout(r, 100));
+  }
+  return false;
+}
+
 // Lazy-load Firebase auth functions
 export async function createUserWithEmailAndPassword(email: string, password: string) {
   if (!isFirebaseReady()) throw new Error('Firebase not loaded');
