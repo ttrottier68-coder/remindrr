@@ -1,81 +1,59 @@
-// Firebase configuration and helpers - using CDN-loaded Firebase
-// The Firebase SDKs are loaded in index.html via global script tags
+// Firebase wrapper - loads dynamically at runtime from CDN
+// This file is designed to work with CDN-loaded Firebase
 
-// Type declarations for Firebase globals
-declare global {
-  interface Window {
-    firebase: any;
-    firebase.auth: any;
-    firebase.firestore: any;
-  }
-}
+export const firebaseConfig = {
+  apiKey: "AIzaSyDsGwszAa34dXq-DtqZ-GPWEK3RUdoT9zI",
+  authDomain: "remindrr-d892c.firebaseapp.com",
+  projectId: "remindrr-d892c",
+  storageBucket: "remindrr-d892c.firebasestorage.app",
+  messagingSenderId: "1033906172145",
+  appId: "1:1033906172145:web:9f91ce8d991fb40d25b950"
+};
 
-// Get Firebase instances from global CDN objects
-function getFirebaseApp() {
-  return window.firebase?.initializeApp ? window.firebase : null;
-}
-
-function getFirebaseAuth() {
-  if (!window.firebase?.auth) return null;
-  try {
-    return window.firebase.auth();
-  } catch {
-    return null;
-  }
-}
-
-function getFirebaseFirestore() {
-  if (!window.firebase?.firestore) return null;
-  try {
-    return window.firebase.firestore();
-  } catch {
-    return null;
-  }
-}
-
-// Initialize Firebase - called after SDKs load
-export const app = null; // Will be initialized lazily
-export const auth = null;
-export const db = null;
-
-// Helper to check if Firebase is ready
+// Check if Firebase is ready (loaded in index.html)
 export function isFirebaseReady(): boolean {
-  return !!window.firebase && !!window.firebase.auth && !!window.firebase.firestore;
+  return typeof window !== 'undefined' && !!(window as any).firebase?.auth;
 }
 
-// Auth helpers (lazy-loaded)
+// Lazy-load Firebase auth functions
 export async function createUserWithEmailAndPassword(email: string, password: string) {
-  if (!window.firebase?.auth) throw new Error('Firebase not loaded');
-  return window.firebase.auth().createUserWithEmailAndPassword(email, password);
+  if (!isFirebaseReady()) throw new Error('Firebase not loaded');
+  return (window as any).firebase.auth().createUserWithEmailAndPassword(email, password);
 }
 
 export async function signInWithEmailAndPassword(email: string, password: string) {
-  if (!window.firebase?.auth) throw new Error('Firebase not loaded');
-  return window.firebase.auth().signInWithEmailAndPassword(email, password);
+  if (!isFirebaseReady()) throw new Error('Firebase not loaded');
+  return (window as any).firebase.auth().signInWithEmailAndPassword(email, password);
 }
 
 export async function signOut() {
-  if (!window.firebase?.auth) return;
-  return window.firebase.auth().signOut();
+  if (!isFirebaseReady()) return;
+  return (window as any).firebase.auth().signOut();
 }
 
 export function onAuthStateChanged(callback: (user: any) => void) {
-  if (!window.firebase?.auth) return;
-  return window.firebase.auth().onAuthStateChanged(callback);
+  if (!isFirebaseReady()) return;
+  return (window as any).firebase.auth().onAuthStateChanged(callback);
 }
 
-// Firestore helpers (lazy-loaded)
-export function doc(...path: string[]) {
-  if (!window.firebase?.firestore) throw new Error('Firebase not loaded');
-  return window.firebase.firestore().doc(path.join('/'));
+// Firestore functions
+export function doc(...pathParts: string[]) {
+  if (!isFirebaseReady()) throw new Error('Firebase not loaded');
+  const path = pathParts.join('/');
+  return (window as any).firebase.firestore().doc(path);
 }
 
 export async function setDoc(docRef: any, data: any) {
-  if (!window.firebase?.firestore) throw new Error('Firebase not loaded');
+  if (!isFirebaseReady()) throw new Error('Firebase not loaded');
   return docRef.set(data);
 }
 
 export async function getDoc(docRef: any) {
-  if (!window.firebase?.firestore) throw new Error('Firebase not loaded');
+  if (!isFirebaseReady()) throw new Error('Firebase not loaded');
   return docRef.get();
 }
+
+// Re-export for compatibility
+export const app = null;
+export const auth = null;
+export const db = null;
