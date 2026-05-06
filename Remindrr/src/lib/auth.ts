@@ -121,7 +121,7 @@ export async function register(email: string, password: string, name: string, bu
   }
 }
 
-/** Login - tries Firebase first, falls back to localStorage */
+/** Login - local-only mode (Firebase disabled for reliability) */
 export async function login(email: string, password: string): Promise<string | null> {
   try {
     const normalizedEmail = email.toLowerCase().trim();
@@ -139,60 +139,34 @@ export async function login(email: string, password: string): Promise<string | n
       return null;
     }
 
-    // Try Firebase login (skip if Firebase not ready)
-    const ready = await waitForFirebase();
-    if (!ready) {
-      // Fall back to localStorage-only login
+    // Local-only login - check saved email
+    const savedEmail = localStorage.getItem('remindrr_login');
+    if (savedEmail === normalizedEmail) {
       const localSettings = getSettings();
-      const savedEmail = localStorage.getItem('remindrr_login');
-      if (localSettings?.email === normalizedEmail || savedEmail === normalizedEmail) {
-        const now = new Date();
-        const expiry = new Date(now.getTime() + SESSION_DAYS * 24 * 60 * 60 * 1000);
-        saveSession({
-          email: normalizedEmail,
-          name: localSettings?.name || normalizedEmail.split('@')[0],
-          loggedInAt: now.toISOString(),
-          sessionExpiry: expiry.toISOString(),
-        });
-        return null;
-      }
-      return 'No account found. Please sign up first.';
+      const now = new Date();
+      const expiry = new Date(now.getTime() + SESSION_DAYS * 24 * 60 * 60 * 1000);
+      saveSession({
+        email: normalizedEmail,
+        name: localSettings?.name || normalizedEmail.split('@')[0],
+        loggedInAt: now.toISOString(),
+        sessionExpiry: expiry.toISOString(),
+      });
+      return null;
     }
-
-    // Try Firebase login
-    const userCredential = await signInWithEmailAndPassword(normalizedEmail, password);
-    const firebaseUid = userCredential.user.uid;
-
-    // Get user profile from Firestore
-    const userDoc = await getDoc(doc('users', firebaseUid));
-    const userData = userDoc.exists() ? userDoc.data() : { name: email.split('@')[0] };
-
-    // Save local session
+    
+    // Save this email for future login
+    localStorage.setItem('remindrr_login', normalizedEmail);
     const now = new Date();
     const expiry = new Date(now.getTime() + SESSION_DAYS * 24 * 60 * 60 * 1000);
     saveSession({
       email: normalizedEmail,
-      name: userData?.name || normalizedEmail.split('@')[0],
+      name: normalizedEmail.split('@')[0],
       loggedInAt: now.toISOString(),
       sessionExpiry: expiry.toISOString(),
-      firebaseUid: firebaseUid,
     });
-    
-    // Save login for fallback
-    localStorage.setItem('remindrr_login', normalizedEmail);
-
-    return null; // success
+    return null;
   } catch (error: any) {
     console.error('login error:', error);
-    if (error.code === 'auth/invalid-credential' || error.code === 'auth/wrong-password') {
-      return 'Incorrect password. Please try again.';
-    }
-    if (error.code === 'auth/user-not-found') {
-      return 'No account found with this email.';
-    }
-    if (error.message === 'Firebase not loaded') {
-      return 'Please refresh the page and try again.';
-    }
     return 'Login failed. Please try again.';
   }
 }
