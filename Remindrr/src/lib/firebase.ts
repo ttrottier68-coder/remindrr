@@ -1,14 +1,13 @@
-// Firebase configuration - loads from environment variables
-// These should be set in Netlify dashboard as environment variables:
-// VITE_FIREBASE_API_KEY, VITE_FIREBASE_AUTH_DOMAIN, VITE_FIREBASE_PROJECT_ID, etc.
+// Firebase wrapper - loads dynamically at runtime from CDN
+// This file is designed to work with CDN-loaded Firebase
 
 export const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "",
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "",
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "",
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "",
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "",
-  appId: import.meta.env.VITE_FIREBASE_APP_ID || ""
+  apiKey: "AIzaSyDsGwszAa34dXq-DtqZ-GPWEK3RUdoT9zI",
+  authDomain: "remindrr-d892c.firebaseapp.com",
+  projectId: "remindrr-d892c",
+  storageBucket: "remindrr-d892c.firebasestorage.app",
+  messagingSenderId: "1033906172145",
+  appId: "1:1033906172145:web:9f91ce8d991fb40d25b950"
 };
 
 // Check if Firebase is ready (loaded in index.html)
@@ -23,6 +22,7 @@ export async function createUserWithEmailAndPassword(email: string, password: st
 }
 
 export async function signInWithEmailAndPassword(email: string, password: string) {
+  // This is the correct way - no auth object needed
   if (!isFirebaseReady()) throw new Error('Firebase not loaded');
   return (window as any).firebase.auth().signInWithEmailAndPassword(email, password);
 }

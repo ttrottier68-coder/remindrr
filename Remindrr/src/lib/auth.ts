@@ -70,7 +70,7 @@ export async function register(email: string, password: string, name: string, bu
     const normalizedEmail = email.toLowerCase().trim();
     
     // Create Firebase user
-    const userCredential = await createUserWithEmailAndPassword(auth, normalizedEmail, password);
+    const userCredential = await createUserWithEmailAndPassword(normalizedEmail, password);
     const firebaseUid = userCredential.user.uid;
 
     // Save user profile to Firestore (includes name and default settings)
@@ -121,7 +121,7 @@ export async function login(email: string, password: string): Promise<string | n
     }
 
     // Try Firebase login
-    const userCredential = await signInWithEmailAndPassword(auth, normalizedEmail, password);
+    const userCredential = await signInWithEmailAndPassword(normalizedEmail, password);
     const firebaseUid = userCredential.user.uid;
 
     // Get user profile from Firestore
