@@ -202,16 +202,22 @@ export async function login(email: string, password: string): Promise<string | n
 
 /** Logout - clears session and signs out of Firebase, but keeps settings */
 export async function logout(): Promise<void> {
-  // Try to sign out of Firebase
-  const ready = await waitForFirebase();
-  if (ready) {
-    try {
-      await signOut();
-    } catch (e) {
-      console.log('Firebase signOut error:', e);
+  console.log('logout called');
+  
+  // Try to sign out of Firebase (don't wait - fire and forget)
+  waitForFirebase().then(async (ready) => {
+    if (ready) {
+      try {
+        await signOut();
+        console.log('Firebase signed out');
+      } catch (e) {
+        console.log('Firebase signOut error:', e);
+      }
     }
-  }
+  }).catch(() => {});
+  
   clearLocalSession();
+  console.log('Local session cleared');
   // NOTE: Do NOT delete settings - we want to preserve SendGrid API key
 }
 
