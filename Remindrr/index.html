@@ -8,16 +8,21 @@
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <!-- Firebase config loaded from bundle -->
   <script>
-    // Initialize Firebase with your config
-    firebase.initializeApp({
+    // Firebase config - these are safe to expose (public Firebase config)
+    var firebaseConfig = {
       apiKey: "AIzaSyDsGwszAa34dXq-DtqZ-GPWEK3RUdoT9zI",
       authDomain: "remindrr-d892c.firebaseapp.com",
       projectId: "remindrr-d892c",
       storageBucket: "remindrr-d892c.firebasestorage.app",
       messagingSenderId: "1033906172145",
       appId: "1:1033906172145:web:9f91ce8d991fb40d25b950"
-    });
+    };
+    // Initialize Firebase
+    if (typeof firebase !== 'undefined') {
+      firebase.initializeApp(firebaseConfig);
+    }
   </script>
 </head>
 
