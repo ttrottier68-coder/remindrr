@@ -97,6 +97,9 @@ export async function register(email: string, password: string, name: string, bu
       sessionExpiry: expiry.toISOString(),
       firebaseUid: firebaseUid,
     });
+    
+    // Also save to localStorage for fallback login
+    localStorage.setItem('remindrr_login', normalizedEmail);
 
     return null; // success
   } catch (error: any) {
@@ -131,18 +134,19 @@ export async function login(email: string, password: string): Promise<string | n
     if (!ready) {
       // Fall back to localStorage-only login
       const localSettings = getSettings();
-      if (localSettings?.email === normalizedEmail) {
+      const savedEmail = localStorage.getItem('remindrr_login');
+      if (localSettings?.email === normalizedEmail || savedEmail === normalizedEmail) {
         const now = new Date();
         const expiry = new Date(now.getTime() + SESSION_DAYS * 24 * 60 * 60 * 1000);
         saveSession({
           email: normalizedEmail,
-          name: localSettings.name || normalizedEmail.split('@')[0],
+          name: localSettings?.name || normalizedEmail.split('@')[0],
           loggedInAt: now.toISOString(),
           sessionExpiry: expiry.toISOString(),
         });
         return null;
       }
-      return 'Please check your email and password.';
+      return 'No account found. Please sign up first.';
     }
 
     // Try Firebase login
