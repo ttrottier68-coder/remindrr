@@ -137,8 +137,17 @@ export function saveClient(c: Client) {
 }
 
 export function deleteSettings() {
+  // Preserve SendGrid settings on logout so users don't have to re-enter them
+  const settings = getSettings();
+  const sendgridApiKey = settings.sendgridApiKey;
+  const sendgridFromEmail = settings.sendgridFromEmail;
+  
   localStorage.removeItem(SETTINGS_KEY);
-  // Note: NOT clearing 'remindrr_login' - we need this for fallback login after logout
+  
+  // Restore SendGrid settings after clearing
+  if (sendgridApiKey || sendgridFromEmail) {
+    persist(SETTINGS_KEY, { sendgridApiKey, sendgridFromEmail });
+  }
 }
 
 export interface Stats {
