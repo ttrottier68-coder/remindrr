@@ -173,14 +173,6 @@ export async function login(email: string, password: string): Promise<string | n
 
 /** Logout - clears local session and Firebase auth */
 export async function logout(): Promise<void> {
-  try {
-    const ready = await waitForFirebase();
-    if (ready) {
-      await signOut();
-    }
-  } catch (e) {
-    console.log('Firebase signOut error:', e);
-  }
   clearLocalSession();
   deleteSettings();
 }
