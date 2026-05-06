@@ -2,7 +2,7 @@
 
 import { isFirebaseReady, waitForFirebase, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, doc, setDoc, getDoc } from './firebase';
 import type { User } from 'firebase/auth';
-import { getSettings, saveSettings as saveSettingsLocal, deleteSettings, persist, SETTINGS_KEY } from './reminder-data';
+import { getSettings, saveSettings as saveSettingsLocal, deleteSettings, SETTINGS_KEY } from './reminder-data';
 
 const AUTH_KEY = 'remindrr_session';
 const SESSION_DAYS = 30;
