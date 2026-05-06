@@ -126,17 +126,27 @@ export async function login(email: string, password: string): Promise<string | n
       return null;
     }
 
-    // Wait for Firebase to be ready
+    // Try Firebase login (skip if Firebase not ready)
     const ready = await waitForFirebase();
-    console.log('Firebase ready:', ready);
     if (!ready) {
-      return 'Firebase is loading. Please refresh and wait a moment.';
+      // Fall back to localStorage-only login
+      const localSettings = getSettings();
+      if (localSettings?.email === normalizedEmail) {
+        const now = new Date();
+        const expiry = new Date(now.getTime() + SESSION_DAYS * 24 * 60 * 60 * 1000);
+        saveSession({
+          email: normalizedEmail,
+          name: localSettings.name || normalizedEmail.split('@')[0],
+          loggedInAt: now.toISOString(),
+          sessionExpiry: expiry.toISOString(),
+        });
+        return null;
+      }
+      return 'Please check your email and password.';
     }
 
     // Try Firebase login
-    console.log('Attempting Firebase login for:', normalizedEmail);
     const userCredential = await signInWithEmailAndPassword(normalizedEmail, password);
-    console.log('Firebase login success:', userCredential.user.uid);
     const firebaseUid = userCredential.user.uid;
 
     // Get user profile from Firestore
