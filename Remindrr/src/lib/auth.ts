@@ -155,12 +155,24 @@ export async function login(email: string, password: string): Promise<string | n
 /** Logout - clears local session and Firebase auth */
 export async function logout(): Promise<void> {
   try {
-    await signOut(auth);
+    await signOut();
   } catch (e) {
     console.log('Firebase signOut error:', e);
   }
   clearLocalSession();
   deleteSettings();
+}
+
+/** Check if email exists (placeholder - Firebase doesn't allow checking without action) */
+export async function emailExists(email: string): Promise<boolean> {
+  // Firebase doesn't provide a direct "check if email exists" API
+  // For now, always return false - user will get error on actual login attempt
+  return false;
+}
+
+/** Clear password reset data */
+export function clearPassword(): void {
+  // No-op placeholder
 }
 
 /** Auto-login as demo user */
