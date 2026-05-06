@@ -1,30 +1,41 @@
 exports.handler = async (event) => {
   console.log('Event received, method:', event.httpMethod);
   
+  // Add CORS headers
+  const headers = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Headers': 'Content-Type',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  };
+
+  if (event.httpMethod === 'OPTIONS') {
+    return { statusCode: 200, headers, body: '' };
+  }
+
   if (event.httpMethod !== 'POST') {
-    return { statusCode: 405, body: 'Method not allowed' };
+    return { statusCode: 405, headers, body: 'Method not allowed' };
   }
 
   let body;
   try {
     body = JSON.parse(event.body);
   } catch (e) {
-    return { statusCode: 400, body: JSON.stringify({ success: false, message: 'Invalid JSON: ' + e.message }) };
+    return { statusCode: 400, headers, body: JSON.stringify({ success: false, message: 'Invalid JSON: ' + e.message }) };
   }
 
   const { apiKey, fromEmail, toEmail, subject, html, text } = body;
 
-  console.log('Received: apiKey=' + !!apiKey + ', fromEmail=' + fromEmail + ', toEmail=' + toEmail + ', hasHtml=' + !!html + ', hasText=' + !!text);
+  console.log('Processing: fromEmail=' + fromEmail + ', toEmail=' + toEmail);
 
   if (!apiKey || !fromEmail || !toEmail) {
     return { 
       statusCode: 400, 
+      headers, 
       body: JSON.stringify({ success: false, message: 'Missing required fields' }) 
     };
   }
 
   try {
-    // Use SendGrid Web API v3 directly
     const response = await fetch('https://api.sendgrid.com/v3/mail/send', {
       method: 'POST',
       headers: {
@@ -47,21 +58,24 @@ exports.handler = async (event) => {
     if (response.ok || response.status === 202) {
       return {
         statusCode: 200,
+        headers,
         body: JSON.stringify({ success: true, message: 'Email sent!' }),
       };
     } else {
       const errorText = await response.text();
-      console.log('SendGrid error response:', errorText);
+      console.log('SendGrid error:', errorText);
       return {
         statusCode: response.status,
-        body: JSON.stringify({ success: false, message: 'SendGrid 403 - check API key permissions AND verify sender email in SendGrid settings. Raw: ' + errorText.substring(0, 200) }),
+        headers,
+        body: JSON.stringify({ success: false, message: 'SendGrid error: ' + errorText.substring(0, 200) }),
       };
     }
   } catch (error) {
     console.error('Error:', error.message);
     return {
       statusCode: 500,
-      body: JSON.stringify({ success: false, message: error.message || 'Failed to send email' }),
+      headers,
+      body: JSON.stringify({ success: false, message: 'Could not connect: ' + error.message }),
     };
   }
 };
