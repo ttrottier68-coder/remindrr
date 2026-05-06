@@ -5,6 +5,7 @@ export type { UserSettings };
 const SETTINGS_KEY = 'remindrr_settings';
 const INVOICES_KEY = 'remindrr_invoices';
 const CLIENTS_KEY  = 'remindrr_clients';
+const SENDGRID_KEY = 'remindrr_sendgrid'; // Separate key for SendGrid - persists on logout
 
 function safe<T>(key: string, fallback: T): T {
   try { const r = localStorage.getItem(key); return r ? JSON.parse(r) : fallback; }
@@ -15,12 +16,8 @@ function persist(key: string, data: unknown) {
 }
 
 export function getSettings(): UserSettings {
-  // Debug: log what's in localStorage
-  try {
-    const stored = localStorage.getItem(SETTINGS_KEY);
-    console.log('getSettings() - stored in localStorage:', stored ? 'YES' : 'NO', stored ? JSON.parse(stored) : null);
-  } catch {}
-  return safe(SETTINGS_KEY, {
+  // Load main settings
+  const mainSettings = safe(SETTINGS_KEY, {
     businessName: '',
     ownerName: '',
     email: '',
@@ -29,12 +26,31 @@ export function getSettings(): UserSettings {
     sendgridApiKey: '',
     sendgridFromEmail: '',
   });
+  
+  // Load SendGrid from separate key (persists on logout)
+  const sendgridStored = safe(SENDGRID_KEY, { apiKey: '', fromEmail: '' });
+  
+  // Merge: use SendGrid from separate key if available
+  return {
+    ...mainSettings,
+    sendgridApiKey: sendgridStored.apiKey || mainSettings.sendgridApiKey,
+    sendgridFromEmail: sendgridStored.fromEmail || mainSettings.sendgridFromEmail,
+  };
 }
 
-export function saveSettings(s: Partial<UserSettings>) {
+export function saveSettings(s: Partial<UserSettings>): UserSettings {
   const prev = getSettings();
   const next = { ...prev, ...s };
   persist(SETTINGS_KEY, next);
+  
+  // Also save SendGrid to separate key (persists on logout)
+  if (s.sendgridApiKey || s.sendgridFromEmail) {
+    persist(SENDGRID_KEY, {
+      apiKey: s.sendgridApiKey || prev.sendgridApiKey,
+      fromEmail: s.sendgridFromEmail || prev.sendgridFromEmail,
+    });
+  }
+  
   return next;
 }
 
