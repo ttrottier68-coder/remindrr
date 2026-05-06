@@ -2,7 +2,7 @@
 
 import { isFirebaseReady, waitForFirebase, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, doc, setDoc, getDoc } from './firebase';
 import type { User } from 'firebase/auth';
-import { getSettings, saveSettings as saveSettingsLocal, deleteSettings } from './reminder-data';
+import { getSettings, saveSettings as saveSettingsLocal, deleteSettings, persist, SETTINGS_KEY } from './reminder-data';
 
 const AUTH_KEY = 'remindrr_session';
 const SESSION_DAYS = 30;
@@ -163,6 +163,9 @@ export async function login(email: string, password: string): Promise<string | n
     const userCredential = await signInWithEmailAndPassword(normalizedEmail, password);
     const firebaseUid = userCredential.user.uid;
 
+    // Preserve existing settings (especially SendGrid) before saving new session
+    const existingSettings = getSettings();
+    
     // Save session with Firebase UID
     const now = new Date();
     const expiry = new Date(now.getTime() + SESSION_DAYS * 24 * 60 * 60 * 1000);
@@ -173,6 +176,12 @@ export async function login(email: string, password: string): Promise<string | n
       sessionExpiry: expiry.toISOString(),
       firebaseUid: firebaseUid,
     });
+    
+    // Restore SendGrid settings after login
+    if (existingSettings?.sendgridApiKey || existingSettings?.sendgridFromEmail) {
+      persist(SETTINGS_KEY, existingSettings);
+    }
+    
     localStorage.setItem('remindrr_login', normalizedEmail);
 
     return null;
@@ -191,7 +200,7 @@ export async function login(email: string, password: string): Promise<string | n
   }
 }
 
-/** Logout - clears session and signs out of Firebase */
+/** Logout - clears session and signs out of Firebase, but keeps settings */
 export async function logout(): Promise<void> {
   // Try to sign out of Firebase
   const ready = await waitForFirebase();
@@ -203,7 +212,7 @@ export async function logout(): Promise<void> {
     }
   }
   clearLocalSession();
-  deleteSettings();
+  // NOTE: Do NOT delete settings - we want to preserve SendGrid API key
 }
 
 /** Check if email exists (placeholder - Firebase doesn't allow checking without action) */
