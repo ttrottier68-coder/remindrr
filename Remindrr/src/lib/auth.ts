@@ -128,12 +128,15 @@ export async function login(email: string, password: string): Promise<string | n
 
     // Wait for Firebase to be ready
     const ready = await waitForFirebase();
+    console.log('Firebase ready:', ready);
     if (!ready) {
-      return 'Firebase is loading. Please wait a moment and try again.';
+      return 'Firebase is loading. Please refresh and wait a moment.';
     }
 
     // Try Firebase login
+    console.log('Attempting Firebase login for:', normalizedEmail);
     const userCredential = await signInWithEmailAndPassword(normalizedEmail, password);
+    console.log('Firebase login success:', userCredential.user.uid);
     const firebaseUid = userCredential.user.uid;
 
     // Get user profile from Firestore
