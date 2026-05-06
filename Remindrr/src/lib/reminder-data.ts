@@ -136,6 +136,10 @@ export function saveClient(c: Client) {
   persist(CLIENTS_KEY, [...all, c]);
 }
 
+export function deleteSettings() {
+  localStorage.removeItem(SETTINGS_KEY);
+}
+
 export interface Stats {
   totalOutstanding: number;
   dueSoon: number;
