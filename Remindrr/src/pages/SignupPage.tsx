@@ -61,6 +61,7 @@ export default function SignupPage() {
       plan: 'starter',
     });
     setLoading(false);
+    // First-time user goes to onboarding
     window.location.replace('/onboarding');
   };
 

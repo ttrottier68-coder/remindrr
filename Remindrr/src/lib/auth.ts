@@ -1,7 +1,10 @@
-// ─── Auth utilities ───────────────────────────────────────────────────────────
+// ─── Auth utilities with Firebase ───────────────────────────────────────────────────
 
-const AUTH_KEY = 'remindrr_auth';
-const PASSWORDS_KEY = 'remindrr_passwords';
+import { app, auth, db, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, doc, setDoc, getDoc } from './firebase';
+import type { User } from 'firebase/auth';
+import { getSettings, saveSettings as saveSettingsLocal, deleteSettings } from './reminder-data';
+
+const AUTH_KEY = 'remindrr_session';
 const SESSION_DAYS = 30;
 
 export interface AuthSession {
@@ -9,36 +12,7 @@ export interface AuthSession {
   name: string;
   loggedInAt: string;
   sessionExpiry: string;
-}
-
-export interface PasswordStore {
-  [email: string]: string; // email → SHA-256 hash
-}
-
-// ─── Password hashing ─────────────────────────────────────────────────────────
-
-export async function hashPassword(password: string): Promise<string> {
-  const encoder = new TextEncoder();
-  const data = encoder.encode(password);
-  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-  return btoa(String.fromCharCode(...new Uint8Array(hashBuffer)));
-}
-
-// ─── Password store helpers ───────────────────────────────────────────────────
-
-function getPasswords(): PasswordStore {
-  try {
-    const raw = localStorage.getItem(PASSWORDS_KEY);
-    return raw ? JSON.parse(raw) : {};
-  } catch {
-    return {};
-  }
-}
-
-function savePassword(email: string, hash: string): void {
-  const store = getPasswords();
-  store[email] = hash;
-  localStorage.setItem(PASSWORDS_KEY, JSON.stringify(store));
+  firebaseUid?: string;
 }
 
 // ─── Session helpers ──────────────────────────────────────────────────────────
@@ -63,138 +37,138 @@ function saveSession(session: AuthSession): void {
   localStorage.setItem(AUTH_KEY, JSON.stringify(session));
 }
 
-function clearSession(): void {
+function clearLocalSession(): void {
   localStorage.removeItem(AUTH_KEY);
 }
 
-// Demo credentials (exported for use in LoginPage/SignupPage)
+// ─── Auth functions ────────────────────────────────────────────────────────────────
+
+// Demo credentials
 export const DEMO_EMAIL = 'demo@remindrr.app';
 export const DEMO_PASSWORD = 'demo1234';
-// Pre-computed SHA-256 hash of 'demo1234' so this runs sync with no async needed
-const DEMO_HASH = 'jGlngIHI7VXwjn+WTt8Es+DiHV6VE9/zYpFPgI/sqHs=';
 
-/** Auto-register the demo account if not exists — synchronous, no async needed */
-export function ensureDemoAccount(): void {
-  const passwords = getPasswords();
-  if (!passwords[DEMO_EMAIL]) {
-    savePassword(DEMO_EMAIL, DEMO_HASH);
+/** Check if user is authenticated */
+export function isAuthenticated(): boolean {
+  return !!getSession();
+}
+
+/** Get current user email */
+export function getUserEmail(): string | null {
+  const session = getSession();
+  return session?.email || null;
+}
+
+/** Get current user name */
+export function getUserName(): string | null {
+  const session = getSession();
+  return session?.name || null;
+}
+
+/** Register new user - using Firebase Auth */
+export async function register(email: string, password: string, name: string, businessName?: string): Promise<string | null> {
+  try {
+    const normalizedEmail = email.toLowerCase().trim();
+    
+    // Create Firebase user
+    const userCredential = await createUserWithEmailAndPassword(auth, normalizedEmail, password);
+    const firebaseUid = userCredential.user.uid;
+
+    // Save user profile to Firestore (includes name and default settings)
+    await setDoc(doc(db, 'users', firebaseUid), {
+      email: normalizedEmail,
+      name: name,
+      businessName: businessName || '',
+      createdAt: new Date().toISOString(),
+    });
+
+    // Save local session
+    const now = new Date();
+    const expiry = new Date(now.getTime() + SESSION_DAYS * 24 * 60 * 60 * 1000);
+    saveSession({
+      email: normalizedEmail,
+      name: name,
+      loggedInAt: now.toISOString(),
+      sessionExpiry: expiry.toISOString(),
+      firebaseUid: firebaseUid,
+    });
+
+    return null; // success
+  } catch (error: any) {
+    console.error('register error:', error);
+    if (error.code === 'auth/email-already-in-use') {
+      return 'An account with this email already exists.';
+    }
+    return 'Registration failed. Please try again.';
   }
+}
+
+/** Login - tries Firebase first, falls back to localStorage */
+export async function login(email: string, password: string): Promise<string | null> {
+  try {
+    const normalizedEmail = email.toLowerCase().trim();
+    
+    // Demo account login
+    if (normalizedEmail === DEMO_EMAIL && password === DEMO_PASSWORD) {
+      const now = new Date();
+      const expiry = new Date(now.getTime() + SESSION_DAYS * 24 * 60 * 60 * 1000);
+      saveSession({
+        email: DEMO_EMAIL,
+        name: 'Demo User',
+        loggedInAt: now.toISOString(),
+        sessionExpiry: expiry.toISOString(),
+      });
+      return null;
+    }
+
+    // Try Firebase login
+    const userCredential = await signInWithEmailAndPassword(auth, normalizedEmail, password);
+    const firebaseUid = userCredential.user.uid;
+
+    // Get user profile from Firestore
+    const userDoc = await getDoc(doc(db, 'users', firebaseUid));
+    const userData = userDoc.exists() ? userDoc.data() : { name: email.split('@')[0] };
+
+    // Save local session
+    const now = new Date();
+    const expiry = new Date(now.getTime() + SESSION_DAYS * 24 * 60 * 60 * 1000);
+    saveSession({
+      email: normalizedEmail,
+      name: userData?.name || normalizedEmail.split('@')[0],
+      loggedInAt: now.toISOString(),
+      sessionExpiry: expiry.toISOString(),
+      firebaseUid: firebaseUid,
+    });
+
+    return null; // success
+  } catch (error: any) {
+    console.error('login error:', error);
+    if (error.code === 'auth/invalid-credential' || error.code === 'auth/wrong-password') {
+      return 'Incorrect password. Please try again.';
+    }
+    if (error.code === 'auth/user-not-found') {
+      return 'No account found with this email.';
+    }
+    return 'Login failed. Please try again.';
+  }
+}
+
+/** Logout - clears local session and Firebase auth */
+export async function logout(): Promise<void> {
+  try {
+    await signOut(auth);
+  } catch (e) {
+    console.log('Firebase signOut error:', e);
+  }
+  clearLocalSession();
+  deleteSettings();
 }
 
 /** Auto-login as demo user */
 export async function loginAsDemo(): Promise<string | null> {
-  ensureDemoAccount();
   return login(DEMO_EMAIL, DEMO_PASSWORD);
 }
 
-/** Check if a user is currently logged in with a valid session */
-export function isAuthenticated(): boolean {
-  return getSession() !== null;
-}
-
-/** Get current logged-in session (or null) */
-export function getCurrentSession(): AuthSession | null {
-  return getSession();
-}
-
-/** Register a new account. Returns error string or null on success. */
-export async function register(
-  email: string,
-  password: string,
-  name: string,
-  businessName: string
-): Promise<string | null> {
-  const normalizedEmail = email.toLowerCase().trim();
-  const passwords = getPasswords();
-
-  if (passwords[normalizedEmail]) {
-    return 'An account with this email already exists.';
-  }
-
-  const hash = await hashPassword(password);
-  savePassword(normalizedEmail, hash);
-
-  const now = new Date();
-  const expiry = new Date(now.getTime() + SESSION_DAYS * 24 * 60 * 60 * 1000);
-  saveSession({
-    email: normalizedEmail,
-    name: name.trim(),
-    loggedInAt: now.toISOString(),
-    sessionExpiry: expiry.toISOString(),
-  });
-
-  // Extra safety: also store a pending flag so App knows to let us through
-  try { sessionStorage.setItem('remindrr_just_registered', '1'); } catch {}
-
-  return null;
-}
-
-/** Log in with email + password. Returns error string or null on success. */
-export async function login(email: string, password: string): Promise<string | null> {
-  const normalizedEmail = email.toLowerCase().trim();
-  console.log('login() starting for:', normalizedEmail);
-
-  // ── Hardcoded demo account (works on any URL, no localStorage needed) ──────
-  if (normalizedEmail === DEMO_EMAIL && password === DEMO_PASSWORD) {
-    const now = new Date();
-    const expiry = new Date(now.getTime() + SESSION_DAYS * 24 * 60 * 60 * 1000);
-    saveSession({
-      email: DEMO_EMAIL,
-      name: 'Demo User',
-      loggedInAt: now.toISOString(),
-      sessionExpiry: expiry.toISOString(),
-    });
-    return null;
-  }
-
-  // ── Regular accounts ────────────────────────────────────────────────────────
-  const passwords = getPasswords();
-  const storedHash = passwords[normalizedEmail];
-
-  if (!storedHash) {
-    return 'No account found with this email.';
-  }
-
-  const inputHash = await hashPassword(password);
-  if (inputHash !== storedHash) {
-    return 'Incorrect password. Please try again.';
-  }
-
-  const now = new Date();
-  const expiry = new Date(now.getTime() + SESSION_DAYS * 24 * 60 * 60 * 1000);
-  saveSession({
-    email: normalizedEmail,
-    name: '', // name loaded from settings if available
-    loggedInAt: now.toISOString(),
-    sessionExpiry: expiry.toISOString(),
-  });
-
-  return null;
-}
-
-/** Log the current user out */
-export function logout(): void {
-  clearSession();
-}
-
-/** Update the session name (e.g., after loading from settings) */
-export function updateSessionName(name: string): void {
-  const session = getSession();
-  if (session) {
-    session.name = name;
-    saveSession(session);
-  }
-}
-
-/** Check if an email has an existing account */
-export function emailExists(email: string): boolean {
-  const passwords = getPasswords();
-  return !!passwords[email.toLowerCase().trim()];
-}
-
-/** Clear a user's password so they can reset it (enables "forgot password" flow) */
-export function clearPassword(email: string): void {
-  const passwords = getPasswords();
-  delete passwords[email.toLowerCase().trim()];
-  localStorage.setItem(PASSWORDS_KEY, JSON.stringify(passwords));
+/** Listen for auth changes (for future use with onAuthStateChanged) */
+export function initAuthListener(callback: (user: User | null) => void): void {
+  onAuthStateChanged(auth, callback);
 }

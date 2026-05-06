@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { login } from '../lib/auth';
-import { saveSettings, getSettings } from '../lib/reminder-data';
+import { saveSettings, getSettings, loadFromCloud } from '../lib/reminder-data';
 import AuthLayout from '../components/AuthLayout';
 
 export default function LoginPage() {
@@ -31,9 +31,16 @@ export default function LoginPage() {
         return; 
       }
       
-      // After successful login, ensure settings exist in localStorage for this browser
+      // After successful login, try to load data from cloud
+      const cloudData = await loadFromCloud();
       const freshSettings = getSettings();
-      if (freshSettings?.ownerName) {
+      if (cloudData.settings) {
+        // Has cloud data - restore it
+        saveSettings(cloudData.settings);
+        if (cloudData.invoices) localStorage.setItem('remindrr_invoices', JSON.stringify(cloudData.invoices));
+        if (cloudData.clients) localStorage.setItem('remindrr_clients', JSON.stringify(cloudData.clients));
+        window.location.href = '/';
+      } else if (freshSettings?.ownerName) {
         window.location.href = '/';
       } else {
         // No settings yet in this browser → save basic settings from login, then go to onboarding

@@ -158,3 +158,50 @@ export function getDashboardStats(): Stats {
 function daysUntil(date: string) {
   return Math.ceil((new Date(date).getTime() - Date.now()) / 86400000);
 }
+
+// ─── Firestore sync (new) ───────────────────────────────────────────────────
+
+import { app, db, doc, setDoc, getDoc } from './firebase';
+import { getSession } from './auth';
+
+const FIRESTORE_ENABLED = true;
+
+/** Save all user data to Firestore */
+export async function syncToCloud(settings: UserSettings, invoices: Invoice[], clients: Client[]): Promise<void> {
+  if (!FIRESTORE_ENABLED) return;
+  const session = getSession();
+  const firebaseUid = session?.firebaseUid;
+  if (!firebaseUid) return;
+  
+  try {
+    await setDoc(doc(db, 'users', firebaseUid, 'data', 'settings'), settings);
+    await setDoc(doc(db, 'users', firebaseUid, 'data', 'invoices'), { list: invoices });
+    await setDoc(doc(db, 'users', firebaseUid, 'data', 'clients'), { list: clients });
+    console.log('Synced to Firestore');
+  } catch (e) {
+    console.error('Sync to Firestore failed:', e);
+  }
+}
+
+/** Load user data from Firestore */
+export async function loadFromCloud(): Promise<{ settings: UserSettings | null; invoices: Invoice[] | null; clients: Client[] | null }> {
+  if (!FIRESTORE_ENABLED) return { settings: null, invoices: null, clients: null };
+  const session = getSession();
+  const firebaseUid = session?.firebaseUid;
+  if (!firebaseUid) return { settings: null, invoices: null, clients: null };
+  
+  try {
+    const settingsDoc = await getDoc(doc(db, 'users', firebaseUid, 'data', 'settings'));
+    const invoicesDoc = await getDoc(doc(db, 'users', firebaseUid, 'data', 'invoices'));
+    const clientsDoc = await getDoc(doc(db, 'users', firebaseUid, 'data', 'clients'));
+    
+    return {
+      settings: settingsDoc.exists() ? settingsDoc.data() as UserSettings : null,
+      invoices: invoicesDoc.exists() ? (invoicesDoc.data().list as Invoice[]) : null,
+      clients: clientsDoc.exists() ? (clientsDoc.data().list as Client[]) : null,
+    };
+  } catch (e) {
+    console.error('Load from Firestore failed:', e);
+    return { settings: null, invoices: null, clients: null };
+  }
+}
