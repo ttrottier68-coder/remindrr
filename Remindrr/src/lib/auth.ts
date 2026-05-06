@@ -175,6 +175,11 @@ export function clearPassword(): void {
   // No-op placeholder
 }
 
+/** Ensure demo account exists */
+export async function ensureDemoAccount(): Promise<void> {
+  // Demo account is already handled in login() - no-op
+}
+
 /** Auto-login as demo user */
 export async function loginAsDemo(): Promise<string | null> {
   return login(DEMO_EMAIL, DEMO_PASSWORD);
