@@ -69,12 +69,18 @@ export async function register(email: string, password: string, name: string, bu
   try {
     const normalizedEmail = email.toLowerCase().trim();
     
+    // Wait for Firebase
+    const ready = await waitForFirebase();
+    if (!ready) {
+      return 'Firebase is loading. Please wait a moment and try again.';
+    }
+
     // Create Firebase user
     const userCredential = await createUserWithEmailAndPassword(normalizedEmail, password);
     const firebaseUid = userCredential.user.uid;
 
-    // Save user profile to Firestore (includes name and default settings)
-    await setDoc(doc(db, 'users', firebaseUid), {
+    // Save user profile to Firestore
+    await setDoc(doc('users', firebaseUid), {
       email: normalizedEmail,
       name: name,
       businessName: businessName || '',
@@ -131,7 +137,7 @@ export async function login(email: string, password: string): Promise<string | n
     const firebaseUid = userCredential.user.uid;
 
     // Get user profile from Firestore
-    const userDoc = await getDoc(doc(db, 'users', firebaseUid));
+    const userDoc = await getDoc(doc('users', firebaseUid));
     const userData = userDoc.exists() ? userDoc.data() : { name: email.split('@')[0] };
 
     // Save local session
