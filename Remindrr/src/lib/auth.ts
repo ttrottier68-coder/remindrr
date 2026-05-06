@@ -167,6 +167,9 @@ export async function login(email: string, password: string): Promise<string | n
       sessionExpiry: expiry.toISOString(),
       firebaseUid: firebaseUid,
     });
+    
+    // Save login for fallback
+    localStorage.setItem('remindrr_login', normalizedEmail);
 
     return null; // success
   } catch (error: any) {

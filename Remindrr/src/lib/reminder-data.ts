@@ -138,6 +138,7 @@ export function saveClient(c: Client) {
 
 export function deleteSettings() {
   localStorage.removeItem(SETTINGS_KEY);
+  // Note: NOT clearing 'remindrr_login' - we need this for fallback login after logout
 }
 
 export interface Stats {
