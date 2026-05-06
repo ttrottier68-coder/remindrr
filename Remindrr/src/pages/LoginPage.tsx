@@ -32,7 +32,13 @@ export default function LoginPage() {
       }
       
       // After successful login, try to load data from cloud
-      const cloudData = await loadFromCloud();
+      // If Firebase ready, try cloud sync - otherwise use localStorage
+      let cloudData = { settings: null, invoices: null, clients: null };
+      try {
+        cloudData = await loadFromCloud();
+      } catch (e) {
+        console.log('Cloud sync unavailable, using local data');
+      }
       const freshSettings = getSettings();
       if (cloudData.settings) {
         // Has cloud data - restore it
