@@ -64,15 +64,25 @@ export function getUserName(): string | null {
   return session?.name || null;
 }
 
-/** Register new user - using Firebase Auth */
+/** Register new user - using Firebase Auth, falls back to local-only */
 export async function register(email: string, password: string, name: string, businessName?: string): Promise<string | null> {
   try {
     const normalizedEmail = email.toLowerCase().trim();
     
-    // Wait for Firebase
+    // Try Firebase if ready
     const ready = await waitForFirebase();
     if (!ready) {
-      return 'Firebase is loading. Please wait a moment and try again.';
+      // Fall back to local-only registration
+      const now = new Date();
+      const expiry = new Date(now.getTime() + SESSION_DAYS * 24 * 60 * 60 * 1000);
+      saveSession({
+        email: normalizedEmail,
+        name: name,
+        loggedInAt: now.toISOString(),
+        sessionExpiry: expiry.toISOString(),
+      });
+      localStorage.setItem('remindrr_login', normalizedEmail);
+      return null;
     }
 
     // Create Firebase user
