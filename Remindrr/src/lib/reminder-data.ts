@@ -165,7 +165,7 @@ function daysUntil(date: string) {
 
 // ─── Firestore sync (new) ───────────────────────────────────────────────────
 
-import { app, db, doc, setDoc, getDoc } from './firebase';
+import { isFirebaseReady, doc, setDoc, getDoc } from './firebase';
 import { getSession } from './auth';
 
 const FIRESTORE_ENABLED = true;
@@ -178,9 +178,12 @@ export async function syncToCloud(settings: UserSettings, invoices: Invoice[], c
   if (!firebaseUid) return;
   
   try {
-    await setDoc(doc(db, 'users', firebaseUid, 'data', 'settings'), settings);
-    await setDoc(doc(db, 'users', firebaseUid, 'data', 'invoices'), { list: invoices });
-    await setDoc(doc(db, 'users', firebaseUid, 'data', 'clients'), { list: clients });
+    const settingsRef = doc('users', firebaseUid, 'data', 'settings');
+    const invoicesRef = doc('users', firebaseUid, 'data', 'invoices');
+    const clientsRef = doc('users', firebaseUid, 'data', 'clients');
+    await setDoc(settingsRef, settings);
+    await setDoc(invoicesRef, { list: invoices });
+    await setDoc(clientsRef, { list: clients });
     console.log('Synced to Firestore');
   } catch (e) {
     console.error('Sync to Firestore failed:', e);
@@ -195,9 +198,12 @@ export async function loadFromCloud(): Promise<{ settings: UserSettings | null; 
   if (!firebaseUid) return { settings: null, invoices: null, clients: null };
   
   try {
-    const settingsDoc = await getDoc(doc(db, 'users', firebaseUid, 'data', 'settings'));
-    const invoicesDoc = await getDoc(doc(db, 'users', firebaseUid, 'data', 'invoices'));
-    const clientsDoc = await getDoc(doc(db, 'users', firebaseUid, 'data', 'clients'));
+    const settingsRef = doc('users', firebaseUid, 'data', 'settings');
+    const invoicesRef = doc('users', firebaseUid, 'data', 'invoices');
+    const clientsRef = doc('users', firebaseUid, 'data', 'clients');
+    const settingsDoc = await getDoc(settingsRef);
+    const invoicesDoc = await getDoc(invoicesRef);
+    const clientsDoc = await getDoc(clientsRef);
     
     return {
       settings: settingsDoc.exists() ? settingsDoc.data() as UserSettings : null,

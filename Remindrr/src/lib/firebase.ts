@@ -40,6 +40,8 @@ export function onAuthStateChanged(callback: (user: any) => void) {
 // Firestore functions
 export function doc(...pathParts: string[]) {
   if (!isFirebaseReady()) throw new Error('Firebase not loaded');
+  // Accept variadic arguments: doc(db, 'users', uid, 'data', 'settings')
+  // Or array: doc(['users', uid, 'data', 'settings'])
   const path = pathParts.join('/');
   return (window as any).firebase.firestore().doc(path);
 }
