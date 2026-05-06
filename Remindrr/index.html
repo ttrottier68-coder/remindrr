@@ -4,10 +4,21 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <!-- Firebase SDKs -->
-  <script type="module" src="https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js"></script>
-  <script type="module" src="https://www.gstatic.com/firebasejs/11.6.0/firebase-auth.js"></script>
-  <script type="module" src="https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js"></script>
+  <!-- Firebase SDKs from CDN -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script>
+    // Initialize Firebase with your config
+    firebase.initializeApp({
+      apiKey: "AIzaSyDsGwszAa34dXq-DtqZ-GPWEK3RUdoT9zI",
+      authDomain: "remindrr-d892c.firebaseapp.com",
+      projectId: "remindrr-d892c",
+      storageBucket: "remindrr-d892c.firebasestorage.app",
+      messagingSenderId: "1033906172145",
+      appId: "1:1033906172145:web:9f91ce8d991fb40d25b950"
+    });
+  </script>
 </head>
 
 <body>
