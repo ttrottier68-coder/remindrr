@@ -17,7 +17,7 @@ export interface AuthSession {
 
 // ─── Session helpers ──────────────────────────────────────────────────────────
 
-function getSession(): AuthSession | null {
+export function getSession(): AuthSession | null {
   try {
     const raw = localStorage.getItem(AUTH_KEY);
     if (!raw) return null;
