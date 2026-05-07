@@ -245,28 +245,38 @@ export default function SettingsPage() {
         </div>
       </div>
 
-      {/* ── Email ── */}
+      {/* ── Email (Resend) ── */}
       <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
         <div className="flex items-center gap-3 mb-4">
           <div className="bg-gradient-to-br from-green-500 to-green-600 text-white text-xs font-bold px-3 py-1.5 rounded-lg">📧</div>
           <div>
-            <h2 className="font-bold text-slate-700 text-base">Email Setup</h2>
-            <p className="text-slate-400 text-xs mt-0.5">Resend or SendGrid - sends reminders when invoices are due</p>
+            <h2 className="font-bold text-slate-700 text-base">Email Reminders</h2>
+            <p className="text-slate-400 text-xs mt-0.5">Resend - 3,000 free emails/month</p>
           </div>
         </div>
-        <EmailGuide />
-        <div className="space-y-4">
+
+        <div className="bg-green-50 rounded-xl p-4 border border-green-100 space-y-3">
+          <p className="font-semibold text-slate-700 text-sm">How to set up Resend:</p>
+          <ol className="list-decimal list-inside text-sm text-slate-600 space-y-2">
+            <li>Go to <a href="https://resend.com" target="_blank" rel="noopener noreferrer" className="text-green-600 underline font-medium">resend.com</a> and sign up</li>
+            <li>Copy your API Key (starts with <code className="bg-slate-100 px-1 rounded text-xs">re_</code>) from <strong>API Keys</strong> page</li>
+            <li>Paste it in the API Key field below</li>
+            <li>Enter your sender email (e.g. yourname@onresend.com)</li>
+          </ol>
+        </div>
+
+        <div className="space-y-4 mt-4">
           <div>
-            <label className="block text-xs font-medium text-slate-500 mb-1.5">Resend or SendGrid API Key</label>
-            <input type="password" value={form.sendgridApiKey} onChange={e => set('sendgridApiKey', e.target.value)} placeholder="re_... or SG.you..._key"
+            <label className="block text-xs font-medium text-slate-500 mb-1.5">Resend API Key</label>
+            <input type="password" value={form.sendgridApiKey} onChange={e => set('sendgridApiKey', e.target.value)} placeholder="re_..."
               className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-green-400 transition-all" />
-            <p className="text-xs text-slate-400 mt-1">Resend: API Keys → Create | SendGrid: Settings → API Keys</p>
+            <p className="text-xs text-slate-400 mt-1">Found at: resend.com → API Keys</p>
           </div>
           <div>
             <label className="block text-xs font-medium text-slate-500 mb-1.5">Sender Email (From address)</label>
-            <input type="email" value={form.sendgridFromEmail} onChange={e => set('sendgridFromEmail', e.target.value)} placeholder="your@email.com"
+            <input type="email" value={form.sendgridFromEmail} onChange={e => set('sendgridFromEmail', e.target.value)} placeholder="yourname@onresend.com"
               className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-400 transition-all" />
-            <p className="text-xs text-slate-400 mt-1">Must be verified in Resend or SendGrid</p>
+            <p className="text-xs text-slate-400 mt-1">Your Resend sender email</p>
           </div>
         </div>
       </div>
