@@ -177,7 +177,7 @@ export async function login(email: string, password: string): Promise<string | n
       firebaseUid: firebaseUid,
     });
     
-    // Restore SendGrid settings after login
+    // Restore Resend settings after login
     if (existingSettings?.sendgridApiKey || existingSettings?.sendgridFromEmail) {
       saveSettingsLocal(existingSettings);
     }

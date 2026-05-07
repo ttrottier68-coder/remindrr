@@ -72,7 +72,7 @@ export async function sendReminderNow(invoice: Invoice): Promise<{ success: bool
   const settings = getSettings();
 
   if (!settings.sendgridApiKey || !settings.sendgridFromEmail) {
-    return { success: false, message: 'Email not configured. Go to Settings to set up SendGrid.' };
+    return { success: false, message: 'Email not configured. Go to Settings to set up Resend.' };
   }
 
   const client = getClients().find(c => c.id === invoice.clientId);
@@ -107,7 +107,7 @@ export async function sendReminderNow(invoice: Invoice): Promise<{ success: bool
       return { success: false, message: data.message || 'Failed to send reminder.' };
     }
   } catch {
-    return { success: false, message: 'Could not connect. Check your SendGrid settings.' };
+    return { success: false, message: 'Could not connect. Check your Resend settings.' };
   }
 }
 
@@ -153,14 +153,14 @@ export function saveClient(c: Client) {
 }
 
 export function deleteSettings() {
-  // Preserve SendGrid settings on logout so users don't have to re-enter them
+  // Preserve Resend settings on logout so users don't have to re-enter them
   const settings = getSettings();
   const sendgridApiKey = settings.sendgridApiKey;
   const sendgridFromEmail = settings.sendgridFromEmail;
   
   localStorage.removeItem(SETTINGS_KEY);
   
-  // Restore SendGrid settings after clearing
+  // Restore Resend settings after clearing
   if (sendgridApiKey || sendgridFromEmail) {
     persist(SETTINGS_KEY, { sendgridApiKey, sendgridFromEmail });
   }
