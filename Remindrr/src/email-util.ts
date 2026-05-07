@@ -2,10 +2,9 @@ export async function sendReminderNow(invoice: Invoice): Promise<{ success: bool
   const settings = getSettings();
   
   console.log('sendReminderNow settings:', settings);
-  alert('DEBUG: sendgridApiKey=' + (settings?.sendgridApiKey ? 'SET (' + settings.sendgridApiKey.substring(0,10) + ')' : 'EMPTY') + ', sendgridFromEmail=' + (settings?.sendgridFromEmail || 'EMPTY') + ', full settings object: ' + JSON.stringify(settings));
 
   if (!settings?.sendgridApiKey || !settings?.sendgridFromEmail) {
-    return { success: false, message: 'Email not configured. Go to Settings to set up SendGrid. apiKey=' + settings?.sendgridApiKey + ', fromEmail=' + settings?.sendgridFromEmail };
+    return { success: false, message: 'Email not configured. Go to Settings to set up Resend. apiKey=' + settings?.sendgridApiKey + ', fromEmail=' + settings?.sendgridFromEmail };
   }
 
   const client = getClients().find(c => c.phaseId === invoice.clientId);
@@ -24,9 +23,6 @@ export async function sendReminderNow(invoice: Invoice): Promise<{ success: bool
       html: (buildEmailHtml(invoice, client, settings.businessName) || '<p>Test</p>'),
       text: 'Invoice reminder',
     };
-    alert('DEBUG: businessName=' + settings.businessName + ', html length=' + requestBody.html.length);
-    const keyPreview = settings.sendgridApiKey ? settings.sendgridApiKey.substring(0, 15) + '...' : 'MISSING';
-    alert('Sending: key=' + keyPreview + ', from=' + settings.sendgridFromEmail + ', to=' + clientEmail + ', subject=' + requestBody.subject);
     
     const response = await fetch(`/.netlify/functions/send-email`, {
       method: 'POST',
@@ -34,7 +30,6 @@ export async function sendReminderNow(invoice: Invoice): Promise<{ success: bool
       body: JSON.stringify(requestBody),
     });
 
-    alert('Response status: ' + response.status);
     if (response.ok) {
       return { success: true, message: 'Reminder sent!' };
     } else {
@@ -42,7 +37,7 @@ export async function sendReminderNow(invoice: Invoice): Promise<{ success: bool
       return { success: false, message: data.message || 'Failed to send reminder.' };
     }
   } catch {
-    return { success: false, message: 'Could not connect. Check your SendGrid settings.' };
+    return { success: false, message: 'Could not connect. Check your Resend settings.' };
   }
 }
 
