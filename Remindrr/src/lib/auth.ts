@@ -179,7 +179,7 @@ export async function login(email: string, password: string): Promise<string | n
     
     // Restore SendGrid settings after login
     if (existingSettings?.sendgridApiKey || existingSettings?.sendgridFromEmail) {
-      persist(SETTINGS_KEY, existingSettings);
+      saveSettingsLocal(existingSettings);
     }
     
     localStorage.setItem('remindrr_login', normalizedEmail);
