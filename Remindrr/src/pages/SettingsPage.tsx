@@ -83,8 +83,8 @@ function StripeGuide() {
   );
 }
 
-// ─── SendGrid Setup Guide ────────────────────────────────────────────────────
-function SendGridGuide() {
+// ─── Email Setup Guide ────────────────────────────────────────────────────
+function EmailGuide() {
   const [open, setOpen] = useState(false);
   return (
     <div className="border border-green-200 rounded-xl overflow-hidden bg-green-50/50">
@@ -93,10 +93,10 @@ function SendGridGuide() {
         className="w-full flex items-center justify-between p-5 text-left hover:bg-green-100/50 transition-colors"
       >
         <div className="flex items-center gap-3">
-          <div className="bg-green-600 text-white text-xs font-bold px-2 py-1 rounded">SENDGRID</div>
+          <div className="bg-green-600 text-white text-xs font-bold px-2 py-1 rounded">EMAIL</div>
           <div>
-            <p className="font-semibold text-slate-800 text-sm">How to set up SendGrid (step by step)</p>
-            <p className="text-slate-500 text-xs mt-0.5">Takes about 5 minutes · Free tier (100 emails/day)</p>
+            <p className="font-semibold text-slate-800 text-sm">How to set up Email Reminders</p>
+            <p className="text-slate-500 text-xs mt-0.5">Resend (recommended) or SendGrid</p>
           </div>
         </div>
         <ChevronIcon open={open} />
@@ -104,40 +104,27 @@ function SendGridGuide() {
       {open && (
         <div className="px-5 pb-5 border-t border-green-200 pt-4 space-y-4 text-sm text-slate-700">
           <div className="bg-white rounded-lg p-4 border border-green-100">
-            <p className="font-bold text-slate-800 mb-2">📧 What is SendGrid?</p>
-            <p className="text-slate-600 leading-relaxed">
-              SendGrid sends email reminders to your customers when their invoices are due. It's the email equivalent of Twilio — reliable, professional, and won't go to spam when set up correctly.
+            <p className="font-bold text-slate-800 mb-2">📧 Recommended: Resend</p>
+            <p className="text-slate-600 leading-relaxed mb-3">
+              Resend gives you 3,000 free emails/month - more than enough for most small businesses. No credit card required.
             </p>
+            <ol className="list-decimal list-inside space-y-2 text-slate-600">
+              <li>Go to <a href="https://resend.com" target="_blank" rel="noopener noreferrer" className="text-purple-600 underline">resend.com</a> and sign up</li>
+              <li>Add your domain (or use their test domain)</li>
+              <li>Go to API Keys → Create API Key</li>
+              <li>Copy the key (starts with <code className="bg-slate-100 px-1 rounded">re_</code>)</li>
+            </ol>
           </div>
-          <div className="space-y-3">
-            <div className="flex gap-3">
-              <div className="bg-orange-500 text-white text-xs font-bold w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">1</div>
-              <div>
-                <p className="font-semibold text-slate-800">Sign up at sendgrid.com</p>
-                <p className="text-slate-500 text-xs mt-1">Use the same email you use for Remindrr. Free tier is fine to start.</p>
-              </div>
-            </div>
-            <div className="flex gap-3">
-              <div className="bg-orange-500 text-white text-xs font-bold w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">2</div>
-              <div>
-                <p className="font-semibold text-slate-800">Verify your sender email</p>
-                <p className="text-slate-500 text-xs mt-1">Check your inbox for an email from SendGrid and click the verification link.</p>
-              </div>
-            </div>
-            <div className="flex gap-3">
-              <div className="bg-orange-500 text-white text-xs font-bold w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">3</div>
-              <div>
-                <p className="font-semibold text-slate-800">Create an API Key</p>
-                <p className="text-slate-500 text-xs mt-1">Go to <strong>Settings → API Keys → Create API Key → Full Access → Create & Copy</strong>. Paste it into the field on the left.</p>
-              </div>
-            </div>
-            <div className="flex gap-3">
-              <div className="bg-orange-500 text-white text-xs font-bold w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">4</div>
-              <div>
-                <p className="font-semibold text-slate-800">Add your sender email</p>
-                <p className="text-slate-500 text-xs mt-1">Enter the email you verified with (e.g. yourbusiness@email.com). This is who the emails appear to come from.</p>
-              </div>
-            </div>
+          <div className="bg-slate-50 rounded-lg p-4 border border-slate-200">
+            <p className="font-bold text-slate-800 mb-2">📧 Alternative: SendGrid</p>
+            <p className="text-slate-600 leading-relaxed mb-2">
+              SendGrid has a free tier but is ending free plans June 7th. We recommend Resend instead.
+            </p>
+            <ul className="list-disc list-inside space-y-1 text-slate-500 text-xs">
+              <li>Go to sendgrid.com and sign up</li>
+              <li>Verify your sender identity</li>
+              <li>Create API Key in Settings → API Keys</li>
+            </ul>
           </div>
         </div>
       )}
@@ -267,10 +254,10 @@ export default function SettingsPage() {
             <p className="text-slate-400 text-xs mt-0.5">Sends reminders when invoices are due</p>
           </div>
         </div>
-        <SendGridGuide />
+        <EmailGuide />
         <div className="space-y-4">
           <div>
-            <label className="block text-xs font-medium text-slate-500 mb-1.5">SendGrid API Key</label>
+            <label className="block text-xs font-medium text-slate-500 mb-1.5">Resend or SendGrid API Key</label>
             <input type="password" value={form.sendgridApiKey} onChange={e => set('sendgridApiKey', e.target.value)} placeholder="SG.you..._key"
               className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-green-400 transition-all" />
             <p className="text-xs text-slate-400 mt-1">Found at: Settings → API Keys → Create API Key → Full Access</p>
