@@ -245,28 +245,28 @@ export default function SettingsPage() {
         </div>
       </div>
 
-      {/* ── SendGrid ── */}
+      {/* ── Email ── */}
       <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
         <div className="flex items-center gap-3 mb-4">
           <div className="bg-gradient-to-br from-green-500 to-green-600 text-white text-xs font-bold px-3 py-1.5 rounded-lg">📧</div>
           <div>
-            <h2 className="font-bold text-slate-700 text-base">SendGrid Email Setup</h2>
-            <p className="text-slate-400 text-xs mt-0.5">Sends reminders when invoices are due</p>
+            <h2 className="font-bold text-slate-700 text-base">Email Setup</h2>
+            <p className="text-slate-400 text-xs mt-0.5">Resend or SendGrid - sends reminders when invoices are due</p>
           </div>
         </div>
         <EmailGuide />
         <div className="space-y-4">
           <div>
             <label className="block text-xs font-medium text-slate-500 mb-1.5">Resend or SendGrid API Key</label>
-            <input type="password" value={form.sendgridApiKey} onChange={e => set('sendgridApiKey', e.target.value)} placeholder="SG.you..._key"
+            <input type="password" value={form.sendgridApiKey} onChange={e => set('sendgridApiKey', e.target.value)} placeholder="re_... or SG.you..._key"
               className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-green-400 transition-all" />
-            <p className="text-xs text-slate-400 mt-1">Found at: Settings → API Keys → Create API Key → Full Access</p>
+            <p className="text-xs text-slate-400 mt-1">Resend: API Keys → Create | SendGrid: Settings → API Keys</p>
           </div>
           <div>
             <label className="block text-xs font-medium text-slate-500 mb-1.5">Sender Email (From address)</label>
             <input type="email" value={form.sendgridFromEmail} onChange={e => set('sendgridFromEmail', e.target.value)} placeholder="your@email.com"
               className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-400 transition-all" />
-            <p className="text-xs text-slate-400 mt-1">Must be verified in SendGrid → Sender Authentication</p>
+            <p className="text-xs text-slate-400 mt-1">Must be verified in Resend or SendGrid</p>
           </div>
         </div>
       </div>
