@@ -80,7 +80,7 @@ export async function sendReminderNow(invoice: Invoice): Promise<{ success: bool
   const settings = getSettings();
   
   // Debug: Check what's in the separate storage
-  const sendgridStored = safe('remindrr_sendgrid_v1', { apiKey: '', fromEmail: '' });
+  const sendgridStored = safe(SENDGRID_KEY, { apiKey: '', fromEmail: '' });
   console.log('=== STORAGE CHECK ===');
   console.log('sendgridStored:', sendgridStored);
   console.log('mainSettings.sendgridApiKey:', settings.sendgridApiKey);

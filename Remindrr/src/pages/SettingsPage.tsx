@@ -162,6 +162,13 @@ export default function SettingsPage() {
 
   const handleSave = () => {
     saveSettings(form);
+    // Also save Resend key separately (persists on logout)
+    if (form.sendgridApiKey) {
+      localStorage.setItem('remindrr_sendgrid', JSON.stringify({
+        apiKey: form.sendgridApiKey,
+        fromEmail: form.sendgridFromEmail,
+      }));
+    }
     setSaved(true);
     alert('Settings saved! sendgridApiKey=' + form.sendgridApiKey?.substring(0,10) + '..., sendgridFromEmail=' + form.sendgridFromEmail);
     setTimeout(() => setSaved(false), 2500);
