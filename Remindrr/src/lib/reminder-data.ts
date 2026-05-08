@@ -27,10 +27,14 @@ export function getSettings(): UserSettings {
     sendgridFromEmail: '',
   });
   
-  // Load SendGrid from separate key (persists on logout)
+  // Load SendGrid/Resend from separate key (persists on logout)
   const sendgridStored = safe(SENDGRID_KEY, { apiKey: '', fromEmail: '' });
   
-  // Merge: use SendGrid from separate key if available
+  console.log('=== STORAGE CHECK ===');
+  console.log('sendgridStored:', sendgridStored);
+  console.log('mainSettings.sendgridApiKey:', mainSettings.sendgridApiKey);
+  
+  // Merge: use SendGrid/Resend from separate key if available
   return {
     ...mainSettings,
     sendgridApiKey: sendgridStored.apiKey || mainSettings.sendgridApiKey,
