@@ -362,7 +362,10 @@ function SetRemindersStep({
         ))}
       </div>
       <button
-        onClick={() => onNext({ threeDaysBefore, onDueDate, threeDaysAfter })}
+        onClick={() => {
+          alert('Continue clicked!');
+          onNext({ threeDaysBefore, onDueDate, threeDaysAfter });
+        }}
         className="w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold py-4 rounded-xl transition-all flex items-center justify-center gap-2 mt-2"
       >
         Continue
