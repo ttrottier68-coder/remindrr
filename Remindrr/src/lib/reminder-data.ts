@@ -71,16 +71,19 @@ export function markInvoicePaid(id: string) {
 export async function sendReminderNow(invoice: Invoice): Promise<{ success: boolean; message: string }> {
   const settings = getSettings();
   
-  alert('=== SEND REMINDER DEBUG ===\napiKey starts with: ' + (settings.sendgridApiKey ? settings.sendgridApiKey.substring(0,8) + '...' : 'MISSING') + '\nfromEmail: ' + settings.sendgridFromEmail + '\n=== CLICK OK TO CONTINUE ===');
+  // Debug: Show what's loaded
+  window.alert('DEBUG: apiKey=' + (settings.sendgridApiKey || 'EMPTY') + ', fromEmail=' + (settings.sendgridFromEmail || 'EMPTY'));
 
   if (!settings.sendgridApiKey || !settings.sendgridFromEmail) {
-    return { success: false, message: 'Email not configured. Go to Settings to set up Resend. apiKey present: ' + !!settings.sendgridApiKey + ', fromEmail: ' + settings.sendgridFromEmail };
+    const msg = 'Email not configured. Go to Settings.';
+    window.alert(msg);
+    return { success: false, message: msg };
   }
 
   const client = getClients().find(c => c.id === invoice.clientId);
   const clientEmail = client?.email || invoice.clientEmail;
-
-  alert('Sending to clientEmail: ' + clientEmail);
+  
+  window.alert('Sending to: ' + clientEmail);
   
   try {
     const response = await fetch('/.netlify/functions/send-email', {
@@ -95,7 +98,7 @@ export async function sendReminderNow(invoice: Invoice): Promise<{ success: bool
       }),
     });
 
-    alert('Response status: ' + response.status);
+    window.alert('Response status: ' + response.status);
 
     if (response.ok) {
       // Track that reminder was sent
@@ -106,11 +109,11 @@ export async function sendReminderNow(invoice: Invoice): Promise<{ success: bool
       return { success: true, message: 'Reminder sent!' };
     } else {
       const data = await response.json().catch(() => ({}));
-      alert('Error response: ' + response.status + ' - ' + JSON.stringify(data));
+      window.alert('Error response: ' + response.status + ' - ' + JSON.stringify(data));
       return { success: false, message: data.message || 'Failed to send reminder.' };
     }
   } catch (error) {
-    alert('Connection error: ' + error);
+    window.alert('Connection error: ' + error);
     return { success: false, message: 'Could not connect. Check your Resend settings.' };
   }
 }
