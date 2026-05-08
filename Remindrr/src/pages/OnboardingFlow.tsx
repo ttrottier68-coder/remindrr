@@ -221,12 +221,24 @@ function CreateInvoiceStep({
   });
 
   const isValid = customerName && (customerPhone || customerEmail) && description && amount && dueDate;
+  
+  // Debug
+  console.log('=== CreateInvoiceStep DEBUG ===');
+  console.log('customerName:', customerName, 'bool:', !!customerName);
+  console.log('customerPhone:', customerPhone, 'bool:', !!customerPhone);
+  console.log('customerEmail:', customerEmail, 'bool:', !!customerEmail);
+  console.log('description:', description, 'bool:', !!description);
+  console.log('amount:', amount, 'bool:', !!amount);
+  console.log('dueDate:', dueDate, 'bool:', !!dueDate);
+  console.log('isValid:', isValid);
+  console.log('onNext function:', typeof onNext);
 
   return (
     <div className="space-y-5">
       <div className="text-center mb-6">
         <h2 className="text-2xl font-bold text-slate-900 mb-1">Create your first invoice</h2>
         <p className="text-slate-400 text-sm">You can edit this anytime.</p>
+        <div className="text-xs text-red-500 mt-2">isValid = {isValid ? 'TRUE' : 'FALSE'}</div>
       </div>
       <div>
         <label className="block text-sm font-medium text-slate-700 mb-1.5">Customer Name</label>
