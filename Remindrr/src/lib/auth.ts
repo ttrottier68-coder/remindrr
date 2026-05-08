@@ -39,6 +39,11 @@ function saveSession(session: AuthSession): void {
 
 function clearLocalSession(): void {
   localStorage.removeItem(AUTH_KEY);
+  localStorage.removeItem('remindrr_settings');
+  localStorage.removeItem('remindrr_clients');
+  localStorage.removeItem('remindrr_invoices');
+  // Keep the Resend/SendGrid key - don't make users re-enter it
+  console.log('User data cleared, but Resend key preserved');
 }
 
 // ─── Auth functions ────────────────────────────────────────────────────────────────
