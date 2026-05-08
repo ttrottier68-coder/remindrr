@@ -70,22 +70,19 @@ export function markInvoicePaid(id: string) {
 
 export async function sendReminderNow(invoice: Invoice): Promise<{ success: boolean; message: string }> {
   const settings = getSettings();
-
-  alert('DEBUG reminder-data: apiKey=' + (settings.sendgridApiKey ? settings.sendgridApiKey.substring(0,15) + '...' : 'MISSING') + ', fromEmail=' + settings.sendgridFromEmail);
+  
+  alert('=== SEND REMINDER DEBUG ===\napiKey starts with: ' + (settings.sendgridApiKey ? settings.sendgridApiKey.substring(0,8) + '...' : 'MISSING') + '\nfromEmail: ' + settings.sendgridFromEmail + '\n=== CLICK OK TO CONTINUE ===');
 
   if (!settings.sendgridApiKey || !settings.sendgridFromEmail) {
-    return { success: false, message: 'Email not configured. Go to Settings to set up Resend.' };
+    return { success: false, message: 'Email not configured. Go to Settings to set up Resend. apiKey present: ' + !!settings.sendgridApiKey + ', fromEmail: ' + settings.sendgridFromEmail };
   }
 
   const client = getClients().find(c => c.id === invoice.clientId);
   const clientEmail = client?.email || invoice.clientEmail;
 
-  if (!clientEmail) {
-    return { success: false, message: 'No email found for this client.' };
-  }
-
+  alert('Sending to clientEmail: ' + clientEmail);
+  
   try {
-    alert('Sending email...');
     const response = await fetch('/.netlify/functions/send-email', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

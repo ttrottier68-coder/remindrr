@@ -52,7 +52,9 @@ export function InvoiceCard({ invoice, onRefresh }: Props) {
 
   const handleSendReminder = async () => {
     setSendingReminder(true);
+    alert('Calling sendReminderNow...');
     const result = await sendReminderNow(invoice);
+    alert('Result: ' + JSON.stringify(result));
     setSendingReminder(false);
     if (result.success) {
       setReminderSent(true);
