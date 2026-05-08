@@ -526,8 +526,10 @@ export default function OnboardingFlow() {
   };
 
   const handleRemindersNext = (data: typeof reminderData) => {
+    alert('handleRemindersNext running! data=' + JSON.stringify(data));
     setReminderData(data);
-    setStep(4);
+    setStep(5); // Go to Preview step
+    alert('setStep(5) called');
   };
 
   const handlePreviewNext = () => {
