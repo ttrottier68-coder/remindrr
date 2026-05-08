@@ -527,12 +527,34 @@ export default function OnboardingFlow() {
 
   const handleRemindersNext = (data: typeof reminderData) => {
     setReminderData(data);
-    // Force a re-render by using the functional update
-    setStep(current => {
-      const nextStep = 5;
-      console.log('Step changing from', current, 'to', nextStep);
-      return nextStep;
-    });
+    // Save the invoice before finishing
+    if (invoiceData) {
+      const clientId = `client_${Date.now()}`;
+      const newClient: Client = {
+        id: clientId,
+        name: invoiceData.customerName,
+        email: invoiceData.customerEmail || '',
+        phone: invoiceData.customerPhone,
+        createdAt: new Date().toISOString(),
+      };
+      saveClient(newClient);
+
+      const newInvoice: Invoice = {
+        id: `inv_${Date.now()}`,
+        clientId,
+        clientName: invoiceData.customerName,
+        clientPhone: invoiceData.customerPhone,
+        clientEmail: invoiceData.customerEmail,
+        description: invoiceData.description,
+        amount: parseFloat(invoiceData.amount),
+        dueDate: invoiceData.dueDate,
+        createdAt: new Date().toISOString(),
+        status: 'pending',
+        reminderSettings: data,
+      };
+      saveInvoice(newInvoice);
+    }
+    finishOnboarding();
   };
 
   const handlePreviewNext = () => {
