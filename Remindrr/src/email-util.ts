@@ -34,11 +34,12 @@ export async function sendReminderNow(invoice: Invoice): Promise<{ success: bool
       return { success: true, message: 'Reminder sent!' };
     } else {
       const data = await response.json().catch(() => ({}));
-      return { success: false, message: data.message || 'Failed to send reminder.' };
+      console.log('Failed response:', response.status, data);
+      return { success: false, message: data.message || 'Failed to send reminder. Status: ' + response.status };
     }
-  } catch {
-    return { success: false, message: 'Could not connect. Check your Resend settings.' };
-  }
+  } catch (error) {
+    console.log('Connection error:', error);
+    return { success: false, message: 'Could not connect. Check your Resend settings. Error: ' + error };
 }
 
 function buildEmailHtml(invoice: Invoice, client: Client | undefined, businessName: string) {
