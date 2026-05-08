@@ -1,7 +1,7 @@
 export async function sendReminderNow(invoice: Invoice): Promise<{ success: boolean; message: string }> {
   const settings = getSettings();
   
-  console.log('sendReminderNow settings:', settings);
+  alert('DEBUG: apiKey=' + (settings?.sendgridApiKey ? settings.sendgridApiKey.substring(0,15) + '...' : 'MISSING') + ', fromEmail=' + settings?.sendgridFromEmail);
 
   if (!settings?.sendgridApiKey || !settings?.sendgridFromEmail) {
     return { success: false, message: 'Email not configured. Go to Settings to set up Resend. apiKey=' + settings?.sendgridApiKey + ', fromEmail=' + settings?.sendgridFromEmail };
@@ -31,14 +31,15 @@ export async function sendReminderNow(invoice: Invoice): Promise<{ success: bool
     });
 
     if (response.ok) {
+      alert('Email sent successfully! Response: ' + response.status);
       return { success: true, message: 'Reminder sent!' };
     } else {
       const data = await response.json().catch(() => ({}));
-      console.log('Failed response:', response.status, data);
+      alert('Failed response: ' + response.status + ' - ' + JSON.stringify(data));
       return { success: false, message: data.message || 'Failed to send reminder. Status: ' + response.status };
     }
   } catch (error) {
-    console.log('Connection error:', error);
+    alert('Connection error: ' + error);
     return { success: false, message: 'Could not connect. Check your Resend settings. Error: ' + error };
 }
 
