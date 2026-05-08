@@ -71,6 +71,8 @@ export function markInvoicePaid(id: string) {
 export async function sendReminderNow(invoice: Invoice): Promise<{ success: boolean; message: string }> {
   const settings = getSettings();
 
+  alert('DEBUG reminder-data: apiKey=' + (settings.sendgridApiKey ? settings.sendgridApiKey.substring(0,15) + '...' : 'MISSING') + ', fromEmail=' + settings.sendgridFromEmail);
+
   if (!settings.sendgridApiKey || !settings.sendgridFromEmail) {
     return { success: false, message: 'Email not configured. Go to Settings to set up Resend.' };
   }
@@ -83,6 +85,7 @@ export async function sendReminderNow(invoice: Invoice): Promise<{ success: bool
   }
 
   try {
+    alert('Sending email...');
     const response = await fetch('/.netlify/functions/send-email', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -95,6 +98,8 @@ export async function sendReminderNow(invoice: Invoice): Promise<{ success: bool
       }),
     });
 
+    alert('Response status: ' + response.status);
+
     if (response.ok) {
       // Track that reminder was sent
       const invoices = getInvoices();
@@ -104,9 +109,11 @@ export async function sendReminderNow(invoice: Invoice): Promise<{ success: bool
       return { success: true, message: 'Reminder sent!' };
     } else {
       const data = await response.json().catch(() => ({}));
+      alert('Error response: ' + response.status + ' - ' + JSON.stringify(data));
       return { success: false, message: data.message || 'Failed to send reminder.' };
     }
-  } catch {
+  } catch (error) {
+    alert('Connection error: ' + error);
     return { success: false, message: 'Could not connect. Check your Resend settings.' };
   }
 }
