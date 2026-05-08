@@ -511,9 +511,13 @@ export default function OnboardingFlow() {
   };
 
   const handleInvoiceNext = (data: typeof invoiceData extends null ? never : typeof invoiceData) => {
-    console.log('handleInvoiceNext called with:', data);
+    console.log('=== handleInvoiceNext START ===');
+    console.log('data:', data);
+    console.log('current step:', step);
     setInvoiceData(data);
+    console.log('invoiceData set, about to call setStep(4)');
     setStep(4); // Go to Set Reminders step
+    console.log('setStep(4) called, new step should be 4');
   };
 
   const handleRemindersNext = (data: typeof reminderData) => {
