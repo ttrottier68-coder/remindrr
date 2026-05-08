@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getSettings, getClients, getInvoices, deleteInvoice, markInvoicePaid, sendReminderNow, syncInvoicesToServer } from '../lib/reminder-data';
+import { getSettings, getClients, getInvoices, deleteInvoice, markInvoicePaid, sendReminderNow, openMailto, syncInvoicesToServer } from '../lib/reminder-data';
 import type { Invoice } from '../types';
 
 interface Props {
@@ -86,10 +86,16 @@ export function InvoiceCard({ invoice, onRefresh }: Props) {
 
         <div className="flex items-center gap-2 flex-wrap">
           {invoice.status !== 'paid' && (
-            <button onClick={handleSendReminder} disabled={sendingReminder}
-              className={`text-sm font-bold px-4 py-2 rounded-lg transition-colors ${reminderSent ? 'bg-green-500 text-white' : 'bg-orange-50 text-orange-700 hover:bg-orange-100'}`}>
-              {sendingReminder ? 'Sending...' : reminderSent ? 'Sent! ✓' : 'Send Reminder 🔔'}
-            </button>
+            <>
+              <button onClick={() => openMailto(invoice)}
+                className="text-sm font-bold px-4 py-2 rounded-lg transition-colors bg-blue-50 text-blue-700 hover:bg-blue-100">
+               📧 Email
+              </button>
+              <button onClick={handleSendReminder} disabled={sendingReminder}
+                className={`text-sm font-bold px-4 py-2 rounded-lg transition-colors ${reminderSent ? 'bg-green-500 text-white' : 'bg-orange-50 text-orange-700 hover:bg-orange-100'}`}>
+                {sendingReminder ? 'Sending...' : reminderSent ? 'Sent! ✓' : 'Auto 🔔'}
+              </button>
+            </>
           )}
           {invoice.status !== 'paid' && invoice.paymentLink && (
             <a href={invoice.paymentLink} target="_blank" rel="noreferrer"

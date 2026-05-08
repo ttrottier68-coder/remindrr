@@ -72,6 +72,31 @@ export function markInvoicePaid(id: string) {
   persist(INVOICES_KEY, all);
 }
 
+export function openMailto(invoice: Invoice): void {
+  const settings = getSettings();
+  const client = getClients().find(c => c.id === invoice.clientId);
+  const clientEmail = client?.email || invoice.clientEmail;
+  const clientName = client?.name || invoice.clientName;
+  
+  const subject = `Invoice for ${invoice.description} - $${invoice.amount}`;
+  const dueDate = new Date(invoice.dueDate).toLocaleDateString();
+  const body = `Hi ${clientName},
+
+This is a friendly reminder about your invoice:
+
+Description: ${invoice.description}
+Amount: $${invoice.amount}
+Due Date: ${dueDate}
+
+Please send payment at your earliest convenience.
+
+Thank you!
+${settings?.businessName || ''}`;
+
+  const mailtoLink = `mailto:${clientEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  window.location.href = mailtoLink;
+}
+
 export async function sendReminderNow(invoice: Invoice): Promise<{ success: boolean; message: string }> {
   // Debug: Console log BEFORE alert
   console.log('=== sendReminderNow START ===');
