@@ -8,6 +8,9 @@ interface Props {
   onRefresh: () => void;
 }
 
+// Debug: Check if openMailto is exported
+console.log('InvoiceCard loaded, openMailto:', typeof openMailto);
+
 function getStatus(inv: Invoice) {
   const days = Math.ceil((new Date(inv.dueDate).getTime() - Date.now()) / 86400000);
   if (inv.status === 'paid') return { label: 'PAID', bg: 'bg-green-100', text: 'text-green-700' };
