@@ -69,7 +69,14 @@ export function markInvoicePaid(id: string) {
 }
 
 export async function sendReminderNow(invoice: Invoice): Promise<{ success: boolean; message: string }> {
+  // Debug: Console log BEFORE alert
+  console.log('=== sendReminderNow START ===');
+  console.log('invoice:', invoice);
+  
   const settings = getSettings();
+  console.log('settings from getSettings():', settings);
+  console.log('sendgridApiKey:', settings?.sendgridApiKey);
+  console.log('sendgridFromEmail:', settings?.sendgridFromEmail);
   
   // Debug: Show what's loaded
   window.alert('DEBUG: apiKey=' + (settings.sendgridApiKey || 'EMPTY') + ', fromEmail=' + (settings.sendgridFromEmail || 'EMPTY'));

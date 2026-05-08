@@ -401,7 +401,9 @@ function InvoicesPage() {
   const [lastMessage, setLastMessage] = useState<string | null>(null);
   const navigate = useNavigate();
   const handleSendReminder = (inv: Invoice) => {
-    console.log('button clicked for invoice:', inv.id);
+    console.log('=== handleSendReminder START ===');
+    console.log('invoice id:', inv.id);
+    console.log('clientEmail:', inv.clientEmail);
     setSendingId(inv.id);
     setLastMessage('Processing...');
     alert('handleSendReminder called for: ' + inv.id + ', clientEmail=' + inv.clientEmail);
