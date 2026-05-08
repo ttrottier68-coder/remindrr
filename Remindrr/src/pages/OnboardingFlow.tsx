@@ -298,6 +298,7 @@ function CreateInvoiceStep({
       </div>
       <button
         onClick={() => {
+          alert('Button clicked! isValid=' + isValid);
           console.log('=== BUTTON CLICKED ===');
           console.log('isValid:', isValid);
           if (isValid) {
