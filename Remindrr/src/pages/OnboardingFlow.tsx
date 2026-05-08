@@ -526,10 +526,13 @@ export default function OnboardingFlow() {
   };
 
   const handleRemindersNext = (data: typeof reminderData) => {
-    alert('handleRemindersNext running! data=' + JSON.stringify(data));
     setReminderData(data);
-    setStep(5); // Go to Preview step
-    alert('setStep(5) called');
+    // Force a re-render by using the functional update
+    setStep(current => {
+      const nextStep = 5;
+      console.log('Step changing from', current, 'to', nextStep);
+      return nextStep;
+    });
   };
 
   const handlePreviewNext = () => {
