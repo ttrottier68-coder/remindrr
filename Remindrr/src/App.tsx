@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
-import { getSettings, saveSettings, getDashboardStats, getInvoices, getClients, saveInvoice, saveClient, markInvoicePaid, deleteInvoice, sendReminderNow } from './lib/reminder-data';
+import { getSettings, saveSettings, getDashboardStats, getInvoices, getClients, saveInvoice, saveClient, markInvoicePaid, deleteInvoice, sendReminderNow, openMailto } from './lib/reminder-data';
 import { isAuthenticated, logout, ensureDemoAccount } from './lib/auth';
 import type { Invoice, Client } from './types';
 import SettingsPage from './pages/SettingsPage';
@@ -483,9 +483,13 @@ function InvoicesPage() {
                     <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${st.color}`}>{st.label}</span>
                     {inv.status !== 'paid' && (
                       <>
+                        <button type="button" onClick={(e) => { e.preventDefault(); openMailto(inv); }}
+                          className="text-xs bg-blue-50 text-blue-700 font-bold px-3 py-1 rounded-lg hover:bg-blue-100">
+                          📧 Email
+                        </button>
                         <button type="button" onClick={(e) => { e.preventDefault(); handleSendReminder(inv); }} disabled={sendingId === inv.id}
                           className="text-xs bg-orange-50 text-orange-700 font-bold px-3 py-1 rounded-lg hover:bg-orange-100 disabled:opacity-50">
-                          {sendingId === inv.id ? 'Sending...' : 'Send Reminder 🔔'}
+                          {sendingId === inv.id ? 'Sending...' : 'Auto 🔔'}
                         </button>
                         <button
                           onClick={() => { markInvoicePaid(inv.id); setTick(t => t + 1); }}

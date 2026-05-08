@@ -88,7 +88,8 @@ export function InvoiceCard({ invoice, onRefresh }: Props) {
         </div>
 
         <div className="flex items-center gap-2 flex-wrap">
-          {invoice.status !== 'paid' && invoice.status !== 'pending' && (
+          {/* Email button shows for all non-paid invoices */}
+          {invoice.status !== 'paid' && (
             <button onClick={() => { alert('OPEN MAILTO CALLED'); openMailto(invoice); }}
               className="text-sm font-bold px-4 py-2 rounded-lg transition-colors bg-blue-50 text-blue-700 hover:bg-blue-100">
               📧 Email
