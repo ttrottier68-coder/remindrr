@@ -297,7 +297,16 @@ function CreateInvoiceStep({
         />
       </div>
       <button
-        onClick={() => isValid && onNext({ customerName, customerPhone, customerEmail, description, amount, dueDate })}
+        onClick={() => {
+          console.log('=== BUTTON CLICKED ===');
+          console.log('isValid:', isValid);
+          if (isValid) {
+            console.log('Calling onNext...');
+            onNext({ customerName, customerPhone, customerEmail, description, amount, dueDate });
+          } else {
+            alert('isValid is FALSE - missing fields');
+          }
+        }}
         disabled={!isValid}
         className="w-full bg-orange-500 hover:bg-orange-600 disabled:bg-slate-200 disabled:text-slate-400 text-white font-semibold py-4 rounded-xl transition-all flex items-center justify-center gap-2 mt-2"
       >
