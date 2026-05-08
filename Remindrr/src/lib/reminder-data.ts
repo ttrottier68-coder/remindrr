@@ -78,8 +78,12 @@ export async function sendReminderNow(invoice: Invoice): Promise<{ success: bool
   console.log('sendgridApiKey:', settings?.sendgridApiKey);
   console.log('sendgridFromEmail:', settings?.sendgridFromEmail);
   
-  // Debug: Show what's loaded
-  window.alert('DEBUG: apiKey=' + (settings.sendgridApiKey || 'EMPTY') + ', fromEmail=' + (settings.sendgridFromEmail || 'EMPTY'));
+  // Debug: Show what's loaded - create a visible element
+  const debugDiv = document.createElement('div');
+  debugDiv.id = 'debug-output';
+  debugDiv.style.cssText = 'position:fixed;bottom:0;left:0;right:0;background:#ff0;color:#000;padding:10px;font-size:14px;z-index:99999;font-family:monospace;';
+  debugDiv.textContent = 'DEBUG: apiKey=' + (settings.sendgridApiKey || 'EMPTY') + ', fromEmail=' + (settings.sendgridFromEmail || 'EMPTY');
+  document.body.appendChild(debugDiv);
 
   if (!settings.sendgridApiKey || !settings.sendgridFromEmail) {
     const msg = 'Email not configured. Go to Settings.';
