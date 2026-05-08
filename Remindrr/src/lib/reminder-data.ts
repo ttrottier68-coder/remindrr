@@ -110,8 +110,10 @@ export async function sendReminderNow(invoice: Invoice): Promise<{ success: bool
     });
 
     window.alert('Response status: ' + response.status);
+    window.alert('response.ok: ' + response.ok);
 
     if (response.ok) {
+      console.log('=== SUCCESS PATH ===');
       // Track that reminder was sent
       const invoices = getInvoices();
       const updated = invoices.map(i => i.id === invoice.id ? { ...i, reminderSent: true, lastReminderSentAt: new Date().toISOString() } : i);
@@ -119,11 +121,13 @@ export async function sendReminderNow(invoice: Invoice): Promise<{ success: bool
       syncInvoicesToServer(updated);
       return { success: true, message: 'Reminder sent!' };
     } else {
+      console.log('=== ERROR PATH (response.ok false) ===');
       const data = await response.json().catch(() => ({}));
       window.alert('Error response: ' + response.status + ' - ' + JSON.stringify(data));
       return { success: false, message: data.message || 'Failed to send reminder.' };
     }
   } catch (error) {
+    console.log('=== CATCH BLOCK === error: ' + error);
     window.alert('Connection error: ' + error);
     return { success: false, message: 'Could not connect. Check your Resend settings.' };
   }
