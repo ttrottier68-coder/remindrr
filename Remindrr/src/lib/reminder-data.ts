@@ -80,13 +80,14 @@ export function openMailto(invoice: Invoice): void {
   
   const subject = encodeURIComponent(`Invoice for ${invoice.description} - $${invoice.amount}`);
   const dueDate = new Date(invoice.dueDate).toLocaleDateString();
+  const paymentLinkText = invoice.paymentLink ? `\nPay Online: ${invoice.paymentLink}` : '';
   const body = encodeURIComponent(`Hi ${clientName},
 
 This is a friendly reminder about your invoice:
 
 Description: ${invoice.description}
 Amount: $${invoice.amount}
-Due Date: ${dueDate}
+Due Date: ${dueDate}${paymentLinkText}
 
 Please send payment at your earliest convenience.
 
