@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
-import { getSettings, saveSettings, getDashboardStats, getInvoices, getClients, saveInvoice, saveClient, markInvoicePaid, deleteInvoice, sendReminderNow, openMailto } from './lib/reminder-data';
+import { getSettings, saveSettings, getDashboardStats, getInvoices, getClients, saveInvoice, saveClient, markInvoicePaid, deleteInvoice, sendReminderNow, openMailto, loadFromCloud, syncToCloud } from './lib/reminder-data';
 import { isAuthenticated, logout, ensureDemoAccount } from './lib/auth';
 import type { Invoice, Client } from './types';
 import { getTrialDaysLeft } from './types';
@@ -965,8 +965,27 @@ async function seedDemoData() {
   
   // If user has real settings (non-empty ownerName that's not demo), just ensure demo exists
   if (existing?.ownerName && existing.ownerName.trim() && existing.ownerName !== 'Demo User') {
-    console.log('  has real settings, just ensure demo');
+    console.log('  has real settings, loading from cloud...');
     await ensureDemoAccount();
+    // Load real user data from Firestore (restores invoices across deploys)
+    try {
+      const cloudData = await loadFromCloud();
+      if (cloudData.settings) {
+        saveSettings(cloudData.settings);
+        console.log('  loaded settings from cloud');
+      }
+      if (cloudData.invoices && cloudData.invoices.length > 0) {
+        // Only overwrite local invoices if cloud has data (don't clear if cloud is empty)
+        localStorage.setItem('remindrr_invoices', JSON.stringify(cloudData.invoices));
+        console.log('  loaded', cloudData.invoices.length, 'invoices from cloud');
+      }
+      if (cloudData.clients && cloudData.clients.length > 0) {
+        localStorage.setItem('remindrr_clients', JSON.stringify(cloudData.clients));
+        console.log('  loaded', cloudData.clients.length, 'clients from cloud');
+      }
+    } catch (e) {
+      console.error('  failed to load from cloud:', e);
+    }
     return;
   }
   

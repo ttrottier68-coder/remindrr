@@ -64,12 +64,22 @@ export function getInvoices(): Invoice[] {
 
 export function saveInvoice(inv: Invoice) {
   const all = getInvoices().filter(i => i.id !== inv.id);
-  persist(INVOICES_KEY, [...all, inv]);
+  const updated = [...all, inv];
+  persist(INVOICES_KEY, updated);
+  // Sync to cloud for persistence across deploys
+  syncToCloud(getSettings(), updated, getClients());
 }
 
 export function markInvoicePaid(id: string) {
   const all = getInvoices().map(i => i.id === id ? { ...i, status: 'paid' as const, paidAt: new Date().toISOString() } : i);
   persist(INVOICES_KEY, all);
+  syncToCloud(getSettings(), all, getClients());
+}
+
+export function deleteInvoice(id: string) {
+  const all = getInvoices().filter(i => i.id !== id);
+  persist(INVOICES_KEY, all);
+  syncToCloud(getSettings(), all, getClients());
 }
 
 export function openMailto(invoice: Invoice): void {
