@@ -78,9 +78,9 @@ export function openMailto(invoice: Invoice): void {
   const clientEmail = client?.email || invoice.clientEmail;
   const clientName = client?.name || invoice.clientName;
   
-  const subject = `Invoice for ${invoice.description} - $${invoice.amount}`;
+  const subject = encodeURIComponent(`Invoice for ${invoice.description} - $${invoice.amount}`);
   const dueDate = new Date(invoice.dueDate).toLocaleDateString();
-  const body = `Hi ${clientName},
+  const body = encodeURIComponent(`Hi ${clientName},
 
 This is a friendly reminder about your invoice:
 
@@ -91,10 +91,11 @@ Due Date: ${dueDate}
 Please send payment at your earliest convenience.
 
 Thank you!
-${settings?.businessName || ''}`;
-
-  const mailtoLink = `mailto:${clientEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-  window.location.href = mailtoLink;
+${settings?.businessName || ''}`);
+  
+  // Open Gmail compose window directly (works in all browsers)
+  const gmailUrl = `https://mail.google.com/mail/?view=cm&to=${encodeURIComponent(clientEmail)}&su=${subject}&body=${body}`;
+  window.open(gmailUrl, '_blank');
 }
 
 export async function sendReminderNow(invoice: Invoice): Promise<{ success: boolean; message: string }> {
