@@ -288,6 +288,48 @@ export default function SettingsPage() {
         </div>
       </div>
 
+      {/* ── Payment Methods ── */}
+      <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="bg-gradient-to-br from-purple-500 to-purple-600 text-white text-xs font-bold px-3 py-1.5 rounded-lg">💳</div>
+          <div>
+            <h2 className="font-bold text-slate-700 text-base">Payment Methods</h2>
+            <p className="text-slate-400 text-xs mt-0.5">Add your payment info so clients can pay easily</p>
+          </div>
+        </div>
+
+        <div className="bg-purple-50 rounded-xl p-4 border border-purple-100 space-y-3">
+          <p className="font-semibold text-slate-700 text-sm">How it works:</p>
+          <ul className="text-sm text-slate-600 space-y-2">
+            <li>• <strong>PayPal:</strong> Create a <a href="https://www.paypal.com/paypalme" target="_blank" rel="noopener noreferrer" className="text-purple-600 underline font-medium">paypal.me/username</a> link</li>
+            <li>• <strong>Venmo:</strong> Use your Venmo @username</li>
+            <li>• <strong>Zelle:</strong> Add your email or phone linked to Zelle</li>
+          </ul>
+          <p className="text-xs text-slate-500">These appear on invoice emails and payment pages.</p>
+        </div>
+
+        <div className="space-y-4 mt-4">
+          <div>
+            <label className="block text-xs font-medium text-slate-500 mb-1.5">PayPal.me Link</label>
+            <input type="text" value={form.paypalMe} onChange={e => set('paypalMe', e.target.value)} placeholder="https://paypal.me/yourusername"
+              className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-400 transition-all" />
+            <p className="text-xs text-slate-400 mt-1">Get your link at paypal.com/paypalme/yourname</p>
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-slate-500 mb-1.5">Venmo Username</label>
+            <input type="text" value={form.venmoUsername} onChange={e => set('venmoUsername', e.target.value)} placeholder="@yourusername"
+              className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-400 transition-all" />
+            <p className="text-xs text-slate-400 mt-1">Your Venmo @username (find it in Venmo app)</p>
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-slate-500 mb-1.5">Zelle Info</label>
+            <input type="text" value={form.zelleInfo} onChange={e => set('zelleInfo', e.target.value)} placeholder="your@email.com or 555-123-4567"
+              className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-400 transition-all" />
+            <p className="text-xs text-slate-400 mt-1">Email or phone linked to your Zelle account</p>
+          </div>
+        </div>
+      </div>
+
       {/* ── Plan ── */}
       <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
         <h2 className="font-bold text-slate-700 text-base border-b border-slate-100 pb-3 mb-4">📋 Plan</h2>

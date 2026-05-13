@@ -80,14 +80,21 @@ export function openMailto(invoice: Invoice): void {
   
   const subject = encodeURIComponent(`Invoice for ${invoice.description} - $${invoice.amount}`);
   const dueDate = new Date(invoice.dueDate).toLocaleDateString();
-  const paymentLinkText = invoice.paymentLink ? `\nPay Online: ${invoice.paymentLink}` : '';
+  
+  // Build payment methods section
+  let paymentMethods = '';
+  if (settings.paypalMe) paymentMethods += `\nPayPal: ${settings.paypalMe}`;
+  if (settings.venmoUsername) paymentMethods += `\nVenmo: ${settings.venmoUsername}`;
+  if (settings.zelleInfo) paymentMethods += `\nZelle: ${settings.zelleInfo}`;
+  
+  const invoicePaymentLink = invoice.paymentLink || '';
   const body = encodeURIComponent(`Hi ${clientName},
 
 This is a friendly reminder about your invoice:
 
 Description: ${invoice.description}
 Amount: $${invoice.amount}
-Due Date: ${dueDate}${paymentLinkText}
+Due Date: ${dueDate}${invoicePaymentLink ? `\nPay Online: ${invoicePaymentLink}` : ''}${paymentMethods}
 
 Please send payment at your earliest convenience.
 

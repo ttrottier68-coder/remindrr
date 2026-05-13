@@ -497,6 +497,12 @@ function InvoicesPage() {
                         >
                           Mark Paid ✓
                         </button>
+                        {inv.status !== 'paid' && !inv.paymentLink && (settings?.paypalMe || settings?.venmoUsername) && (
+                          <a href={settings.paypalMe || `https://venmo.com/${(settings.venmoUsername || '').replace('@', '')}`} target="_blank" rel="noreferrer"
+                            className="text-xs bg-purple-50 text-purple-700 font-bold px-3 py-1 rounded-lg hover:bg-purple-100">
+                            💳 Pay
+                          </a>
+                        )}
                       </>
                     )}
                   </div>

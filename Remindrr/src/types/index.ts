@@ -33,10 +33,14 @@ export interface UserSettings {
   email: string;
   phone: string;
   stripeAccountId?: string;
+  stripeSecretKey?: string;
   twilioSid?: string;
   twilioToken?: string;
   twilioPhone?: string;
   sendgridApiKey?: string;
   sendgridFromEmail?: string;
   plan: 'starter' | 'pro' | 'business';
+  paypalMe?: string;
+  venmoUsername?: string;
+  zelleInfo?: string;
 }

@@ -11,6 +11,13 @@ interface Props {
 // Debug: Check if openMailto is exported
 console.log('InvoiceCard loaded, openMailto:', typeof openMailto);
 
+function getPaymentMethods(settings: any) {
+  const methods = [];
+  if (settings.paypalMe) methods.push({ label: 'PayPal', url: settings.paypalMe });
+  if (settings.venmoUsername) methods.push({ label: 'Venmo', url: `https://venmo.com/${settings.venmoUsername.replace('@', '')}` });
+  return methods;
+}
+
 function getStatus(inv: Invoice) {
   const days = Math.ceil((new Date(inv.dueDate).getTime() - Date.now()) / 86400000);
   if (inv.status === 'paid') return { label: 'PAID', bg: 'bg-green-100', text: 'text-green-700' };
@@ -104,6 +111,10 @@ export function InvoiceCard({ invoice, onRefresh }: Props) {
           {invoice.status !== 'paid' && invoice.paymentLink && (
             <a href={invoice.paymentLink} target="_blank" rel="noreferrer"
               className="text-sm bg-green-50 text-green-700 font-bold px-4 py-2 rounded-lg hover:bg-green-100 transition-colors">Payment Link →</a>
+          )}
+          {invoice.status !== 'paid' && !invoice.paymentLink && getPaymentMethods(settings).length > 0 && (
+            <a href={getPaymentMethods(settings)[0].url} target="_blank" rel="noreferrer"
+              className="text-sm bg-green-50 text-green-700 font-bold px-4 py-2 rounded-lg hover:bg-green-100 transition-colors">{getPaymentMethods(settings)[0].label} Pay</a>
           )}
           {invoice.status !== 'paid' && (
             <button onClick={() => { markInvoicePaid(invoice.id); syncInvoicesToServer(getInvoices()); onRefresh(); }}
