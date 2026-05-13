@@ -294,39 +294,104 @@ export default function SettingsPage() {
           <div className="bg-gradient-to-br from-purple-500 to-purple-600 text-white text-xs font-bold px-3 py-1.5 rounded-lg">💳</div>
           <div>
             <h2 className="font-bold text-slate-700 text-base">Payment Methods</h2>
-            <p className="text-slate-400 text-xs mt-0.5">Add your payment info so clients can pay easily</p>
+            <p className="text-slate-400 text-xs mt-0.5">Add your payment info so clients can pay you easily</p>
           </div>
         </div>
 
-        <div className="bg-purple-50 rounded-xl p-4 border border-purple-100 space-y-3">
-          <p className="font-semibold text-slate-700 text-sm">How it works:</p>
-          <ul className="text-sm text-slate-600 space-y-2">
-            <li>• <strong>PayPal:</strong> Create a <a href="https://www.paypal.com/paypalme" target="_blank" rel="noopener noreferrer" className="text-purple-600 underline font-medium">paypal.me/username</a> link</li>
-            <li>• <strong>Venmo:</strong> Use your Venmo @username</li>
-            <li>• <strong>Zelle:</strong> Add your email or phone linked to Zelle</li>
-          </ul>
-          <p className="text-xs text-slate-500">These appear on invoice emails and payment pages.</p>
+        {/* ── PayPal ── */}
+        <div className="mb-6">
+          <div className="flex items-center gap-2 mb-2">
+            <div className="bg-blue-600 text-white text-xs font-bold px-3 py-1 rounded-lg">PayPal</div>
+            <h3 className="font-bold text-slate-700 text-sm">PayPal.me (Recommended)</h3>
+          </div>
+          <p className="text-sm text-slate-600 mb-3">
+            The easiest way for clients to pay you via PayPal. They just tap your link, review the amount, and pay — no app install needed.
+          </p>
+          <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-3">
+            <p className="text-xs font-semibold text-blue-700 mb-2">Step-by-step setup:</p>
+            <ol className="text-xs text-slate-600 space-y-1.5">
+              <li><span className="font-bold text-blue-700">1.</span> Go to <a href="https://www.paypal.com/paypalme" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline font-medium">paypal.com/paypalme</a> and sign in to your PayPal account</li>
+              <li><span className="font-bold text-blue-700">2.</span> Create your PayPal.me link (e.g., paypal.me/JohnSmith)</li>
+              <li><span className="font-bold text-blue-700">3.</span> Copy the full link they give you</li>
+              <li><span className="font-bold text-blue-700">4.</span> Paste it into the field below</li>
+            </ol>
+          </div>
+          <label className="block text-xs font-medium text-slate-500 mb-1.5">Your PayPal.me Link</label>
+          <input type="text" value={form.paypalMe} onChange={e => set('paypalMe', e.target.value)} placeholder="https://paypal.me/yourname"
+            className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all" />
+          {form.paypalMe && (
+            <p className="text-xs text-green-600 mt-1.5 flex items-center gap-1">✅ Looks good! This will show in your invoice emails.</p>
+          )}
+          {!form.paypalMe && (
+            <p className="text-xs text-slate-400 mt-1.5">Leave blank if you don't use PayPal.</p>
+          )}
         </div>
 
-        <div className="space-y-4 mt-4">
-          <div>
-            <label className="block text-xs font-medium text-slate-500 mb-1.5">PayPal.me Link</label>
-            <input type="text" value={form.paypalMe} onChange={e => set('paypalMe', e.target.value)} placeholder="https://paypal.me/yourusername"
-              className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-400 transition-all" />
-            <p className="text-xs text-slate-400 mt-1">Get your link at paypal.com/paypalme/yourname</p>
+        <div className="border-t border-slate-100 mb-6" />
+
+        {/* ── Venmo ── */}
+        <div className="mb-6">
+          <div className="flex items-center gap-2 mb-2">
+            <div className="bg-sky-600 text-white text-xs font-bold px-3 py-1 rounded-lg">Venmo</div>
+            <h3 className="font-bold text-slate-700 text-sm">Venmo @username</h3>
           </div>
-          <div>
-            <label className="block text-xs font-medium text-slate-500 mb-1.5">Venmo Username</label>
-            <input type="text" value={form.venmoUsername} onChange={e => set('venmoUsername', e.target.value)} placeholder="@yourusername"
-              className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-400 transition-all" />
-            <p className="text-xs text-slate-400 mt-1">Your Venmo @username (find it in Venmo app)</p>
+          <p className="text-sm text-slate-600 mb-3">
+            Clients can find you in the Venmo app by searching your username. Works great for clients who already use Venmo.
+          </p>
+          <div className="bg-sky-50 border border-sky-200 rounded-xl p-4 mb-3">
+            <p className="text-xs font-semibold text-sky-700 mb-2">Step-by-step setup:</p>
+            <ol className="text-xs text-slate-600 space-y-1.5">
+              <li><span className="font-bold text-sky-700">1.</span> Open the Venmo app on your phone</li>
+              <li><span className="font-bold text-sky-700">2.</span> Tap your profile picture (top-left)</li>
+              <li><span className="font-bold text-sky-700">3.</span> Your @username is shown at the top (e.g., @John-Smith)</li>
+              <li><span className="font-bold text-sky-700">4.</span> Enter that username below — <strong>include the @ symbol</strong></li>
+            </ol>
           </div>
-          <div>
-            <label className="block text-xs font-medium text-slate-500 mb-1.5">Zelle Info</label>
-            <input type="text" value={form.zelleInfo} onChange={e => set('zelleInfo', e.target.value)} placeholder="your@email.com or 555-123-4567"
-              className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-400 transition-all" />
-            <p className="text-xs text-slate-400 mt-1">Email or phone linked to your Zelle account</p>
+          <label className="block text-xs font-medium text-slate-500 mb-1.5">Your Venmo Username</label>
+          <input type="text" value={form.venmoUsername} onChange={e => set('venmoUsername', e.target.value)} placeholder="@yourusername"
+            className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-sky-400 transition-all" />
+          {form.venmoUsername && !form.venmoUsername.startsWith('@') && (
+            <p className="text-xs text-amber-600 mt-1.5">Don't forget the @ symbol (e.g., @JohnSmith)</p>
+          )}
+          {form.venmoUsername && form.venmoUsername.startsWith('@') && (
+            <p className="text-xs text-green-600 mt-1.5 flex items-center gap-1">✅ Looks good! This will show in your invoice emails.</p>
+          )}
+          {!form.venmoUsername && (
+            <p className="text-xs text-slate-400 mt-1.5">Leave blank if you don't use Venmo.</p>
+          )}
+        </div>
+
+        <div className="border-t border-slate-100 mb-6" />
+
+        {/* ── Zelle ── */}
+        <div className="mb-2">
+          <div className="flex items-center gap-2 mb-2">
+            <div className="bg-purple-800 text-white text-xs font-bold px-3 py-1 rounded-lg">Zelle</div>
+            <h3 className="font-bold text-slate-700 text-sm">Zelle</h3>
           </div>
+          <p className="text-sm text-slate-600 mb-3">
+            Direct bank transfer. Clients pay from their bank app — no fees for either party. Most major banks support it.
+          </p>
+          <div className="bg-purple-50 border border-purple-200 rounded-xl p-4 mb-3">
+            <p className="text-xs font-semibold text-purple-700 mb-2">Step-by-step setup:</p>
+            <ol className="text-xs text-slate-600 space-y-1.5">
+              <li><span className="font-bold text-purple-700">1.</span> Zelle is linked to your bank — check your bank's app or website</li>
+              <li><span className="font-bold text-purple-700">2.</span> Find the email address or phone number registered with Zelle</li>
+              <li><span className="font-bold text-purple-700">3.</span> Enter that email or phone number below (clients send money to this)</li>
+            </ol>
+            <div className="mt-2 bg-purple-100 rounded-lg p-2 text-xs text-purple-800">
+              💡 <strong>Tip:</strong> Your Zelle email/phone should match the bank account you want to receive money in.
+            </div>
+          </div>
+          <label className="block text-xs font-medium text-slate-500 mb-1.5">Your Zelle Email or Phone</label>
+          <input type="text" value={form.zelleInfo} onChange={e => set('zelleInfo', e.target.value)} placeholder="your@email.com or 555-123-4567"
+            className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-400 transition-all" />
+          {form.zelleInfo && (
+            <p className="text-xs text-green-600 mt-1.5 flex items-center gap-1">✅ Looks good! This will show in your invoice emails.</p>
+          )}
+          {!form.zelleInfo && (
+            <p className="text-xs text-slate-400 mt-1.5">Leave blank if you don't use Zelle.</p>
+          )}
         </div>
       </div>
 
