@@ -161,7 +161,7 @@ function Benefits() {
           ))}
         </div>
         <div className="grid md:grid-cols-3 gap-4 mt-8">
-          {['Get paid up to 3x faster', 'No more awkward follow-ups', 'Save hours every week', 'Improve cash flow', 'Look more professional', 'Works on any phone'].map((b, i) => (
+          {['Get paid up to 3x faster', 'No more awkward follow-ups', 'Save hours every week', 'Improve cash flow', 'Look more professional', 'Works on any device'].map((b, i) => (
             <div key={i} className="flex items-center gap-2 text-blue-100 text-sm">
               <CheckIcon /><span>{b}</span>
             </div>
@@ -215,9 +215,9 @@ function EmailPreview() {
 function FeaturesSection() {
   const features = [
     { emoji: '📧', title: 'Automated Email Reminders', desc: 'Never forget to follow up again. Reminders sent before, on, and after due date.' },
-    { emoji: '📱', title: 'SMS Text Reminders', desc: 'Customers get text message reminders too — higher open rate than email.' },
     { emoji: '💳', title: 'PayPal, Venmo & Zelle', desc: 'Payment details in every invoice email. Customers pay their preferred way.' },
     { emoji: '📊', title: 'Invoice Tracking', desc: 'See paid, pending, and overdue invoices at a glance.' },
+    { emoji: '⚡', title: 'Simple Setup', desc: 'Start sending invoices and getting paid in minutes.' },
   ];
   return (
     <section className="py-20 px-6 bg-white">
