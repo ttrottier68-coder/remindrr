@@ -200,10 +200,10 @@ function EmailPreview() {
         <div className="bg-white/10 backdrop-blur rounded-2xl p-8 border border-white/20 text-left">
           <div className="text-slate-400 text-sm mb-3 font-mono">Email · From Your Business</div>
           <p className="text-lg text-white leading-relaxed">
-            "Hey John, just a reminder your invoice for <strong>$420</strong> is due today. You can pay here: <span className="text-blue-300 underline">pay.remindrr.app/invite</span> — thanks!"
+            "Hey John, just a reminder your invoice for <strong>$420</strong> is due on Friday. You can pay via PayPal, Venmo, or Zelle — details in the email. Thanks!"
           </p>
           <div className="mt-6 bg-green-500/20 border border-green-400/30 rounded-lg px-4 py-2 inline-flex items-center gap-2 text-sm text-green-300">
-            ✅ Paid with one click — money in your account
+            ✅ Multiple payment options — client pays their way
           </div>
         </div>
       </div>
@@ -215,9 +215,9 @@ function EmailPreview() {
 function FeaturesSection() {
   const features = [
     { emoji: '📧', title: 'Automated Email Reminders', desc: 'Never forget to follow up again. Reminders sent before, on, and after due date.' },
-    { emoji: '💳', title: 'Instant Payment Links', desc: 'Customers pay in 2 taps. No chasing, no awkwardness.' },
+    { emoji: '📱', title: 'SMS Text Reminders', desc: 'Customers get text message reminders too — higher open rate than email.' },
+    { emoji: '💳', title: 'PayPal, Venmo & Zelle', desc: 'Payment details in every invoice email. Customers pay their preferred way.' },
     { emoji: '📊', title: 'Invoice Tracking', desc: 'See paid, pending, and overdue invoices at a glance.' },
-    { emoji: '⚡', title: 'Simple Setup', desc: 'Start sending invoices and getting paid in minutes.' },
   ];
   return (
     <section className="py-20 px-6 bg-white">
@@ -335,7 +335,7 @@ function FAQ() {
     },
     {
       q: 'Can customers pay online?',
-      a: "Yes! Customers receive a secure payment link via email. They can pay in 2 taps on their phone — no accounts or logins needed on their end.",
+      a: "Yes! Customers can pay via PayPal, Venmo, or Zelle — included in every invoice email. No accounts or logins needed on their end.",
     },
     {
       q: 'Is this easy to set up?',
@@ -355,7 +355,7 @@ function FAQ() {
     },
     {
       q: 'How much does it cost?',
-      a: "Just $29/month — cancel anytime. No contracts, no hidden fees. It pays for itself the first time you collect an overdue invoice.",
+      a: "Plans start at $19/month. Remindrr handles everything — from SMS and email reminders to payment links, all in one place. Cancel anytime.",
     },
   ];
   return (
