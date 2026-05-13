@@ -370,7 +370,7 @@ export default function SettingsPage() {
             <h3 className="font-bold text-slate-700 text-sm">Zelle</h3>
           </div>
           <p className="text-sm text-slate-600 mb-3">
-            Direct bank transfer. Clients pay from their bank app — no fees for either party. Most major banks support it.
+            Direct bank transfer. Clients pay from their bank app — no fees for either party. Most major US banks support it. <strong>US bank accounts only.</strong>
           </p>
           <div className="bg-purple-50 border border-purple-200 rounded-xl p-4 mb-3">
             <p className="text-xs font-semibold text-purple-700 mb-2">Step-by-step setup:</p>
