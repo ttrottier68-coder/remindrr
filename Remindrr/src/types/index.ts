@@ -39,8 +39,19 @@ export interface UserSettings {
   twilioPhone?: string;
   sendgridApiKey?: string;
   sendgridFromEmail?: string;
-  plan: 'starter' | 'pro' | 'business';
+  plan: 'trial' | 'starter' | 'pro' | 'business';
+  trialStartDate?: string; // ISO date string when trial began
   paypalMe?: string;
   venmoUsername?: string;
   zelleInfo?: string;
+}
+
+// ── Trial helpers ──────────────────────────────────────────
+export const TRIAL_DAYS = 14;
+
+export function getTrialDaysLeft(settings: UserSettings): number {
+  if (settings.plan !== 'trial' || !settings.trialStartDate) return 0;
+  const elapsed = Date.now() - new Date(settings.trialStartDate).getTime();
+  const daysLeft = Math.ceil(TRIAL_DAYS - elapsed / (1000 * 60 * 60 * 24));
+  return Math.max(0, daysLeft);
 }

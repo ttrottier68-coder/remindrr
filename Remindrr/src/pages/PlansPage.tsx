@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getSettings } from '../lib/reminder-data';
+import { getSettings, saveSettings } from '../lib/reminder-data';
+import { getTrialDaysLeft } from '../types';
 
 const CheckIcon = () => (
   <svg className="w-4 h-4 text-green-500 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
@@ -8,79 +9,30 @@ const CheckIcon = () => (
   </svg>
 );
 
-const plans = [
-  {
-    name: 'Starter',
-    price: '$29',
-    period: '/mo',
-    description: 'Perfect for solo contractors getting started.',
-    features: [
-      'Up to 25 invoices/month',
-      'Automated email reminders',
-      'Up to 50 clients',
-      'Payment link generation',
-      'Invoice tracking dashboard',
-      'Email support',
-    ],
-    color: 'border-slate-200',
-    badge: null,
-    paymentLink: 'https://buy.stripe.com/4gM9AU3nIaoE26YdS21wY01',
-  },
-  {
-    name: 'Pro',
-    price: '$59',
-    period: '/mo',
-    description: 'For growing businesses with more clients.',
-    features: [
-      'Unlimited invoices',
-      'Automated email reminders',
-      'Unlimited clients',
-      'Payment link generation',
-      'Invoice tracking dashboard',
-      'Priority phone & email support',
-      'Custom branding',
-    ],
-    color: 'border-orange-400',
-    badge: 'MOST POPULAR',
-    paymentLink: 'https://buy.stripe.com/fZu8wQe2mcwMfXOaFQ1wY02',
-  },
-  {
-    name: 'Business',
-    price: '$129',
-    period: '/mo',
-    description: 'For established companies at scale.',
-    features: [
-      'Everything in Pro',
-      'White-label invoice links',
-      'API access',
-      'Dedicated account manager',
-      'Custom integrations',
-      'SLA guarantee',
-    ],
-    color: 'border-slate-200',
-    badge: null,
-    paymentLink: 'https://buy.stripe.com/8x28wQ0bw0O46neg0a1wY03',
-  },
-];
-
 export default function PlansPage() {
   const navigate = useNavigate();
   const settings = getSettings();
   const [showGuide, setShowGuide] = useState(false);
+  const daysLeft = getTrialDaysLeft(settings);
 
-  // If user already has a plan, redirect to dashboard
+  // If user is on paid starter plan, redirect to dashboard
   useEffect(() => {
-    if (settings?.plan && settings.plan !== 'starter') {
+    if (settings?.plan === 'starter') {
       navigate('/');
     }
   }, [settings, navigate]);
 
-  // If user has starter plan but no settings, go to onboarding
-  useEffect(() => {
-    if (settings?.plan === 'starter' && !settings?.ownerName) {
-      navigate('/onboarding');
-    }
-  }, [settings, navigate]);
+  const handleStartTrial = () => {
+    saveSettings({
+      plan: 'trial',
+      trialStartDate: new Date().toISOString(),
+    });
+    navigate('/onboarding');
+  };
+
+  const handleStartStarter = () => {
+    window.open('https://buy.stripe.com/4gM9AU3nIaoE26YdS21wY01', '_blank');
+  };
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -88,104 +40,118 @@ export default function PlansPage() {
       <div className="bg-white border-b border-slate-100 py-4 px-6">
         <div className="max-w-4xl mx-auto flex items-center justify-between">
           <button onClick={() => navigate('/')} className="text-slate-500 hover:text-slate-800 text-sm font-medium">← Back</button>
-          <h1 className="text-lg font-bold text-slate-800">Choose Your Plan</h1>
+          <h1 className="text-lg font-bold text-slate-800">Plans & Pricing</h1>
           <div />
         </div>
       </div>
 
-      <div className="max-w-5xl mx-auto px-6 py-12">
-        {/* ── Stripe Setup Guide Toggle ── */}
-        <div className="mb-8 text-center">
-          <button
-            onClick={() => setShowGuide(g => !g)}
-            className="text-sm text-orange-500 hover:underline font-medium"
-          >
-            {showGuide ? 'Hide' : 'How do I set up Pro & Business in Stripe?'}
-          </button>
-
-          {showGuide && (
-            <div className="mt-4 bg-blue-50 border border-blue-200 rounded-2xl p-6 text-left max-w-2xl mx-auto text-sm text-slate-700">
-              <h3 className="font-bold text-blue-800 mb-3">📋 How to create Pro & Business Stripe Payment Links</h3>
-              <ol className="space-y-2 list-decimal list-inside">
-                <li>Log into <a href="https://dashboard.stripe.com" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline font-medium">dashboard.stripe.com</a></li>
-                <li>In the left menu: <strong>Products → + Add product</strong></li>
-                <li><strong>Name:</strong> "Remindrr Pro Plan" · <strong>Price:</strong> $59.00/month · recurring · click <strong>Add product</strong></li>
-                <li>Repeat for Business: name "Remindrr Business Plan" · $129.00/month</li>
-                <li>For each product: click <strong>→ Payment link</strong> · click <strong>Add pricing page</strong> · copy the URL</li>
-                <li>Come back here and paste those URLs in the code (or send them to Max)</li>
-              </ol>
-              <p className="mt-3 text-blue-600 font-medium">Need help? Stripe's docs: <a href="https://stripe.com/docs/payments/payment-links" target="_blank" rel="noopener noreferrer" className="underline">stripe.com/docs/payments/payment-links</a></p>
-            </div>
-          )}
-        </div>
-
-        {/* Current plan badge */}
-        {settings?.plan && settings.plan !== 'starter' && (
-          <div className="text-center mb-6">
-            <span className="bg-orange-100 text-orange-700 text-sm font-bold px-4 py-1.5 rounded-full">
-              Current plan: {settings.plan}
-            </span>
+      <div className="max-w-4xl mx-auto px-6 py-12">
+        {/* Trial banner */}
+        {settings?.plan === 'trial' && daysLeft > 0 && (
+          <div className="bg-orange-50 border border-orange-200 rounded-2xl p-6 mb-10 text-center">
+            <div className="text-4xl mb-2">⏳</div>
+            <h2 className="text-xl font-bold text-orange-800 mb-1">Your free trial is active!</h2>
+            <p className="text-orange-700 mb-4">
+              You have <strong>{daysLeft} day{daysLeft !== 1 ? 's' : ''}</strong> left in your trial. Enjoy full access — no credit card needed.
+            </p>
+            <button
+              onClick={handleStartStarter}
+              className="bg-gradient-to-r from-orange-500 to-orange-600 text-white font-bold px-8 py-3 rounded-xl shadow-lg shadow-orange-500/30 hover:opacity-90 transition-opacity"
+            >
+              Unlock full access — $29/mo →
+            </button>
+            <p className="text-orange-500 text-xs mt-3">Cancel anytime. No contracts.</p>
           </div>
         )}
 
-        {/* Pricing cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {plans.map(plan => (
-            <div
-              key={plan.name}
-              className={`bg-white rounded-2xl border-2 ${plan.color} shadow-sm overflow-hidden relative`}
+        {/* Trial expired banner */}
+        {settings?.plan === 'trial' && daysLeft === 0 && (
+          <div className="bg-red-50 border border-red-200 rounded-2xl p-6 mb-10 text-center">
+            <div className="text-4xl mb-2">⏰</div>
+            <h2 className="text-xl font-bold text-red-800 mb-1">Your free trial has ended</h2>
+            <p className="text-red-700 mb-4">Upgrade to Starter to keep using Remindrr.</p>
+            <button
+              onClick={handleStartStarter}
+              className="bg-gradient-to-r from-red-500 to-red-600 text-white font-bold px-8 py-3 rounded-xl shadow-lg hover:opacity-90 transition-opacity"
             >
-              {plan.badge && (
-                <div className="bg-gradient-to-r from-orange-500 to-orange-600 text-white text-xs font-bold px-4 py-1.5 text-center">
-                  {plan.badge}
-                </div>
-              )}
+              Upgrade to Starter — $29/mo →
+            </button>
+          </div>
+        )}
 
-              <div className="p-6">
-                <h2 className="text-xl font-black text-slate-800 mb-1">{plan.name}</h2>
-                <div className="flex items-baseline gap-1 mb-3">
-                  <span className="text-3xl font-black text-slate-900">{plan.price}</span>
-                  <span className="text-slate-400 text-sm font-medium">{plan.period}</span>
-                </div>
-                <p className="text-slate-500 text-sm mb-5">{plan.description}</p>
+        {/* Section header */}
+        <div className="text-center mb-10">
+          <h2 className="text-3xl font-bold text-slate-800 mb-3">Simple, honest pricing</h2>
+          <p className="text-slate-500">Start free. Upgrade when you're ready.</p>
+        </div>
 
-                <ul className="space-y-2 mb-6">
-                  {plan.features.map(f => (
-                    <li key={f} className="flex items-start gap-2 text-sm text-slate-600">
-                      <CheckIcon /><span>{f}</span>
-                    </li>
-                  ))}
-                </ul>
-
-                <a
-                  href={plan.paymentLink}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={`block w-full text-center font-bold py-3 rounded-xl transition-colors ${
-                    plan.badge
-                      ? 'bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-lg shadow-orange-500/30 hover:opacity-90'
-                      : 'bg-slate-900 text-white hover:bg-slate-800'
-                  }`}
-                >
-                  {plan.paymentLink.includes('YOUR_') ? '⚠️ Set up in Stripe first' : `Get Started →`}
-                </a>
-
-                {plan.paymentLink.includes('YOUR_') && (
-                  <p className="text-xs text-slate-400 text-center mt-2">
-                    Need to create this in Stripe →
-                    <button onClick={() => setShowGuide(true)} className="text-orange-500 hover:underline ml-1">see guide above</button>
-                  </p>
-                )}
+        {/* Pricing cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl mx-auto">
+          {/* Free Trial Card */}
+          <div className="bg-white rounded-2xl border-2 border-slate-200 shadow-sm overflow-hidden">
+            <div className="p-6">
+              <div className="flex items-center gap-2 mb-3">
+                <span className="bg-slate-100 text-slate-700 text-xs font-bold px-3 py-1 rounded-full">FREE</span>
               </div>
+              <h2 className="text-xl font-black text-slate-800 mb-1">Free Trial</h2>
+              <div className="flex items-baseline gap-1 mb-3">
+                <span className="text-3xl font-black text-slate-900">$0</span>
+                <span className="text-slate-400 text-sm font-medium">/ 14 days</span>
+              </div>
+              <p className="text-slate-500 text-sm mb-5">Try everything before you buy. No credit card required.</p>
+              <ul className="space-y-2 mb-6">
+                {['Full access for 14 days', 'Unlimited invoices', 'Unlimited clients', 'Email reminders', 'PayPal, Venmo & Zelle'].map(f => (
+                  <li key={f} className="flex items-start gap-2 text-sm text-slate-600">
+                    <CheckIcon /><span>{f}</span>
+                  </li>
+                ))}
+              </ul>
+              <button
+                onClick={handleStartTrial}
+                className="w-full bg-slate-900 text-white font-bold py-3 rounded-xl hover:bg-slate-800 transition-colors"
+              >
+                Start Free Trial →
+              </button>
             </div>
-          ))}
+          </div>
+
+          {/* Starter Card */}
+          <div className="bg-white rounded-2xl border-2 border-orange-400 shadow-sm overflow-hidden relative">
+            <div className="bg-gradient-to-r from-orange-500 to-orange-600 text-white text-xs font-bold px-4 py-1.5 text-center">
+              BEST VALUE
+            </div>
+            <div className="p-6">
+              <h2 className="text-xl font-black text-slate-800 mb-1">Starter</h2>
+              <div className="flex items-baseline gap-1 mb-3">
+                <span className="text-3xl font-black text-slate-900">$29</span>
+                <span className="text-slate-400 text-sm font-medium">/month</span>
+              </div>
+              <p className="text-slate-500 text-sm mb-5">Full access, billed monthly. Cancel anytime.</p>
+              <ul className="space-y-2 mb-6">
+                {['Everything in the free trial', 'Unlimited use — no limits', 'Priority email support', 'All features included'].map(f => (
+                  <li key={f} className="flex items-start gap-2 text-sm text-slate-600">
+                    <CheckIcon /><span>{f}</span>
+                  </li>
+                ))}
+              </ul>
+              <a
+                href="https://buy.stripe.com/4gM9AU3nIaoE26YdS21wY01"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block w-full text-center bg-gradient-to-r from-orange-500 to-orange-600 text-white font-bold py-3 rounded-xl shadow-lg shadow-orange-500/30 hover:opacity-90 transition-opacity"
+              >
+                Get Started →
+              </a>
+              <p className="text-xs text-slate-400 text-center mt-3">Secured by Stripe · Cancel anytime</p>
+            </div>
+          </div>
         </div>
 
         {/* Trust footer */}
-        <div className="mt-8 flex flex-wrap items-center justify-center gap-6 text-sm text-slate-400">
+        <div className="mt-10 flex flex-wrap items-center justify-center gap-6 text-sm text-slate-400">
           <span>🔒 Secured by Stripe</span>
-          <span>✅ Cancel anytime</span>
-          <span>💳 Set up in 5 minutes</span>
+          <span>✅ No credit card for trial</span>
+          <span>💳 Cancel anytime</span>
         </div>
       </div>
     </div>

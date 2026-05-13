@@ -36,10 +36,10 @@ function HeroSection() {
         <p className="text-xl text-blue-100 max-w-2xl mx-auto mb-4">
           Remindrr automatically sends friendly email payment reminders so contractors and small business owners get paid on time — without awkward follow-ups.
         </p>
-        <p className="text-blue-300/60 text-sm mb-10">Automatic Email Reminders</p>
+        <p className="text-blue-300/60 text-sm mb-10">14-day free trial · No credit card</p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <Link to="/signup" className="bg-blue-500 hover:bg-blue-600 text-white font-bold px-8 py-4 rounded-xl text-lg transition-colors shadow-lg shadow-blue-500/30 flex items-center justify-center gap-2">
-            Create Account →
+            Start Free Trial →
           </Link>
           <Link to="/login" className="border border-blue-400/40 text-blue-200 hover:text-white hover:border-blue-300 px-8 py-4 rounded-xl text-lg font-medium transition-colors">
             Sign In

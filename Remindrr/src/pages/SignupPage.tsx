@@ -53,12 +53,14 @@ export default function SignupPage() {
       return;
     }
     // Use same normalized email key that register() used — this is the login bug fix
+    // New users start on a 14-day free trial
     saveSettings({
       ownerName: form.name,
       businessName: form.businessName || '',
       email: normalizedEmail,
       phone: '',
-      plan: 'starter',
+      plan: 'trial',
+      trialStartDate: new Date().toISOString(),
     });
     setLoading(false);
     // First-time user goes to onboarding
@@ -69,7 +71,7 @@ export default function SignupPage() {
     <AuthLayout>
       <div className="text-center mb-6">
         <h1 className="text-2xl font-bold text-slate-800">Create your account</h1>
-        <p className="text-slate-500 mt-1 text-sm">Start managing invoices in minutes</p>
+        <p className="text-orange-600 mt-1 text-sm font-semibold">✨ 14-day free trial — no credit card required</p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-3">
@@ -144,7 +146,7 @@ export default function SignupPage() {
           disabled={loading}
           className="w-full bg-gradient-to-r from-orange-500 to-orange-600 text-white font-bold py-3 rounded-xl shadow-lg shadow-orange-500/30 disabled:opacity-60 disabled:cursor-not-allowed transition-opacity mt-2"
         >
-          {loading ? 'Creating account...' : 'Create Account'}
+          {loading ? 'Creating account...' : 'Start Free Trial →'}
         </button>
       </form>
 

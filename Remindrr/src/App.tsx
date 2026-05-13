@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-route
 import { getSettings, saveSettings, getDashboardStats, getInvoices, getClients, saveInvoice, saveClient, markInvoicePaid, deleteInvoice, sendReminderNow, openMailto } from './lib/reminder-data';
 import { isAuthenticated, logout, ensureDemoAccount } from './lib/auth';
 import type { Invoice, Client } from './types';
+import { getTrialDaysLeft } from './types';
 import SettingsPage from './pages/SettingsPage';
 import AddClientPage from './pages/AddClientPage';
 import LoginPage from './pages/LoginPage';
@@ -231,10 +232,58 @@ function SetupPage() {
   );
 }
 
+// ─── Trial Banner ─────────────────────────────────────────────────────────────
+function TrialBanner() {
+  const settings = getSettings();
+  const [dismissed, setDismissed] = useState(false);
+  const daysLeft = getTrialDaysLeft(settings);
+
+  if (dismissed) return null;
+
+  // Expired trial — redirect to plans page
+  if (settings?.plan === 'trial' && daysLeft === 0) {
+    if (window.location.pathname !== '/plans') {
+      window.location.href = '/plans';
+      return null;
+    }
+    return null;
+  }
+
+  // Active trial — show banner
+  if (settings?.plan === 'trial' && daysLeft > 0) {
+    return (
+      <div className="bg-gradient-to-r from-orange-500 to-orange-600 rounded-xl p-5 text-white flex items-center justify-between gap-4 shadow-lg shadow-orange-200/50">
+        <div className="flex items-center gap-3">
+          <span className="text-2xl">⏳</span>
+          <div>
+            <p className="font-bold text-sm">Free trial active — {daysLeft} day{daysLeft !== 1 ? 's' : ''} left</p>
+            <p className="text-orange-100 text-xs">Enjoy full access. Upgrade anytime to keep it after your trial ends.</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <button
+            onClick={() => window.location.href = '/plans'}
+            className="bg-white text-orange-600 font-bold text-xs px-4 py-2 rounded-lg hover:bg-orange-50 transition-colors whitespace-nowrap"
+          >
+            Upgrade → $29/mo
+          </button>
+          <button onClick={() => setDismissed(true)} className="text-orange-200 hover:text-white text-xs px-2 py-2">✕</button>
+        </div>
+      </div>
+    );
+  }
+
+  // Paid user — no banner
+  return null;
+}
+
 // ─── Upgrade Banner ────────────────────────────────────────────────────────────────
 function UpgradeBanner() {
   const [dismissed, setDismissed] = useState(false);
   if (dismissed) return null;
+  // Only show for paid users (trial users see TrialBanner instead)
+  const settings = getSettings();
+  if (settings?.plan === 'trial') return null;
   const count = getInvoices().length;
   if (count < 5) return null;
   return (
@@ -243,19 +292,19 @@ function UpgradeBanner() {
         <span className="text-2xl">🚀</span>
         <div>
           <p className="font-bold text-sm">
-            {count >= 10 ? "You're a power user! Unlock Pro features →" : "Want to speed up your payments even more?"}
+            Love Remindrr? Help us grow and get perks.
           </p>
           <p className="text-orange-100 text-xs">
-            {count >= 10 ? "Advanced reminders · Custom templates · Priority SMS" : "Upgrade to Pro for advanced automation and custom message templates."}
+            Refer a friend and both get one free month.
           </p>
         </div>
       </div>
       <div className="flex items-center gap-2 flex-shrink-0">
         <button
-          onClick={() => window.location.href = '/settings'}
+          onClick={() => window.location.href = '/plans'}
           className="bg-white text-orange-600 font-bold text-xs px-4 py-2 rounded-lg hover:bg-orange-50 transition-colors whitespace-nowrap"
         >
-          Upgrade to Pro
+          Refer a friend
         </button>
         <button onClick={() => setDismissed(true)} className="text-orange-200 hover:text-white text-xs px-2 py-2">✕</button>
       </div>
@@ -288,6 +337,8 @@ function Dashboard() {
       </div>
 
       <UpgradeBanner />
+      
+      <TrialBanner />
       
       {/* Complete Setup CTA - if business name or phone missing */}
       {(!settings?.businessName || !settings?.phone) && (
