@@ -483,7 +483,7 @@ function InvoicesPage() {
                     <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${st.color}`}>{st.label}</span>
                     {inv.status !== 'paid' && (
                       <>
-                        <button type="button" onClick={(e) => { e.preventDefault(); alert('EMAIL CLICKED'); openMailto(inv); }}
+                        <button type="button" onClick={() => openMailto(inv)}
                           className="text-xs bg-blue-50 text-blue-700 font-bold px-3 py-1 rounded-lg hover:bg-blue-100">
                           📧 Email
                         </button>
