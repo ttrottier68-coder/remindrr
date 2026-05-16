@@ -46,6 +46,7 @@ export function openInvoicePrint(invoice: Invoice) {
 
 export function InvoiceCard({ invoice, onRefresh }: Props) {
   const navigate = useNavigate();
+  const settings = getSettings();
   const client = getClients().find(c => c.id === invoice.clientId);
   const st = getStatus(invoice);
   const days = Math.ceil((new Date(invoice.dueDate).getTime() - Date.now()) / 86400000);

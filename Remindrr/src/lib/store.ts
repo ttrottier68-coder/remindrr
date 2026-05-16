@@ -52,7 +52,7 @@ export async function sendReminderNow(invoice: Invoice): Promise<{ success: bool
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         to: phone,
-        message: `Hi ${client?.name || 'there'}, this is a reminder that your invoice for $${invoice.amount} is due. Please pay at: ${invoice.paymentLink || 'your payment link'}`,
+        message: `Hi ${client?.name || 'there'}, Remindrr here! Just a heads up — your invoice for $${invoice.amount} is due. Please reach out to arrange payment. Thanks!`,
         from: settings.twilioPhone,
         accountSid: settings.twilioSid,
         authToken: settings.twilioToken,
