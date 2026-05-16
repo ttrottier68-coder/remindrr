@@ -246,10 +246,6 @@ function buildEmailHtml(invoice: Invoice, client: Client | undefined, businessNa
 </body></html>`;
 }
 
-export function deleteInvoice(id: string) {
-  persist(INVOICES_KEY, getInvoices().filter(i => i.id !== id));
-}
-
 export function getClients(): Client[] {
   return safe(CLIENTS_KEY, []);
 }
