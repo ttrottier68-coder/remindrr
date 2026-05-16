@@ -600,12 +600,11 @@ function NewInvoicePage() {
   const finalEmail = useNew ? newEmail : (selectedClient?.email || '');
   const finalName = useNew ? newName : (selectedClient?.name || '');
   const invId = 'inv_' + Math.random().toString(36).slice(2, 11);
-  // Module-level formatDate is used here
-  const paymentLink = `https://pay.stripe.com/pay/${invId}#demo`;
+  // paymentLink intentionally left empty — let users configure PayPal/Venmo/Zelle in settings
 
   const defaultEmailSubject = finalEmail ? `Payment Reminder: Invoice for ${description || 'your service'}` : '';
   const defaultEmailBody = finalEmail
-    ? `Hi ${finalName},\n\nJust a friendly reminder that your invoice of $${total.toFixed(2)} for "${description || 'your service'}"${taxRate > 0 ? ` (incl. ${taxName})` : ''} is due on ${formatDate(dueDate)}.\n\nPay now: ${paymentLink}\n\nThanks for your business!`
+    ? `Hi ${finalName},\n\nJust a friendly reminder that your invoice of $${total.toFixed(2)} for "${description || 'your service'}"${taxRate > 0 ? ` (incl. ${taxName})` : ''} is due on ${formatDate(dueDate)}.\n\nYou can pay using PayPal, Venmo, or Zelle — details below.\n\nThanks for your business!`
     : '';
 
   const [messageText, setMessageText] = useState('');
@@ -638,7 +637,7 @@ function NewInvoicePage() {
       clientEmail: finalEmail,
       amount: total, taxRate, taxName, subtotal,
       description, dueDate, status: 'pending',
-      paymentLink, createdAt: new Date().toISOString(),
+      paymentLink: '', createdAt: new Date().toISOString(),
     });
     // Sync to server (no await - runs in background)
     
