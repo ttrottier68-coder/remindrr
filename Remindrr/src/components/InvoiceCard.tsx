@@ -12,6 +12,7 @@ interface Props {
 console.log('InvoiceCard loaded, openMailto:', typeof openMailto);
 
 function getPaymentMethods(settings: any) {
+  if (!settings) return [];
   const methods = [];
   if (settings.paypalMe) methods.push({ label: 'PayPal', url: settings.paypalMe });
   if (settings.venmoUsername) methods.push({ label: 'Venmo', url: `https://venmo.com/${settings.venmoUsername.replace('@', '')}` });
