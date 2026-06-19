@@ -221,24 +221,12 @@ function CreateInvoiceStep({
   });
 
   const isValid = customerName && (customerPhone || customerEmail) && description && amount && dueDate;
-  
-  // Debug
-  console.log('=== CreateInvoiceStep DEBUG ===');
-  console.log('customerName:', customerName, 'bool:', !!customerName);
-  console.log('customerPhone:', customerPhone, 'bool:', !!customerPhone);
-  console.log('customerEmail:', customerEmail, 'bool:', !!customerEmail);
-  console.log('description:', description, 'bool:', !!description);
-  console.log('amount:', amount, 'bool:', !!amount);
-  console.log('dueDate:', dueDate, 'bool:', !!dueDate);
-  console.log('isValid:', isValid);
-  console.log('onNext function:', typeof onNext);
 
   return (
     <div className="space-y-5">
       <div className="text-center mb-6">
         <h2 className="text-2xl font-bold text-slate-900 mb-1">Create your first invoice</h2>
         <p className="text-slate-400 text-sm">You can edit this anytime.</p>
-        <div className="text-xs text-red-500 mt-2">isValid = {isValid ? 'TRUE' : 'FALSE'}</div>
       </div>
       <div>
         <label className="block text-sm font-medium text-slate-700 mb-1.5">Customer Name</label>
@@ -298,14 +286,8 @@ function CreateInvoiceStep({
       </div>
       <button
         onClick={() => {
-          alert('Button clicked! isValid=' + isValid);
-          console.log('=== BUTTON CLICKED ===');
-          console.log('isValid:', isValid);
           if (isValid) {
-            console.log('Calling onNext...');
             onNext({ customerName, customerPhone, customerEmail, description, amount, dueDate });
-          } else {
-            alert('isValid is FALSE - missing fields');
           }
         }}
         disabled={!isValid}
@@ -363,7 +345,6 @@ function SetRemindersStep({
       </div>
       <button
         onClick={() => {
-          alert('Continue clicked!');
           onNext({ threeDaysBefore, onDueDate, threeDaysAfter });
         }}
         className="w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold py-4 rounded-xl transition-all flex items-center justify-center gap-2 mt-2"
@@ -515,14 +496,8 @@ export default function OnboardingFlow() {
   };
 
   const handleInvoiceNext = (data: typeof invoiceData extends null ? never : typeof invoiceData) => {
-    alert('handleInvoiceNext running! data=' + JSON.stringify(data).substring(0,50));
-    console.log('=== handleInvoiceNext START ===');
-    console.log('data:', data);
-    console.log('current step:', step);
     setInvoiceData(data);
-    console.log('invoiceData set, about to call setStep(4)');
     setStep(4); // Go to Set Reminders step
-    alert('setStep(4) called');
   };
 
   const handleRemindersNext = (data: typeof reminderData) => {

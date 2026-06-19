@@ -73,12 +73,8 @@ function NavBar() {
   const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
   const handleLogout = () => {
-    console.log('Logging out...');
     logout();
-    // Only clear session - keep settings so user can log back in without re-onboarding
-    // Also clear demo flag and redirect to login (NOT landing)
     try { localStorage.removeItem('remindrr_onboarding_complete'); } catch {}
-    console.log('Session cleared, redirecting to /login');
     window.location.replace('/login');
   };
   const navItems = [
@@ -452,19 +448,12 @@ function InvoicesPage() {
   const [lastMessage, setLastMessage] = useState<string | null>(null);
   const navigate = useNavigate();
   const handleSendReminder = (inv: Invoice) => {
-    console.log('=== handleSendReminder START ===');
-    console.log('invoice id:', inv.id);
-    console.log('clientEmail:', inv.clientEmail);
     setSendingId(inv.id);
     setLastMessage('Processing...');
-    alert('handleSendReminder called for: ' + inv.id + ', clientEmail=' + inv.clientEmail);
     sendReminderNow(inv).then(result => {
-      console.log('result:', result);
-      alert('Result: ' + JSON.stringify(result));
       setSendingId(null);
       setLastMessage(result.message);
     }).catch(err => {
-      console.error('Error:', err);
       setSendingId(null);
       setLastMessage('Error: ' + err);
     });
@@ -955,48 +944,33 @@ function RequireAuth({ children }: { children: JSX.Element }) {
 
 // Track when a user just finished registering so we don't kick them back to /signup
 const REGISTERED_KEY = 'remindrr_just_registered';
-
-// ─── Demo seed data ──────────────────────────────────────────────────────────
+// ─── Seed demo data ──────────────────────────────────────────────────────────
 async function seedDemoData() {
-  console.log('seedDemoData running...');
   const existing = getSettings();
-  console.log('  existing settings - ownerName:', existing?.ownerName, '| plan:', existing?.plan);
-  
-  // If user has real settings (non-empty ownerName that's not demo), just ensure demo exists
+
   if (existing?.ownerName && existing.ownerName.trim() && existing.ownerName !== 'Demo User') {
-    console.log('  has real settings, loading from cloud...');
     await ensureDemoAccount();
-    // Load real user data from Firestore (restores invoices across deploys)
     try {
       const cloudData = await loadFromCloud();
       if (cloudData.settings) {
         saveSettings(cloudData.settings);
-        console.log('  loaded settings from cloud');
       }
       if (cloudData.invoices && cloudData.invoices.length > 0) {
-        // Only overwrite local invoices if cloud has data (don't clear if cloud is empty)
         localStorage.setItem('remindrr_invoices', JSON.stringify(cloudData.invoices));
-        console.log('  loaded', cloudData.invoices.length, 'invoices from cloud');
       }
       if (cloudData.clients && cloudData.clients.length > 0) {
         localStorage.setItem('remindrr_clients', JSON.stringify(cloudData.clients));
-        console.log('  loaded', cloudData.clients.length, 'clients from cloud');
       }
     } catch (e) {
-      console.error('  failed to load from cloud:', e);
+      // Silently fail cloud load — user can still use local data
     }
     return;
   }
-  
-  // For authenticated users with demo/no settings: create real settings or go to onboarding
+
   if (isAuthenticated()) {
-    console.log('  authenticated but needs onboarding');
-    // Don't create demo settings - let them go through onboarding
     return;
   }
-  
-  // For visitors: create demo settings
-  console.log('  creating demo settings');
+
   saveSettings({
     businessName: 'Demo Business',
     ownerName: 'Demo User',
@@ -1012,8 +986,6 @@ export default function App() {
   const [ready, setReady] = useState(false);
   const [settings, setSettings] = useState(() => getSettings());
   const [authed, setAuthed] = useState(() => isAuthenticated());
-
-  console.log('App ready:', ready, '| hasSettings:', !!settings?.ownerName, '| authed:', authed, '| plan:', settings?.plan);
 
   useEffect(() => {
     // Run demo seeding on first mount
@@ -1038,11 +1010,7 @@ export default function App() {
   }
 
 // Case 1: Has settings AND is logged in → show the app
-  // Has settings (any kind - could have starter plan already or be in onboarding to get one)
   const hasSettings = !!settings?.ownerName?.trim();
-  const hasSubscription = settings?.plan && ['starter', 'pro', 'business'].includes(settings.plan);
-
-  console.log('Route decision:', { hasSettings, hasSubscription, ownerName: settings?.ownerName, plan: settings?.plan });
 
   // User is logged in and has settings → full app access
   if (isAuthenticated() && hasSettings) {
