@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
-import { getSettings, saveSettings, getDashboardStats, getInvoices, getClients, saveInvoice, saveClient, markInvoicePaid, deleteInvoice, sendReminderNow, openMailto, loadFromCloud, syncToCloud } from './lib/reminder-data';
+import { getSettings, saveSettings, getDashboardStats, getInvoices, getClients, saveInvoice, saveClient, markInvoicePaid, deleteInvoice, sendReminderNow, openMailto, loadFromCloud, syncToCloud, checkAndFireAutoReminders } from './lib/reminder-data';
+import { showToast } from './hooks/useToast';
+import { ToastContainer } from './components/ToastContainer';
 import { isAuthenticated, logout, ensureDemoAccount } from './lib/auth';
 import type { Invoice, Client } from './types';
 import { getTrialDaysLeft } from './types';
@@ -315,17 +317,43 @@ function Dashboard() {
   const stats = getDashboardStats();
   const all = getInvoices();
   const clients = getClients();
-  const invoices = getInvoices().slice(-5).reverse();
+  
+  // Revenue metrics
+  const collected = stats.paidThisMonth;
+  const outstanding = stats.totalOutstanding;
+  const overdueAmount = all.filter(i => i.status !== 'paid' && daysUntilDue(i.dueDate) < 0).reduce((s, i) => s + i.amount, 0);
+  
+  // Recent invoices
+  const recent = getInvoices().slice(-8).reverse();
+  
+  // Quick actions needed
+  const overdueInvoices = all.filter(i => i.status !== 'paid' && daysUntilDue(i.dueDate) < 0);
+  const dueSoonInvoices = all.filter(i => i.status !== 'paid' && daysUntilDue(i.dueDate) >= 0 && daysUntilDue(i.dueDate) <= 3);
+  
+  // Top overdue clients
+  const overdueByClient: Record<string, number> = {};
+  overdueInvoices.forEach(inv => {
+    const key = inv.clientName || 'Unknown';
+    overdueByClient[key] = (overdueByClient[key] || 0) + inv.amount;
+  });
+  const topOverdue = Object.entries(overdueByClient).sort((a, b) => b[1] - a[1]).slice(0, 3);
+
   const cards = [
-    { label: 'Total Sent', value: stats.totalOutstanding + stats.paidThisMonth, icon: <DollarIcon />, color: 'from-blue-500 to-blue-600' },
-    { label: 'Collected', value: stats.paidThisMonth, icon: <CheckIcon />, color: 'from-green-500 to-green-600' },
-    { label: 'Outstanding', value: stats.totalOutstanding, icon: <ClockIcon />, color: 'from-amber-500 to-amber-600' },
-    { label: 'Overdue', value: stats.overdue, icon: <AlertIcon />, color: 'from-red-500 to-red-600' },
+    { label: 'Collected', value: '$' + collected.toFixed(0), sub: 'this month', icon: <DollarIcon />, color: 'from-green-500 to-green-600', bg: 'bg-green-50' },
+    { label: 'Outstanding', value: '$' + outstanding.toFixed(0), sub: 'total owed', icon: <ClockIcon />, color: 'from-amber-500 to-amber-600', bg: 'bg-amber-50' },
+    { label: 'Overdue', value: String(stats.overdue), sub: 'invoice' + (stats.overdue !== 1 ? 's' : '') + ' past due', icon: <AlertIcon />, color: 'from-red-500 to-red-600', bg: 'bg-red-50' },
+    { label: 'Clients', value: String(clients.length), sub: 'active', icon: <UsersIcon />, color: 'from-blue-500 to-blue-600', bg: 'bg-blue-50' },
   ];
+  
   return (
     <div className="max-w-6xl mx-auto p-6 space-y-6">
       <div className="flex items-center justify-between">
-        <div><h1 className="text-2xl font-bold text-slate-800">Dashboard</h1><p className="text-slate-500 text-sm">{clients.length} clients · {all.length} invoices</p></div>
+        <div>
+          <h1 className="text-2xl font-bold text-slate-800">
+            {settings?.businessName ? settings.businessName + ' Dashboard' : 'Dashboard'}
+          </h1>
+          <p className="text-slate-500 text-sm">{clients.length} clients · {all.filter(i => i.status !== 'paid').length} active invoices</p>
+        </div>
         <button onClick={() => navigate('/invoices/new')}
           className="flex items-center gap-2 bg-gradient-to-r from-orange-500 to-orange-600 text-white font-bold px-5 py-2.5 rounded-xl shadow-lg shadow-orange-500/30">
           <PlusIcon /> New Invoice
@@ -333,18 +361,45 @@ function Dashboard() {
       </div>
 
       <UpgradeBanner />
-      
       <TrialBanner />
       
-      {/* Complete Setup CTA - if business name or phone missing */}
+      {/* Complete Setup CTA */}
       {(!settings?.businessName || !settings?.phone) && (
       <a href="/onboarding" className="block bg-orange-50 border border-orange-200 rounded-xl p-5">
           <h3 className="font-bold text-orange-800 mb-1">Complete your setup</h3>
           <p className="text-sm text-orange-700 mb-3">Add your phone to start sending invoices.</p>
-          <span className="inline-block bg-orange-500 hover:bg-orange-600 text-white font-medium px-4 py-2 rounded-lg transition-colors">
-            Complete Setup
-          </span>
+          <span className="inline-block bg-orange-500 hover:bg-orange-600 text-white font-medium px-4 py-2 rounded-lg transition-colors">Complete Setup</span>
       </a>
+      )}
+      
+      {/* Action alerts — overdue / due soon */}
+      {(overdueInvoices.length > 0 || dueSoonInvoices.length > 0) && (
+        <div className="space-y-2">
+          {overdueInvoices.slice(0, 2).map(inv => (
+            <div key={inv.id} className="flex items-center justify-between bg-red-50 border border-red-200 rounded-xl px-5 py-3">
+              <div className="flex items-center gap-3">
+                <span className="text-lg">🔴</span>
+                <div>
+                  <p className="text-sm font-bold text-red-800">{inv.clientName || 'Unknown client'}</p>
+                  <p className="text-xs text-red-600">${inv.amount.toFixed(0)} overdue by {Math.abs(daysUntilDue(inv.dueDate))} day{Math.abs(daysUntilDue(inv.dueDate)) !== 1 ? 's' : ''}</p>
+                </div>
+              </div>
+              <button onClick={() => navigate(`/invoices/${inv.id}/edit`)} className="text-xs bg-red-100 text-red-700 font-bold px-3 py-1.5 rounded-lg hover:bg-red-200">Send Reminder</button>
+            </div>
+          ))}
+          {dueSoonInvoices.slice(0, 1).map(inv => (
+            <div key={inv.id} className="flex items-center justify-between bg-amber-50 border border-amber-200 rounded-xl px-5 py-3">
+              <div className="flex items-center gap-3">
+                <span className="text-lg">🟡</span>
+                <div>
+                  <p className="text-sm font-bold text-amber-800">{inv.clientName || 'Unknown client'}</p>
+                  <p className="text-xs text-amber-600">${inv.amount.toFixed(0)} due in {daysUntilDue(inv.dueDate)} day{daysUntilDue(inv.dueDate) !== 1 ? 's' : ''}</p>
+                </div>
+              </div>
+              <button onClick={() => navigate(`/invoices/${inv.id}/edit`)} className="text-xs bg-amber-100 text-amber-700 font-bold px-3 py-1.5 rounded-lg hover:bg-amber-200">Send Reminder</button>
+            </div>
+          ))}
+        </div>
       )}
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -352,86 +407,96 @@ function Dashboard() {
           <div key={c.label} className="bg-white rounded-xl p-5 shadow-sm border border-slate-100">
             <div className="flex items-center justify-between mb-3">
               <p className="text-sm text-slate-500 font-medium">{c.label}</p>
-              <div className={`bg-gradient-to-br ${c.color} text-white p-2 rounded-lg shadow`}>{c.icon}</div>
+              <div className={`${c.bg} p-2 rounded-lg`}><div className={`text-white`}>{c.icon}</div></div>
             </div>
-            <p className="text-2xl font-bold text-slate-800">${c.value.toLocaleString()}</p>
+            <p className="text-2xl font-bold text-slate-800">{c.value}</p>
+            <p className="text-xs text-slate-400 mt-0.5">{c.sub}</p>
           </div>
         ))}
       </div>
 
-      {/* Why Remindrr? - dark gradient banner */}
-      <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl p-8">
-        <h2 className="text-white text-xl font-bold mb-1">Why Remindrr?</h2>
-        <p className="text-slate-400 text-sm mb-6">Built for tradespeople who are tired of chasing money.</p>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          {[
-            { icon: '⚡', title: 'Get paid faster', desc: 'Friendly email reminders mean you get paid 3x faster.' },
-            { icon: '🛡️', title: 'No awkward calls', desc: 'Automated reminders. No confrontation, no favour asking.' },
-            { icon: '💳', title: 'Instant payments', desc: 'Clients tap a Stripe link in email. Pays in 2 days.' },
-            { icon: '💰', title: 'Affordable', desc: 'From $29.99/mo. A fraction of what collection agencies take.' },
-          ].map(item => (
-            <div key={item.title} className="bg-slate-800/50 rounded-xl p-4">
-              <div className="text-2xl mb-2">{item.icon}</div>
-              <p className="text-white font-bold text-sm">{item.title}</p>
-              <p className="text-slate-400 text-xs mt-1">{item.desc}</p>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* How it Works - 3-step strip */}
-      <div className="bg-gradient-to-r from-orange-50 to-orange-100/50 rounded-2xl p-8">
-        <h2 className="text-slate-800 text-xl font-bold mb-6 text-center">How it Works</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {[
-            { step: '1', title: 'Create an invoice', desc: 'Add your client and the amount they owe. Takes 30 seconds.' },
-            { step: '2', title: 'Send a reminder', desc: 'Pick email. Remindrr sends a friendly reminder automatically.' },
-            { step: '3', title: 'Client pays online', desc: 'Your client taps the link in the message and pays via Stripe. Money lands in your account in 2 days.' },
-          ].map(s => (
-            <div key={s.step} className="flex flex-col items-center text-center">
-              <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-orange-600 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-lg shadow-orange-200 mb-3">{s.step}</div>
-              <p className="font-bold text-slate-800 mb-1">{s.title}</p>
-              <p className="text-slate-500 text-sm">{s.desc}</p>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      <div className="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
-          <h2 className="font-bold text-slate-800">Recent Invoices</h2>
-          <button onClick={() => navigate('/invoices')} className="text-sm text-orange-500 font-medium hover:underline">View all →</button>
-        </div>
-        {invoices.length === 0 ? (
-          <div className="p-12 text-center">
-            <div className="text-5xl mb-4">📋</div>
-            <p className="text-slate-500 mb-4">No invoices yet</p>
-            <button onClick={() => navigate('/invoices/new')} className="bg-gradient-to-r from-orange-500 to-orange-600 text-white font-bold px-6 py-2.5 rounded-xl">Create your first invoice →</button>
+      {/* Two-col layout: Recent Invoices + Quick Actions */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Recent Invoices */}
+        <div className="lg:col-span-2 bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
+          <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+            <h2 className="font-bold text-slate-800">Recent Invoices</h2>
+            <button onClick={() => navigate('/invoices')} className="text-sm text-orange-500 font-medium hover:underline">View all →</button>
           </div>
-        ) : (
-          <table className="w-full text-sm">
-            <thead className="bg-slate-50"><tr>
-              <th className="text-left px-6 py-3 text-slate-500 font-medium">Client</th>
-              <th className="text-left px-6 py-3 text-slate-500 font-medium">Amount</th>
-              <th className="text-left px-6 py-3 text-slate-500 font-medium">Due</th>
-              <th className="text-left px-6 py-3 text-slate-500 font-medium">Status</th>
-            </tr></thead>
-            <tbody>
-              {invoices.map(inv => {
+          {recent.length === 0 ? (
+            <div className="p-10 text-center">
+              <div className="text-5xl mb-3">📋</div>
+              <p className="text-slate-500 mb-3">No invoices yet</p>
+              <button onClick={() => navigate('/invoices/new')} className="bg-gradient-to-r from-orange-500 to-orange-600 text-white font-bold px-5 py-2 rounded-xl text-sm">Create your first →</button>
+            </div>
+          ) : (
+            <div className="divide-y divide-slate-50">
+              {recent.map(inv => {
                 const client = clients.find(c => c.id === inv.clientId);
                 const st = getStatus(inv);
+                const days = daysUntilDue(inv.dueDate);
                 return (
-                  <tr key={inv.id} className="border-t border-slate-50 hover:bg-slate-50">
-                    <td className="px-6 py-4 font-medium text-slate-800">{client?.name || inv.clientName}</td>
-                    <td className="px-6 py-4 font-bold text-slate-800">${inv.amount.toLocaleString()}</td>
-                    <td className="px-6 py-4 text-slate-500">{new Date(inv.dueDate).toLocaleDateString()}</td>
-                    <td className="px-6 py-4"><span className={`px-2.5 py-1 rounded-full text-xs font-bold ${st.color}`}>{st.label}</span></td>
-                  </tr>
+                  <div key={inv.id} className="flex items-center justify-between px-6 py-3 hover:bg-slate-50 cursor-pointer" onClick={() => navigate(`/invoices/${inv.id}/edit`)}>
+                    <div className="flex items-center gap-3">
+                      <div className={`w-2 h-2 rounded-full ${st.color.split(' ')[0] === 'bg-red-100' ? 'bg-red-500' : st.color.split(' ')[0] === 'bg-amber-100' ? 'bg-amber-500' : st.color.split(' ')[0] === 'bg-green-100' ? 'bg-green-500' : 'bg-slate-300'}`} />
+                      <div>
+                        <p className="text-sm font-medium text-slate-800">{client?.name || inv.clientName}</p>
+                        <p className="text-xs text-slate-400">{inv.description || 'No description'}</p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm font-bold text-slate-800">${inv.amount.toFixed(0)}</p>
+                      <p className={`text-xs ${st.color.split(' ')[1]}`}>{st.label}</p>
+                    </div>
+                  </div>
                 );
               })}
-            </tbody>
-          </table>
-        )}
+            </div>
+          )}
+        </div>
+
+        {/* Quick Actions sidebar */}
+        <div className="space-y-4">
+          <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-5">
+            <h3 className="font-bold text-slate-800 mb-4">⚡ Quick Actions</h3>
+            <div className="space-y-2">
+              <button onClick={() => navigate('/invoices/new')} className="w-full text-left px-4 py-3 bg-orange-50 hover:bg-orange-100 rounded-xl text-sm font-medium text-orange-700 transition-colors">
+                + New Invoice
+              </button>
+              <button onClick={() => navigate('/clients/new')} className="w-full text-left px-4 py-3 bg-slate-50 hover:bg-slate-100 rounded-xl text-sm font-medium text-slate-700 transition-colors">
+                + Add Client
+              </button>
+              <button onClick={() => navigate('/settings')} className="w-full text-left px-4 py-3 bg-slate-50 hover:bg-slate-100 rounded-xl text-sm font-medium text-slate-700 transition-colors">
+                ⚙️ Email Settings
+              </button>
+              {overdueInvoices.length > 0 && (
+                <button onClick={() => navigate('/invoices')} className="w-full text-left px-4 py-3 bg-red-50 hover:bg-red-100 rounded-xl text-sm font-bold text-red-700 transition-colors">
+                  🔴 {overdueInvoices.length} Overdue Invoice{overdueInvoices.length !== 1 ? 's' : ''}
+                </button>
+              )}
+            </div>
+          </div>
+          
+          {/* Payment Methods Status */}
+          <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-5">
+            <h3 className="font-bold text-slate-800 mb-3">💳 Payment Options</h3>
+            <div className="space-y-2 text-sm">
+              {settings?.paypalMe ? (
+                <div className="flex items-center gap-2 text-green-600"><span>✓</span> PayPal configured</div>
+              ) : (
+                <button onClick={() => navigate('/settings')} className="flex items-center gap-2 text-amber-600"><span>⚠</span> Add PayPal/Venmo</button>
+              )}
+              {settings?.venmoUsername ? (
+                <div className="flex items-center gap-2 text-green-600"><span>✓</span> Venmo @{settings.venmoUsername}</div>
+              ) : null}
+              {settings?.sendgridApiKey ? (
+                <div className="flex items-center gap-2 text-green-600"><span>✓</span> Email reminders active</div>
+              ) : (
+                <button onClick={() => navigate('/settings')} className="flex items-center gap-2 text-red-600"><span>✕</span> Set up email reminders</button>
+              )}
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -453,9 +518,11 @@ function InvoicesPage() {
     sendReminderNow(inv).then(result => {
       setSendingId(null);
       setLastMessage(result.message);
+      if (result.success) showToast('Email sent!', 'success');
+      else showToast(result.message, 'error');
     }).catch(err => {
       setSendingId(null);
-      setLastMessage('Error: ' + err);
+      showToast('Error: ' + err, 'error');
     });
   };
   // Refresh invoices when tick changes
@@ -988,9 +1055,7 @@ export default function App() {
   const [authed, setAuthed] = useState(() => isAuthenticated());
 
   useEffect(() => {
-    // Run demo seeding on first mount
-    seedDemoData().then(() => {
-      // Re-read settings after seeding
+    Promise.all([seedDemoData(), checkAndFireAutoReminders()]).then(() => {
       setSettings(getSettings());
       setAuthed(isAuthenticated());
       setReady(true);
@@ -1033,6 +1098,7 @@ export default function App() {
           <Route path="/privacy-policy" element={<PrivacyPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
+        <ToastContainer />
       </div>
     </BrowserRouter>
   );

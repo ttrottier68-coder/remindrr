@@ -136,10 +136,16 @@ export async function sendReminderNow(invoice: Invoice): Promise<{ success: bool
     });
 
     if (response.ok) {
+      // Update invoice reminder tracking
       const invoices = getInvoices();
-      const updated = invoices.map(i => i.id === invoice.id ? { ...i, reminderSent: true, lastReminderSentAt: new Date().toISOString() } : i);
+      const updated = invoices.map(i => i.id === invoice.id ? {
+        ...i,
+        reminderSent: true,
+        lastReminderSentAt: new Date().toISOString(),
+        followupCount: (i.followupCount || 0) + 1,
+      } : i);
       persist(INVOICES_KEY, updated);
-      syncInvoicesToServer(updated);
+      syncToCloud(getSettings(), updated, getClients());
       return { success: true, message: 'Reminder sent!' };
     } else {
       const data = await response.json().catch(() => ({}));
@@ -275,9 +281,9 @@ export async function syncToCloud(settings: UserSettings, invoices: Invoice[], c
     await setDoc(settingsRef, settings);
     await setDoc(invoicesRef, { list: invoices });
     await setDoc(clientsRef, { list: clients });
-    console.log('Synced to Firestore');
-  } catch (e) {
-    console.error('Sync to Firestore failed:', e);
+    // Synced to Firestore
+  } catch {
+    // Silently fail cloud sync — local data still works
   }
 }
 
@@ -302,7 +308,60 @@ export async function loadFromCloud(): Promise<{ settings: UserSettings | null; 
       clients: clientsDoc.exists() ? (clientsDoc.data().list as Client[]) : null,
     };
   } catch (e) {
-    console.error('Load from Firestore failed:', e);
+    // Load from Firestore failed — fall back to local data
     return { settings: null, invoices: null, clients: null };
+  }
+}
+
+// ─── Auto-Reminder Scheduler ─────────────────────────────────────────────────
+// Runs on app load. Sends automatic reminders for overdue or due-soon invoices.
+// Call checkAndFireAutoReminders() in App.tsx on mount.
+
+const LAST_AUTO_CHECK_KEY = 'remindrr_last_auto_check';
+
+export async function checkAndFireAutoReminders(): Promise<void> {
+  const settings = getSettings();
+  if (!settings?.sendgridApiKey || !settings?.sendgridFromEmail) return;
+  
+  // Only run once per 24 hours
+  const lastCheck = localStorage.getItem(LAST_AUTO_CHECK_KEY);
+  if (lastCheck) {
+    const hoursSince = (Date.now() - parseInt(lastCheck)) / (1000 * 60 * 60);
+    if (hoursSince < 24) return;
+  }
+  localStorage.setItem(LAST_AUTO_CHECK_KEY, String(Date.now()));
+
+  const invoices = getInvoices().filter(i => i.status !== 'paid');
+  const now = new Date();
+  const reminderCandidates: Invoice[] = [];
+
+  for (const inv of invoices) {
+    const due = new Date(inv.dueDate);
+    const daysUntilDue = Math.ceil((due.getTime() - now.getTime()) / 86400000);
+    
+    // Send if overdue or due within 1 day
+    if (daysUntilDue <= 1) {
+      // Only send if not already sent today
+      if (!inv.lastReminderSentAt) {
+        reminderCandidates.push(inv);
+      } else {
+        const lastSent = new Date(inv.lastReminderSentAt);
+        const hoursSince = (now.getTime() - lastSent.getTime()) / (1000 * 60 * 60);
+        if (hoursSince >= 48) reminderCandidates.push(inv);
+      }
+    }
+  }
+
+  // Fire reminders
+  for (const inv of reminderCandidates) {
+    await sendReminderNow(inv);
+    const allInvoices = getInvoices();
+    const updated = allInvoices.map(i => i.id === inv.id ? {
+      ...i,
+      reminderSent: true,
+      lastReminderSentAt: new Date().toISOString(),
+      followupCount: (i.followupCount || 0) + 1,
+    } : i);
+    persist(INVOICES_KEY, updated);
   }
 }

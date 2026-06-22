@@ -43,7 +43,7 @@ function clearLocalSession(): void {
   localStorage.removeItem('remindrr_clients');
   localStorage.removeItem('remindrr_invoices');
   // Keep the Resend/SendGrid key - don't make users re-enter it
-  console.log('User data cleared, but Resend key preserved');
+  // User data cleared — SendGrid/Resend key preserved
 }
 
 // ─── Auth functions ────────────────────────────────────────────────────────────────
@@ -118,7 +118,7 @@ export async function register(email: string, password: string, name: string, bu
 
     return null; // success
   } catch (error: any) {
-    console.error('register error:', error);
+    // Registration error — Firebase auth failed
     if (error.code === 'auth/email-already-in-use') {
       return 'An account with this email already exists.';
     }
@@ -191,7 +191,7 @@ export async function login(email: string, password: string): Promise<string | n
 
     return null;
   } catch (error: any) {
-    console.error('login error:', error);
+    // Login error — Firebase auth failed
     if (error.code === 'auth/invalid-credential' || error.code === 'auth/wrong-password') {
       return 'Incorrect password. Please try again.';
     }
@@ -207,22 +207,13 @@ export async function login(email: string, password: string): Promise<string | n
 
 /** Logout - clears session and signs out of Firebase, but keeps settings */
 export async function logout(): Promise<void> {
-  console.log('logout called');
-  
-  // Try to sign out of Firebase (don't wait - fire and forget)
+  // Logout — clear Firebase session and local data
   waitForFirebase().then(async (ready) => {
     if (ready) {
-      try {
-        await signOut();
-        console.log('Firebase signed out');
-      } catch (e) {
-        console.log('Firebase signOut error:', e);
-      }
+      try { await signOut(); } catch { /* ignore signOut errors */ }
     }
   }).catch(() => {});
-  
   clearLocalSession();
-  console.log('Local session cleared');
   // NOTE: Do NOT delete settings - we want to preserve SendGrid API key
 }
 

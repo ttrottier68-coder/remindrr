@@ -15,6 +15,7 @@ export default function EditInvoicePage() {
   const [amount, setAmount] = useState(invoice ? String(invoice.amount) : '');
   const [description, setDescription] = useState(invoice?.description || '');
   const [dueDate, setDueDate] = useState(invoice?.dueDate?.split('T')[0] || '');
+  const [recurring, setRecurring] = useState(invoice?.recurring || 'none');
   const [saving, setSaving] = useState(false);
 
   if (!invoice) return (
@@ -35,6 +36,7 @@ export default function EditInvoicePage() {
       amount: parseFloat(amount),
       description,
       dueDate,
+      recurring: recurring as Invoice['recurring'],
       status: invoice.status,
     });
     await new Promise(r => setTimeout(r, 900));
@@ -82,6 +84,16 @@ export default function EditInvoicePage() {
           <label className="block text-sm font-medium text-slate-700 mb-1">Description</label>
           <input value={description} onChange={e => setDescription(e.target.value)}
             className="w-full border border-slate-300 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-orange-500" />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-slate-700 mb-1">Recurring</label>
+          <select value={recurring} onChange={e => setRecurring(e.target.value as Invoice['recurring'])}
+            className="w-full border border-slate-300 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-orange-500">
+            <option value="none">One-time invoice</option>
+            <option value="weekly">Weekly</option>
+            <option value="monthly">Monthly</option>
+            <option value="quarterly">Quarterly</option>
+          </select>
         </div>
         {/* Reminder History - Show if reminders have been sent */}
         {(invoice.lastReminderSentAt || invoice.reminderSent) && (

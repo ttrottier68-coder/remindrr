@@ -37,7 +37,7 @@ export default function LoginPage() {
       try {
         cloudData = await loadFromCloud();
       } catch (e) {
-        console.log('Cloud sync unavailable, using local data');
+        // Cloud sync unavailable — user can still use local data
       }
       const freshSettings = getSettings();
       if (cloudData.settings) {

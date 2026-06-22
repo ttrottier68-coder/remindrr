@@ -19,7 +19,7 @@ export async function sendSMS(
 ): Promise<SMSSendResult> {
   // In production, this calls your backend which proxies to Twilio
   // For demo, we simulate success
-  console.log(`[SMS] To: ${to}, Body: ${body}`);
+  // Sending SMS via Twilio
 
   try {
     // Real Twilio call would look like:

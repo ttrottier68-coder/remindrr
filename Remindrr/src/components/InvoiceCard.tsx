@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getSettings, getClients, getInvoices, deleteInvoice, markInvoicePaid, sendReminderNow, openMailto, syncInvoicesToServer } from '../lib/reminder-data';
+import { getSettings, getClients, getInvoices, deleteInvoice, markInvoicePaid, sendReminderNow, openMailto, syncToCloud } from '../lib/reminder-data';
+import { showToast } from '../hooks/useToast';
 import type { Invoice } from '../types';
 
 interface Props {
@@ -54,7 +55,7 @@ export function InvoiceCard({ invoice, onRefresh }: Props) {
   const handleDelete = () => {
     if (confirm('Delete this invoice?')) {
       deleteInvoice(invoice.id);
-      syncInvoicesToServer(getInvoices());
+      syncToCloud(getSettings(), getInvoices(), getClients());
       onRefresh();
     }
   };
@@ -65,7 +66,10 @@ export function InvoiceCard({ invoice, onRefresh }: Props) {
     setSendingReminder(false);
     if (result.success) {
       setReminderSent(true);
+      showToast('Reminder sent to ' + (client?.email || invoice.clientEmail || 'client') + '!', 'success');
       setTimeout(() => setReminderSent(false), 3000);
+    } else {
+      showToast(result.message, 'error');
     }
   };
 
@@ -113,7 +117,7 @@ export function InvoiceCard({ invoice, onRefresh }: Props) {
               className="text-sm bg-green-50 text-green-700 font-bold px-4 py-2 rounded-lg hover:bg-green-100 transition-colors">{getPaymentMethods(settings)[0].label} Pay</a>
           )}
           {invoice.status !== 'paid' && (
-            <button onClick={() => { markInvoicePaid(invoice.id); syncInvoicesToServer(getInvoices()); onRefresh(); }}
+            <button onClick={() => { markInvoicePaid(invoice.id); syncToCloud(getSettings(), getInvoices(), getClients()); onRefresh(); }}
               className="text-sm bg-green-500 text-white font-bold px-4 py-2 rounded-lg hover:bg-green-600 transition-colors">Mark Paid ✓</button>
           )}
           <button onClick={() => openInvoicePrint(invoice)}
