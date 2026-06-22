@@ -4,10 +4,8 @@ import { getSettings, getClients } from './lib/reminder-data';
 export async function sendReminderNow(invoice: Invoice): Promise<{ success: boolean; message: string }> {
   const settings = getSettings();
 
-  alert('DEBUG: apiKey=' + (settings?.sendgridApiKey ? settings.sendgridApiKey.substring(0,15) + '...' : 'MISSING') + ', fromEmail=' + settings?.sendgridFromEmail);
-
   if (!settings?.sendgridApiKey || !settings?.sendgridFromEmail) {
-    return { success: false, message: 'Email not configured. Go to Settings to set up Resend. apiKey=' + settings?.sendgridApiKey + ', fromEmail=' + settings?.sendgridFromEmail };
+    return { success: false, message: 'Email not configured. Go to Settings.' };
   }
 
   const client = getClients().find(c => c.id === invoice.clientId);
@@ -18,32 +16,27 @@ export async function sendReminderNow(invoice: Invoice): Promise<{ success: bool
   }
 
   try {
-    const requestBody = {
-      apiKey: settings.sendgridApiKey,
-      fromEmail: settings.sendgridFromEmail,
-      toEmail: clientEmail,
-      subject: `Invoice Reminder: $${invoice.amount} due ${new Date(invoice.dueDate).toLocaleDateString()}`,
-      html: (buildEmailHtml(invoice, client, settings.businessName, settings) || '<p>Test</p>'),
-      text: 'Invoice reminder',
-    };
-
     const response = await fetch(`/.netlify/functions/send-email`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(requestBody),
+      body: JSON.stringify({
+        apiKey: settings.sendgridApiKey,
+        fromEmail: settings.sendgridFromEmail,
+        toEmail: clientEmail,
+        subject: `Invoice Reminder: $${invoice.amount} due ${new Date(invoice.dueDate).toLocaleDateString()}`,
+        html: buildEmailHtml(invoice, client, settings.businessName, settings) || '<p>Invoice reminder</p>',
+        text: 'Invoice reminder',
+      }),
     });
 
     if (response.ok) {
-      alert('Email sent successfully! Response: ' + response.status);
       return { success: true, message: 'Reminder sent!' };
     } else {
       const data = await response.json().catch(() => ({}));
-      alert('Failed response: ' + response.status + ' - ' + JSON.stringify(data));
-      return { success: false, message: data.message || 'Failed to send reminder. Status: ' + response.status };
+      return { success: false, message: data.message || 'Failed to send reminder.' };
     }
-  } catch (error) {
-    alert('Connection error: ' + error);
-    return { success: false, message: 'Could not connect. Check your Resend settings. Error: ' + error };
+  } catch {
+    return { success: false, message: 'Could not connect. Check your email settings.' };
   }
 }
 

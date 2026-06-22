@@ -29,11 +29,7 @@ export function getSettings(): UserSettings {
   
   // Load SendGrid/Resend from separate key (persists on logout)
   const sendgridStored = safe(SENDGRID_KEY, { apiKey: '', fromEmail: '' });
-  
-  console.log('=== STORAGE CHECK ===');
-  console.log('sendgridStored:', sendgridStored);
-  console.log('mainSettings.sendgridApiKey:', mainSettings.sendgridApiKey);
-  
+
   // Merge: use SendGrid/Resend from separate key if available
   return {
     ...mainSettings,
@@ -117,40 +113,15 @@ ${settings?.businessName || ''}`);
 }
 
 export async function sendReminderNow(invoice: Invoice): Promise<{ success: boolean; message: string }> {
-  // Debug: Console log BEFORE alert
-  console.log('=== sendReminderNow START ===');
-  console.log('invoice:', invoice);
-  
   const settings = getSettings();
-  
-  // Debug: Check what's in the separate storage
-  const sendgridStored = safe(SENDGRID_KEY, { apiKey: '', fromEmail: '' });
-  console.log('=== STORAGE CHECK ===');
-  console.log('sendgridStored:', sendgridStored);
-  console.log('mainSettings.sendgridApiKey:', settings.sendgridApiKey);
-  
-  console.log('settings from getSettings():', settings);
-  console.log('sendgridApiKey:', settings?.sendgridApiKey);
-  console.log('sendgridFromEmail:', settings?.sendgridFromEmail);
-  
-  // Debug: Show what's loaded - create a visible element
-  const debugDiv = document.createElement('div');
-  debugDiv.id = 'debug-output';
-  debugDiv.style.cssText = 'position:fixed;bottom:0;left:0;right:0;background:#ff0;color:#000;padding:10px;font-size:14px;z-index:99999;font-family:monospace;';
-  debugDiv.textContent = 'DEBUG: apiKey=' + (settings.sendgridApiKey || 'EMPTY') + ', fromEmail=' + (settings.sendgridFromEmail || 'EMPTY');
-  document.body.appendChild(debugDiv);
 
   if (!settings.sendgridApiKey || !settings.sendgridFromEmail) {
-    const msg = 'Email not configured. Go to Settings.';
-    window.alert(msg);
-    return { success: false, message: msg };
+    return { success: false, message: 'Email not configured. Go to Settings.' };
   }
 
   const client = getClients().find(c => c.id === invoice.clientId);
   const clientEmail = client?.email || invoice.clientEmail;
-  
-  window.alert('Sending to: ' + clientEmail);
-  
+
   try {
     const response = await fetch('/.netlify/functions/send-email', {
       method: 'POST',
@@ -164,27 +135,18 @@ export async function sendReminderNow(invoice: Invoice): Promise<{ success: bool
       }),
     });
 
-    window.alert('Response status: ' + response.status);
-    window.alert('response.ok: ' + response.ok);
-
     if (response.ok) {
-      console.log('=== SUCCESS PATH ===');
-      // Track that reminder was sent
       const invoices = getInvoices();
       const updated = invoices.map(i => i.id === invoice.id ? { ...i, reminderSent: true, lastReminderSentAt: new Date().toISOString() } : i);
       persist(INVOICES_KEY, updated);
       syncInvoicesToServer(updated);
       return { success: true, message: 'Reminder sent!' };
     } else {
-      console.log('=== ERROR PATH (response.ok false) ===');
       const data = await response.json().catch(() => ({}));
-      window.alert('Error response: ' + response.status + ' - ' + JSON.stringify(data));
       return { success: false, message: data.message || 'Failed to send reminder.' };
     }
-  } catch (error) {
-    console.log('=== CATCH BLOCK === error: ' + error);
-    window.alert('Connection error: ' + error);
-    return { success: false, message: 'Could not connect. Check your Resend settings.' };
+  } catch {
+    return { success: false, message: 'Could not connect. Check your email settings.' };
   }
 }
 
