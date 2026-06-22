@@ -397,28 +397,17 @@ export default function SettingsPage() {
       {/* ── Plan ── */}
       <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
         <h2 className="font-bold text-slate-700 text-base border-b border-slate-100 pb-3 mb-4">📋 Plan</h2>
-        <div className="grid grid-cols-3 gap-3">
-          {(['starter', 'pro', 'business'] as const).map(plan => {
-            const links: Record<string, string> = {
-              starter: 'https://buy.stripe.com/4gM9AU3nIaoE26YdS21wY01',
-              pro: 'https://buy.stripe.com/fZu8wQe2mcwMfXOaFQ1wY02',
-              business: 'https://buy.stripe.com/8x28wQ0bw0O46neg0a1wY03',
-            };
-            return (
-              <button
-                key={plan}
-                onClick={() => {
-                  setForm(f => ({ ...f, plan }));
-                  window.open(links[plan], '_blank');
-                }}
-                className={`p-4 rounded-xl border-2 text-center cursor-pointer transition-all ${form.plan === plan ? 'border-orange-500 bg-orange-50' : 'border-slate-200 hover:border-slate-300'}`}
-              >
-                <div className="text-base font-bold text-slate-800 capitalize">{plan}</div>
-                <div className="text-xs text-slate-400 mt-1">{plan === 'starter' ? '\$29/mo' : plan === 'pro' ? '\$59/mo' : '\$129/mo'}</div>
-                {form.plan !== plan && <div className="text-xs text-orange-500 mt-1 font-medium">Upgrade →</div>}
-              </button>
-            );
-          })}
+        <div className="flex items-center gap-4">
+          <div className="flex-1 p-4 rounded-xl border-2 border-orange-500 bg-orange-50 text-center">
+            <div className="text-base font-bold text-slate-800">Starter</div>
+            <div className="text-xs text-slate-500 mt-1">$29/mo</div>
+            <div className="mt-2 text-xs text-green-600 font-medium">✓ Current plan</div>
+          </div>
+          <div className="flex-1 p-4 rounded-xl border border-slate-200 bg-slate-50 text-center">
+            <div className="text-sm font-bold text-slate-400">Contact us</div>
+            <div className="text-xs text-slate-400 mt-1">for custom plans</div>
+            <div className="mt-2 text-xs text-slate-400">support@remindrr.app</div>
+          </div>
         </div>
       </div>
     </div>
