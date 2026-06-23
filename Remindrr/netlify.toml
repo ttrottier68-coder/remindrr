@@ -6,4 +6,4 @@
   directory = "netlify/functions"
 
 [context.production]
-  environment = { SECRETS_SCAN_SMART_DETECTION_OMIT_VALUES = "***" }
+  environment = { SECRETS_SCAN_SMART_DETECTION_ENABLED = "false" }
