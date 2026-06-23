@@ -306,7 +306,6 @@ export default function SettingsPage() {
       showToast('Gmail connected successfully!', 'success');
     }
     if (gmailError) { showToast('Gmail connection failed: ' + gmailError, 'error'); }
-    if (gmailConnected || gmailError) { window.history.replaceState({}, '', window.location.pathname); }
   }, []);
 
   const connectGmail = async () => {

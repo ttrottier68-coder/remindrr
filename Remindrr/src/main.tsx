@@ -17,8 +17,8 @@ if (params.get('gmail_connected') === '1') {
   if (tokenData.refreshToken) {
     saveGmailTokens(tokenData)
   }
-  // Clean URL immediately
-  window.history.replaceState({}, '', '/')
+  // Clean URL but redirect to Settings so user sees the connected state
+  window.history.replaceState({}, '', '/settings')
 }
 
 createRoot(document.getElementById('root')!).render(
