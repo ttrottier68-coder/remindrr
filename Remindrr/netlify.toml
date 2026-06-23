@@ -5,6 +5,5 @@
 [functions]
   directory = "netlify/functions"
 
-[context.production.environment]
-  GMAIL_CLIENT_ID = "YOUR_CLIENT_ID.apps.googleusercontent.com"
-  GMAIL_CLIENT_SECRET = "YOUR_CLIENT_SECRET"
+[context.production]
+  environment = { SECRETS_SCAN_SMART_DETECTION_OMIT_VALUES = "***" }
