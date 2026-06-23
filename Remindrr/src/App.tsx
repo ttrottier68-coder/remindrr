@@ -512,6 +512,7 @@ function InvoicesPage() {
   const [sendingId, setSendingId] = useState<string | null>(null);
   const [lastMessage, setLastMessage] = useState<string | null>(null);
   const navigate = useNavigate();
+  const settings = getSettings();
   const handleSendReminder = (inv: Invoice) => {
     setSendingId(inv.id);
     setLastMessage('Processing...');
