@@ -52,9 +52,9 @@ exports.handler = async (event) => {
     return { statusCode: 200, headers: cors, body: '' };
   }
 
-  // Netlify Functions: event.path includes the function name
-  // e.g. /gmail-oauth or /gmail-oauth/exchange
-  const FN = '/gmail-oauth';
+  // Netlify Functions: event.path includes /.netlify/functions/ prefix
+  // e.g. /.netlify/functions/gmail-oauth or /.netlify/functions/gmail-oauth/exchange
+  const FN = '/.netlify/functions/gmail-oauth';
   const path = event.path || '';
   const suffix = path.startsWith(FN) ? path.slice(FN.length) || '/' : path;
   const fullUrl = 'https://remindrr.app' + event.path + (event.rawQuery ? '?' + event.rawQuery : '');
