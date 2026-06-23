@@ -309,13 +309,17 @@ export default function SettingsPage() {
   }, []);
 
   const connectGmail = async () => {
-    setGmailStatus('loading');
     setGmailError('');
     try {
       const authUrl = await getGmailAuthUrl();
-      // Open in same tab — function redirects back to app with tokens in URL
-      window.location.href = authUrl;
-    } catch (err: unknown) { setGmailError((err as Error).message || 'Failed to connect Gmail.'); setGmailStatus('idle'); }
+      // Navigate using a hidden anchor element — most reliable method
+      const a = document.createElement('a');
+      a.href = authUrl;
+      a.rel = 'noopener noreferrer';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    } catch (err: unknown) { setGmailError((err as Error).message || 'Failed to connect Gmail.'); }
   };
 
   const disconnectGmail = () => { clearGmailTokens(); setGmailStatus('idle'); setGmailEmail(''); setGmailError(''); };
