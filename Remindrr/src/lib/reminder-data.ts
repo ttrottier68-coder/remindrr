@@ -60,11 +60,13 @@ export function clearGmailTokens() {
   localStorage.removeItem(GMAIL_KEY);
 }
 
+const CLIENT_ID = '1033906172145-gn4egevo8hlgue5cfm06sal4gvr69lq1.apps.googleusercontent.com';
+const REDIRECT_URI = 'https://remindrr.app/.netlify/functions/gmail-oauth';
+const SCOPE = encodeURIComponent('https://www.googleapis.com/auth/gmail.send');
+
 export async function getGmailAuthUrl(): Promise<string> {
-  const res = await fetch('/.netlify/functions/gmail-oauth');
-  const data = await res.json();
-  if (!data.url) throw new Error(data.message || 'Could not get Gmail auth URL');
-  return data.url;
+  const state = Math.random().toString(36).substring(2);
+  return `https://accounts.google.com/o/oauth2/v2/auth?client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=code&scope=${SCOPE}&access_type=offline&prompt=consent&state=${state}`;
 }
 
 export async function exchangeGmailCode(code: string): Promise<GmailTokens> {
