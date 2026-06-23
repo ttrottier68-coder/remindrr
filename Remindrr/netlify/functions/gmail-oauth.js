@@ -1,10 +1,10 @@
 // Netlify Function: gmail-oauth.js
 // Handles Gmail OAuth:
-//   GET  /                → return OAuth URL
-//   GET  /?code=...       → token exchange (Google redirect target)
-//   POST /exchange        → exchange auth code for tokens (called by frontend popup)
-//   POST /refresh         → refresh access token
-//   POST /revoke          → revoke access
+//   GET  /gmail-oauth           → return OAuth URL (GET /)
+//   GET  /gmail-oauth?code=... → token exchange (Google redirect target)
+//   POST /gmail-oauth/exchange → exchange auth code for tokens (called by frontend popup)
+//   POST /gmail-oauth/refresh  → refresh access token
+//   POST /gmail-oauth/revoke   → revoke access
 
 const CLIENT_ID     = process.env.GMAIL_ID;
 const CLIENT_SECRET = process.env.GMAIL_KEY;
@@ -18,13 +18,13 @@ const HEADERS_CORS = {
 
 function htmlResponse(title, color, message) {
   return `<!DOCTYPE html><html><head><meta charset="utf-8"><style>
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; display:flex; align-items:center; justify-content:center; min-height:100vh; margin:0; background:#f8fafc; }
-    .card { background:white; border-radius:16px; padding:40px; box-shadow:0 4px 24px rgba(0,0,0,0.08); text-align:center; max-width:400px; }
-    .icon { font-size:48px; margin-bottom:16px; }
-    h2 { color:#1e293b; margin:0 0 12px; font-size:22px; }
-    p { color:#64748b; margin:0 0 24px; font-size:14px; line-height:1.6; }
-    .spinner { width:40px; height:40px; border:3px solid #e2e8f0; border-top-color:#f97316; border-radius:50%; animation:spin 0.8s linear infinite; margin:0 auto 16px; }
-    @keyframes spin { to{transform:rotate(360deg)} }
+    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;background:#f8fafc;}
+    .card{background:white;border-radius:16px;padding:40px;box-shadow:0 4px 24px rgba(0,0,0,0.08);text-align:center;max-width:400px;}
+    .icon{font-size:48px;margin-bottom:16px;}
+    h2{color:#1e293b;margin:0 0 12px;font-size:22px;}
+    p{color:#64748b;margin:0 0 24px;font-size:14px;line-height:1.6;}
+    .spinner{width:40px;height:40px;border:3px solid #e2e8f0;border-top-color:#f97316;border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 16px;}
+    @keyframes spin{to{transform:rotate(360deg)}}
   </style></head><body>
   <div class="card">
     ${color === 'loading' ? '<div class="spinner"></div>' : `<div class="icon">${color === 'success' ? '✅' : '❌'}</div>`}
@@ -32,15 +32,10 @@ function htmlResponse(title, color, message) {
     <p>${message}</p>
   </div>
   <script>
-    // Extract params from URL and send to parent window
     const params = new URLSearchParams(window.location.search);
     const code = params.get('code');
     const error = params.get('error');
-    const state = params.get('state');
-    window.opener && window.opener.postMessage(
-      { type: 'GMAIL_OAUTH', code, error, state },
-      'https://remindrr.app'
-    );
+    window.opener && window.opener.postMessage({ type: 'GMAIL_OAUTH', code, error }, 'https://remindrr.app');
     setTimeout(() => { if (window.opener) window.close(); }, 1500);
   </script>
 </body></html>`;
@@ -57,12 +52,17 @@ exports.handler = async (event) => {
     return { statusCode: 200, headers: cors, body: '' };
   }
 
-  const url = new URL(event.path + (event.rawQuery ? '?' + event.rawQuery : ''), 'https://remindrr.app');
+  // Netlify Functions: event.path includes the function name
+  // e.g. /gmail-oauth or /gmail-oauth/exchange
+  const FN = '/gmail-oauth';
+  const path = event.path || '';
+  const suffix = path.startsWith(FN) ? path.slice(FN.length) || '/' : path;
+  const fullUrl = 'https://remindrr.app' + event.path + (event.rawQuery ? '?' + event.rawQuery : '');
 
-  // GET / → return OAuth URL
-  if (event.httpMethod === 'GET' && event.path === '/') {
-    if (!CLIENT_ID) {
-      return { statusCode: 500, headers: cors, body: JSON.stringify({ success: false, message: 'Gmail OAuth not configured' }) };
+  // GET /gmail-oauth → return OAuth URL
+  if (event.httpMethod === 'GET' && suffix === '/') {
+    if (!CLIENT_ID || !CLIENT_SECRET) {
+      return { statusCode: 500, headers: cors, body: JSON.stringify({ success: false, message: 'Gmail OAuth not configured. Set GMAIL_ID and GMAIL_KEY in Netlify env vars.' }) };
     }
     const scopes = encodeURIComponent('https://www.googleapis.com/auth/gmail.send');
     const state = Math.random().toString(36).substring(2);
@@ -70,19 +70,20 @@ exports.handler = async (event) => {
     return { statusCode: 200, headers: { ...cors, 'Content-Type': 'application/json' }, body: JSON.stringify({ success: true, url: authUrl, state }) };
   }
 
-  // GET /?code=... → Google redirected back (Netlify strips query from event.path)
-  // Use rawQuery to reconstruct
-  const rawPath = event.path;
-  const fullUrl = 'https://remindrr.app' + event.path + (event.rawQuery ? '?' + event.rawQuery : '');
-  const parsed  = new URL(fullUrl);
-  const code    = parsed.searchParams.get('code');
-  const error   = parsed.searchParams.get('error');
+  // GET /gmail-oauth?code=... → Google redirected back
+  if (event.httpMethod === 'GET' && (suffix === '/' || suffix === '') && event.rawQuery) {
+    const parsed = new URL(fullUrl);
+    const code  = parsed.searchParams.get('code');
+    const error = parsed.searchParams.get('error');
 
-  if ((rawPath === '/' || rawPath === '') && (code || error)) {
-    // This is the redirect from Google — exchange token server-side
-    if (!code) {
+    if (error || !code) {
       return { statusCode: 200, headers: { ...cors, 'Content-Type': 'text/html' }, body: htmlResponse('Access Denied', '❌', error || 'Google denied access. You can close this window.') };
     }
+
+    if (!CLIENT_ID || !CLIENT_SECRET) {
+      return { statusCode: 200, headers: { ...cors, 'Content-Type': 'text/html' }, body: htmlResponse('Error', '❌', 'Gmail OAuth not configured. Contact support.') };
+    }
+
     try {
       const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
         method: 'POST',
@@ -96,14 +97,9 @@ exports.handler = async (event) => {
       if (data.error) {
         return { statusCode: 200, headers: { ...cors, 'Content-Type': 'text/html' }, body: htmlResponse('Error', '❌', data.error_description || data.error) };
       }
-      // Extract email from id_token
       let email = '';
       try { email = JSON.parse(Buffer.from(data.id_token.split('.')[1], 'base64').toString()).email; } catch (_) {}
-      const tokenData = {
-        accessToken: data.access_token, refreshToken: data.refresh_token,
-        expiresAt: Date.now() + data.expires_in * 1000, email,
-      };
-      // Return HTML that sends token to opener window then closes
+      const tokenData = { accessToken: data.access_token, refreshToken: data.refresh_token, expiresAt: Date.now() + (data.expires_in || 3600) * 1000, email };
       return {
         statusCode: 200,
         headers: { ...cors, 'Content-Type': 'text/html' },
@@ -116,11 +112,8 @@ exports.handler = async (event) => {
         </style></head><body>
         <div class="card"><div class="spinner"></div><h2>Connecting Gmail…</h2><p>Almost done.</p></div>
         <script>
-          window.opener && window.opener.postMessage({
-            type: 'GMAIL_OAUTH_SUCCESS',
-            data: ${JSON.stringify(tokenData)}
-          }, 'https://remindrr.app');
-          setTimeout(() => { if (window.opener) window.close(); }, 1000);
+          window.opener && window.opener.postMessage({ type: 'GMAIL_OAUTH_SUCCESS', data: ${JSON.stringify(tokenData)} }, 'https://remindrr.app');
+          setTimeout(() => { if (window.opener) window.close(); }, 1500);
         </script></body></html>`,
       };
     } catch (err) {
@@ -128,8 +121,8 @@ exports.handler = async (event) => {
     }
   }
 
-  // POST /exchange — frontend popup calls this (fallback path)
-  if (event.httpMethod === 'POST' && event.path === '/exchange') {
+  // POST /gmail-oauth/exchange
+  if (event.httpMethod === 'POST' && suffix === '/exchange') {
     if (!CLIENT_ID || !CLIENT_SECRET) {
       return { statusCode: 500, headers: cors, body: JSON.stringify({ success: false, message: 'Gmail OAuth not configured' }) };
     }
@@ -160,7 +153,7 @@ exports.handler = async (event) => {
         statusCode: 200, headers: { ...cors, 'Content-Type': 'application/json' },
         body: JSON.stringify({
           success: true, accessToken: data.access_token,
-          refreshToken: data.refresh_token, expiresAt: Date.now() + data.expires_in * 1000, email,
+          refreshToken: data.refresh_token, expiresAt: Date.now() + (data.expires_in || 3600) * 1000, email,
         }),
       };
     } catch (err) {
@@ -168,8 +161,8 @@ exports.handler = async (event) => {
     }
   }
 
-  // POST /refresh
-  if (event.httpMethod === 'POST' && event.path === '/refresh') {
+  // POST /gmail-oauth/refresh
+  if (event.httpMethod === 'POST' && suffix === '/refresh') {
     if (!CLIENT_ID || !CLIENT_SECRET) {
       return { statusCode: 500, headers: cors, body: JSON.stringify({ success: false, message: 'Gmail OAuth not configured' }) };
     }
@@ -196,15 +189,15 @@ exports.handler = async (event) => {
       }
       return {
         statusCode: 200, headers: { ...cors, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ success: true, accessToken: data.access_token, expiresAt: Date.now() + data.expires_in * 1000 }),
+        body: JSON.stringify({ success: true, accessToken: data.access_token, expiresAt: Date.now() + (data.expires_in || 3600) * 1000 }),
       };
     } catch (err) {
       return { statusCode: 500, headers: cors, body: JSON.stringify({ success: false, message: 'Token refresh failed: ' + err.message }) };
     }
   }
 
-  // POST /revoke
-  if (event.httpMethod === 'POST' && event.path === '/revoke') {
+  // POST /gmail-oauth/revoke
+  if (event.httpMethod === 'POST' && suffix === '/revoke') {
     let body;
     try { body = JSON.parse(event.body); } catch (_) {
       return { statusCode: 400, headers: cors, body: JSON.stringify({ success: false, message: 'Invalid JSON' }) };
@@ -216,5 +209,5 @@ exports.handler = async (event) => {
     return { statusCode: 200, headers: { ...cors, 'Content-Type': 'application/json' }, body: JSON.stringify({ success: true }) };
   }
 
-  return { statusCode: 404, headers: cors, body: JSON.stringify({ success: false, message: 'Not found' }) };
+  return { statusCode: 404, headers: cors, body: JSON.stringify({ success: false, message: 'Not found', path: event.path, suffix }) };
 };
