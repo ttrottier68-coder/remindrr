@@ -2,8 +2,8 @@
 // Sends email via Gmail API using a refresh token
 // Token refresh is handled by gmail-oauth, so we expect a valid access_token
 
-const CLIENT_ID = process.env.GMAIL_CLIENT_ID;
-const CLIENT_SECRET = process.env.GMAIL_CLIENT_SECRET;
+const CLIENT_ID = process.env.GMAIL_ID;
+const CLIENT_SECRET = process.env.GMAIL_KEY;
 
 const HEADERS = {
   'Access-Control-Allow-Origin': '*',

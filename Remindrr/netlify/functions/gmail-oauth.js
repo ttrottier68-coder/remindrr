@@ -6,8 +6,8 @@
 //   POST /refresh         → refresh access token
 //   POST /revoke          → revoke access
 
-const CLIENT_ID     = process.env.GMAIL_CLIENT_ID;
-const CLIENT_SECRET = process.env.GMAIL_CLIENT_SECRET;
+const CLIENT_ID     = process.env.GMAIL_ID;
+const CLIENT_SECRET = process.env.GMAIL_KEY;
 const REDIRECT_URI  = 'https://remindrr.app/.netlify/functions/gmail-oauth';
 
 const HEADERS_CORS = {
