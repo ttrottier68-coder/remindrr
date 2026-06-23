@@ -1,0 +1,220 @@
+// Netlify Function: gmail-oauth.js
+// Handles Gmail OAuth:
+//   GET  /                → return OAuth URL
+//   GET  /?code=...       → token exchange (Google redirect target)
+//   POST /exchange        → exchange auth code for tokens (called by frontend popup)
+//   POST /refresh         → refresh access token
+//   POST /revoke          → revoke access
+
+const CLIENT_ID     = process.env.GMAIL_CLIENT_ID;
+const CLIENT_SECRET = process.env.GMAIL_CLIENT_SECRET;
+const REDIRECT_URI  = 'https://remindrr.app/.netlify/functions/gmail-oauth';
+
+const HEADERS_CORS = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'Content-Type',
+  'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
+};
+
+function htmlResponse(title, color, message) {
+  return `<!DOCTYPE html><html><head><meta charset="utf-8"><style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; display:flex; align-items:center; justify-content:center; min-height:100vh; margin:0; background:#f8fafc; }
+    .card { background:white; border-radius:16px; padding:40px; box-shadow:0 4px 24px rgba(0,0,0,0.08); text-align:center; max-width:400px; }
+    .icon { font-size:48px; margin-bottom:16px; }
+    h2 { color:#1e293b; margin:0 0 12px; font-size:22px; }
+    p { color:#64748b; margin:0 0 24px; font-size:14px; line-height:1.6; }
+    .spinner { width:40px; height:40px; border:3px solid #e2e8f0; border-top-color:#f97316; border-radius:50%; animation:spin 0.8s linear infinite; margin:0 auto 16px; }
+    @keyframes spin { to{transform:rotate(360deg)} }
+  </style></head><body>
+  <div class="card">
+    ${color === 'loading' ? '<div class="spinner"></div>' : `<div class="icon">${color === 'success' ? '✅' : '❌'}</div>`}
+    <h2>${title}</h2>
+    <p>${message}</p>
+  </div>
+  <script>
+    // Extract params from URL and send to parent window
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get('code');
+    const error = params.get('error');
+    const state = params.get('state');
+    window.opener && window.opener.postMessage(
+      { type: 'GMAIL_OAUTH', code, error, state },
+      'https://remindrr.app'
+    );
+    setTimeout(() => { if (window.opener) window.close(); }, 1500);
+  </script>
+</body></html>`;
+}
+
+exports.handler = async (event) => {
+  const cors = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Headers': 'Content-Type',
+    'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
+  };
+
+  if (event.httpMethod === 'OPTIONS') {
+    return { statusCode: 200, headers: cors, body: '' };
+  }
+
+  const url = new URL(event.path + (event.rawQuery ? '?' + event.rawQuery : ''), 'https://remindrr.app');
+
+  // GET / → return OAuth URL
+  if (event.httpMethod === 'GET' && event.path === '/') {
+    if (!CLIENT_ID) {
+      return { statusCode: 500, headers: cors, body: JSON.stringify({ success: false, message: 'Gmail OAuth not configured' }) };
+    }
+    const scopes = encodeURIComponent('https://www.googleapis.com/auth/gmail.send');
+    const state = Math.random().toString(36).substring(2);
+    const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=code&scope=${scopes}&access_type=offline&prompt=consent&state=${state}`;
+    return { statusCode: 200, headers: { ...cors, 'Content-Type': 'application/json' }, body: JSON.stringify({ success: true, url: authUrl, state }) };
+  }
+
+  // GET /?code=... → Google redirected back (Netlify strips query from event.path)
+  // Use rawQuery to reconstruct
+  const rawPath = event.path;
+  const fullUrl = 'https://remindrr.app' + event.path + (event.rawQuery ? '?' + event.rawQuery : '');
+  const parsed  = new URL(fullUrl);
+  const code    = parsed.searchParams.get('code');
+  const error   = parsed.searchParams.get('error');
+
+  if ((rawPath === '/' || rawPath === '') && (code || error)) {
+    // This is the redirect from Google — exchange token server-side
+    if (!code) {
+      return { statusCode: 200, headers: { ...cors, 'Content-Type': 'text/html' }, body: htmlResponse('Access Denied', '❌', error || 'Google denied access. You can close this window.') };
+    }
+    try {
+      const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+          client_id: CLIENT_ID, client_secret: CLIENT_SECRET,
+          code, grant_type: 'authorization_code', redirect_uri: REDIRECT_URI,
+        }),
+      });
+      const data = await tokenRes.json();
+      if (data.error) {
+        return { statusCode: 200, headers: { ...cors, 'Content-Type': 'text/html' }, body: htmlResponse('Error', '❌', data.error_description || data.error) };
+      }
+      // Extract email from id_token
+      let email = '';
+      try { email = JSON.parse(Buffer.from(data.id_token.split('.')[1], 'base64').toString()).email; } catch (_) {}
+      const tokenData = {
+        accessToken: data.access_token, refreshToken: data.refresh_token,
+        expiresAt: Date.now() + data.expires_in * 1000, email,
+      };
+      // Return HTML that sends token to opener window then closes
+      return {
+        statusCode: 200,
+        headers: { ...cors, 'Content-Type': 'text/html' },
+        body: `<!DOCTYPE html><html><head><meta charset="utf-8"><style>
+          body{font-family:-apple-system,sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;background:#f8fafc;}
+          .card{background:white;border-radius:16px;padding:40px;box-shadow:0 4px 24px rgba(0,0,0,0.08);text-align:center;}
+          .spinner{width:40px;height:40px;border:3px solid #e2e8f0;border-top-color:#f97316;border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 16px;}
+          @keyframes spin{to{transform:rotate(360deg)}}
+          h2{color:#1e293b;margin:0 0 8px}p{color:#64748b;margin:0;font-size:14px;}
+        </style></head><body>
+        <div class="card"><div class="spinner"></div><h2>Connecting Gmail…</h2><p>Almost done.</p></div>
+        <script>
+          window.opener && window.opener.postMessage({
+            type: 'GMAIL_OAUTH_SUCCESS',
+            data: ${JSON.stringify(tokenData)}
+          }, 'https://remindrr.app');
+          setTimeout(() => { if (window.opener) window.close(); }, 1000);
+        </script></body></html>`,
+      };
+    } catch (err) {
+      return { statusCode: 200, headers: { ...cors, 'Content-Type': 'text/html' }, body: htmlResponse('Error', '❌', err.message) };
+    }
+  }
+
+  // POST /exchange — frontend popup calls this (fallback path)
+  if (event.httpMethod === 'POST' && event.path === '/exchange') {
+    if (!CLIENT_ID || !CLIENT_SECRET) {
+      return { statusCode: 500, headers: cors, body: JSON.stringify({ success: false, message: 'Gmail OAuth not configured' }) };
+    }
+    let body;
+    try { body = JSON.parse(event.body); } catch (_) {
+      return { statusCode: 400, headers: cors, body: JSON.stringify({ success: false, message: 'Invalid JSON' }) };
+    }
+    const { code: authCode } = body;
+    if (!authCode) {
+      return { statusCode: 400, headers: cors, body: JSON.stringify({ success: false, message: 'Missing code' }) };
+    }
+    try {
+      const res = await fetch('https://oauth2.googleapis.com/token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+          client_id: CLIENT_ID, client_secret: CLIENT_SECRET,
+          code: authCode, grant_type: 'authorization_code', redirect_uri: REDIRECT_URI,
+        }),
+      });
+      const data = await res.json();
+      if (data.error) {
+        return { statusCode: 400, headers: cors, body: JSON.stringify({ success: false, message: data.error_description || data.error }) };
+      }
+      let email = '';
+      try { email = JSON.parse(Buffer.from(data.id_token.split('.')[1], 'base64').toString()).email; } catch (_) {}
+      return {
+        statusCode: 200, headers: { ...cors, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          success: true, accessToken: data.access_token,
+          refreshToken: data.refresh_token, expiresAt: Date.now() + data.expires_in * 1000, email,
+        }),
+      };
+    } catch (err) {
+      return { statusCode: 500, headers: cors, body: JSON.stringify({ success: false, message: 'Token exchange failed: ' + err.message }) };
+    }
+  }
+
+  // POST /refresh
+  if (event.httpMethod === 'POST' && event.path === '/refresh') {
+    if (!CLIENT_ID || !CLIENT_SECRET) {
+      return { statusCode: 500, headers: cors, body: JSON.stringify({ success: false, message: 'Gmail OAuth not configured' }) };
+    }
+    let body;
+    try { body = JSON.parse(event.body); } catch (_) {
+      return { statusCode: 400, headers: cors, body: JSON.stringify({ success: false, message: 'Invalid JSON' }) };
+    }
+    const { refreshToken } = body;
+    if (!refreshToken) {
+      return { statusCode: 400, headers: cors, body: JSON.stringify({ success: false, message: 'Missing refreshToken' }) };
+    }
+    try {
+      const res = await fetch('https://oauth2.googleapis.com/token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+          client_id: CLIENT_ID, client_secret: CLIENT_SECRET,
+          refresh_token: refreshToken, grant_type: 'refresh_token',
+        }),
+      });
+      const data = await res.json();
+      if (data.error) {
+        return { statusCode: 400, headers: cors, body: JSON.stringify({ success: false, message: data.error_description || data.error }) };
+      }
+      return {
+        statusCode: 200, headers: { ...cors, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ success: true, accessToken: data.access_token, expiresAt: Date.now() + data.expires_in * 1000 }),
+      };
+    } catch (err) {
+      return { statusCode: 500, headers: cors, body: JSON.stringify({ success: false, message: 'Token refresh failed: ' + err.message }) };
+    }
+  }
+
+  // POST /revoke
+  if (event.httpMethod === 'POST' && event.path === '/revoke') {
+    let body;
+    try { body = JSON.parse(event.body); } catch (_) {
+      return { statusCode: 400, headers: cors, body: JSON.stringify({ success: false, message: 'Invalid JSON' }) };
+    }
+    const { accessToken } = body;
+    if (accessToken) {
+      try { await fetch(`https://oauth2.googleapis.com/revoke?token=${accessToken}`); } catch (_) {}
+    }
+    return { statusCode: 200, headers: { ...cors, 'Content-Type': 'application/json' }, body: JSON.stringify({ success: true }) };
+  }
+
+  return { statusCode: 404, headers: cors, body: JSON.stringify({ success: false, message: 'Not found' }) };
+};

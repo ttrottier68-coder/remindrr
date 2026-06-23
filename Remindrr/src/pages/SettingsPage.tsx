@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getSettings, saveSettings } from '../lib/store';
 import type { UserSettings } from '../types';
+import { getGmailTokens, saveGmailTokens, clearGmailTokens, getGmailAuthUrl, exchangeGmailCode } from '../lib/reminder-data';
 
 const BackIcon = () => <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>;
 const SaveIcon = () => <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" /></svg>;
@@ -146,6 +147,136 @@ function StatusBadge({ label, connected, fields }: { label: string; connected: b
   );
 }
 
+// ─── Gmail OAuth ─────────────────────────────────────────────────────────────
+function GmailSection() {
+  const [gmailState, setGmailState] = useState<{connected: boolean; email: string | null; error: string | null}>(() => {
+    try {
+      const stored = localStorage.getItem('remindrr_gmail');
+      if (stored) {
+        const data = JSON.parse(stored);
+        return { connected: true, email: data.email || null, error: null };
+      }
+    } catch (_) {}
+    return { connected: false, email: null, error: null };
+  });
+  const [connecting, setConnecting] = useState(false);
+
+  const connectGmail = async () => {
+    setConnecting(true);
+    setGmailState(s => ({ ...s, error: null }));
+    try {
+      const res = await fetch('/.netlify/functions/gmail-oauth', { method: 'GET' });
+      const data = await res.json();
+      if (!data.success) {
+        setGmailState(s => ({ ...s, error: data.message || 'Failed to get OAuth URL' }));
+        setConnecting(false);
+        return;
+      }
+      // Store state for verification when redirected back
+      sessionStorage.setItem('gmail_oauth_state', data.state);
+      // Open Google OAuth window
+      const popup = window.open(data.url, 'gmail_oauth', 'width=600,height=700,left=400,top=100');
+      // Poll for the code being set in localStorage (from the redirect page)
+      const poll = setInterval(() => {
+        const code = sessionStorage.getItem('gmail_auth_code');
+        if (code) {
+          clearInterval(poll);
+          sessionStorage.removeItem('gmail_auth_code');
+          sessionStorage.removeItem('gmail_oauth_state');
+          // Exchange code for tokens
+          fetch('/.netlify/functions/gmail-oauth/exchange', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ code }),
+          }).then(r => r.json()).then(result => {
+            if (result.success) {
+              localStorage.setItem('remindrr_gmail', JSON.stringify({
+                accessToken: result.accessToken,
+                refreshToken: result.refreshToken,
+                expiresAt: result.expiresAt,
+                email: result.email,
+              }));
+              setGmailState({ connected: true, email: result.email, error: null });
+              if (popup) popup.close();
+            } else {
+              setGmailState(s => ({ ...s, error: result.message }));
+            }
+            setConnecting(false);
+          });
+        }
+      }, 500);
+      // Fallback timeout
+      setTimeout(() => { clearInterval(poll); setConnecting(false); }, 300000);
+    } catch (err) {
+      setGmailState(s => ({ ...s, error: 'Could not connect. Please try again.' }));
+      setConnecting(false);
+    }
+  };
+
+  const disconnectGmail = () => {
+    localStorage.removeItem('remindrr_gmail');
+    setGmailState({ connected: false, email: null, error: null });
+  };
+
+  return (
+    <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
+      <div className="flex items-center gap-3 mb-4">
+        <div className="bg-gradient-to-br from-blue-500 to-blue-600 text-white text-xs font-bold px-3 py-1.5 rounded-lg">G</div>
+        <div>
+          <h2 className="font-bold text-slate-700 text-base">Email via Gmail</h2>
+          <p className="text-slate-400 text-xs mt-0.5">Recommended — sends from your Gmail address, no domain needed</p>
+        </div>
+      </div>
+
+      {gmailState.connected ? (
+        <div className="flex items-center justify-between bg-green-50 border border-green-200 rounded-xl p-4">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-bold text-sm">
+              {gmailState.email ? gmailState.email[0].toUpperCase() : 'G'}
+            </div>
+            <div>
+              <p className="font-semibold text-green-800 text-sm">Gmail connected</p>
+              <p className="text-green-600 text-xs">{gmailState.email}</p>
+            </div>
+          </div>
+          <button onClick={disconnectGmail}
+            className="text-xs text-red-500 hover:text-red-700 font-medium px-3 py-1.5 rounded-lg border border-red-200 hover:bg-red-50 transition-colors">
+            Disconnect
+          </button>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          <div className="bg-blue-50 rounded-xl p-4 border border-blue-100">
+            <p className="font-semibold text-slate-700 text-sm mb-2">Best for contractors with Gmail accounts</p>
+            <ul className="text-sm text-slate-600 space-y-1.5">
+              <li>✓ Sends from your own Gmail — no domain or extra account needed</li>
+              <li>✓ Clients receive emails from a real address they recognize</li>
+              <li>✓ Up to 500 emails/day with a free Gmail account</li>
+            </ul>
+          </div>
+          <button
+            onClick={connectGmail}
+            disabled={connecting}
+            className="w-full flex items-center justify-center gap-3 bg-white border-2 border-blue-300 hover:border-blue-500 text-blue-700 font-bold px-5 py-3 rounded-xl transition-colors disabled:opacity-50 cursor-pointer"
+          >
+            <svg className="w-5 h-5" viewBox="0 0 24 24">
+              <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+              <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+              <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+              <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+            </svg>
+            {connecting ? 'Connecting...' : 'Connect Gmail'}
+          </button>
+          {gmailState.error && (
+            <p className="text-red-500 text-xs">{gmailState.error}</p>
+          )}
+          <p className="text-xs text-slate-400 text-center">You'll be redirected to sign in with Google. No password is stored.</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── Main Settings Page ──────────────────────────────────────────────────────
 export default function SettingsPage() {
   const navigate = useNavigate();
@@ -157,6 +288,39 @@ export default function SettingsPage() {
     plan: 'starter',
   });
   const [saved, setSaved] = useState(false);
+  const [gmailStatus, setGmailStatus] = useState<'idle' | 'loading' | 'connected' | 'error'>('idle');
+  const [gmailEmail, setGmailEmail] = useState('');
+  const [gmailError, setGmailError] = useState('');
+
+  useEffect(() => {
+    const tokens = getGmailTokens();
+    if (tokens) { setGmailStatus('connected'); setGmailEmail(tokens.email || 'Connected'); }
+  }, []);
+
+  const connectGmail = async () => {
+    setGmailStatus('loading');
+    setGmailError('');
+    try {
+      const authUrl = await getGmailAuthUrl();
+      const popup = window.open(authUrl, 'gmail_oauth', 'width=600,height=700,top=100,left=100');
+      if (!popup) { setGmailError('Popup blocked. Allow popups for remindrr.app and try again.'); setGmailStatus('idle'); return; }
+      const handleMessage = async (event: MessageEvent) => {
+        if (event.origin !== 'https://remindrr.app') return;
+        const { type, data } = event.data || {};
+        if (type !== 'GMAIL_OAUTH_SUCCESS') return;
+        window.removeEventListener('message', handleMessage);
+        popup.close();
+        if (!data) { setGmailError('Authorization failed.'); setGmailStatus('idle'); return; }
+        saveGmailTokens(data);
+        setGmailEmail(data.email || 'Connected');
+        setGmailStatus('connected');
+      };
+      window.addEventListener('message', handleMessage);
+      setTimeout(() => { window.removeEventListener('message', handleMessage); if (!popup.closed) popup.close(); }, 300000);
+    } catch (err: unknown) { setGmailError((err as Error).message || 'Failed to connect Gmail.'); setGmailStatus('idle'); }
+  };
+
+  const disconnectGmail = () => { clearGmailTokens(); setGmailStatus('idle'); setGmailEmail(''); setGmailError(''); };
 
   const set = (k: keyof UserSettings, v: string) => setForm(f => ({ ...f, [k]: v }));
 
@@ -257,32 +421,82 @@ export default function SettingsPage() {
           <div className="bg-gradient-to-br from-green-500 to-green-600 text-white text-xs font-bold px-3 py-1.5 rounded-lg">📧</div>
           <div>
             <h2 className="font-bold text-slate-700 text-base">Email Reminders</h2>
-            <p className="text-slate-400 text-xs mt-0.5">Resend - 3,000 free emails/month</p>
+            <p className="text-slate-400 text-xs mt-0.5">Gmail or Resend — send reminders directly from your inbox</p>
           </div>
         </div>
 
-        <div className="bg-green-50 rounded-xl p-4 border border-green-100 space-y-3">
-          <p className="font-semibold text-slate-700 text-sm">How to set up Resend:</p>
-          <ol className="list-decimal list-inside text-sm text-slate-600 space-y-2">
-            <li>Go to <a href="https://resend.com" target="_blank" rel="noopener noreferrer" className="text-green-600 underline font-medium">resend.com</a> and sign up</li>
-            <li>Copy your API Key (starts with <code className="bg-slate-100 px-1 rounded text-xs">re_</code>) from <strong>API Keys</strong> page</li>
-            <li>Paste it in the API Key field below</li>
-            <li>Enter your sender email (e.g. yourname@onresend.com)</li>
+        {/* ── Gmail Connect ── */}
+        <div className="rounded-xl border p-4 mb-4 bg-blue-50 border-blue-100">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="bg-white rounded-lg p-1.5 shadow-sm">
+              <svg width="22" height="22" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+            </div>
+            <div className="flex-1">
+              <p className="font-semibold text-slate-700 text-sm">Connect Gmail (Recommended)</p>
+              <p className="text-slate-500 text-xs">No API key needed. Send from your own Gmail address.</p>
+            </div>
+          </div>
+
+          {gmailStatus === 'idle' && (
+            <button onClick={connectGmail}
+              className="mt-2 w-full bg-blue-500 hover:bg-blue-600 active:bg-blue-700 text-white font-semibold text-sm py-2.5 px-4 rounded-xl transition-colors">
+              🔌 Connect Gmail
+            </button>
+          )}
+          {gmailStatus === 'loading' && (
+            <div className="mt-2 flex items-center justify-center gap-2 text-blue-600 text-sm py-2">
+              <div className="w-4 h-4 border-2 border-blue-300 border-t-blue-600 rounded-full animate-spin" />
+              Connecting…
+            </div>
+          )}
+          {gmailStatus === 'connected' && (
+            <div className="mt-2 flex items-center gap-2">
+              <div className="flex-1 bg-green-50 border border-green-200 rounded-xl px-3 py-2 flex items-center gap-2">
+                <span className="text-green-600 text-sm">✅</span>
+                <div>
+                  <p className="text-sm font-medium text-slate-700">Gmail Connected</p>
+                  <p className="text-xs text-slate-400">{gmailEmail}</p>
+                </div>
+              </div>
+              <button onClick={disconnectGmail} className="text-slate-400 hover:text-red-500 text-xs px-2 py-2 transition-colors" title="Disconnect">
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+              </button>
+            </div>
+          )}
+          {gmailError && (
+            <p className="mt-2 text-red-500 text-xs">{gmailError}</p>
+          )}
+          <p className="text-slate-400 text-xs mt-2">Gmail sends from your address — recipients see it came from you.</p>
+        </div>
+
+        <div className="flex items-center gap-2 mb-3">
+          <div className="flex-1 h-px bg-slate-200" />
+          <span className="text-slate-400 text-xs">or use an API key</span>
+          <div className="flex-1 h-px bg-slate-200" />
+        </div>
+
+        {/* ── Resend / SendGrid API Key ── */}
+        <div className="bg-green-50 rounded-xl p-4 border border-green-100 space-y-3 mb-4">
+          <p className="font-semibold text-slate-700 text-sm">📧 Resend (API Key)</p>
+          <ol className="list-decimal list-inside text-xs text-slate-600 space-y-1.5">
+            <li>Go to <a href="https://resend.com" target="_blank" rel="noopener noreferrer" className="text-green-600 underline">resend.com</a> and sign up</li>
+            <li>Copy your API Key (starts with <code className="bg-slate-100 px-1 rounded">re_</code>)</li>
+            <li>Paste it below and enter your sender email</li>
           </ol>
         </div>
 
-        <div className="space-y-4 mt-4">
+        <div className="space-y-4">
           <div>
             <label className="block text-xs font-medium text-slate-500 mb-1.5">Resend API Key</label>
             <input type="password" value={form.sendgridApiKey} onChange={e => set('sendgridApiKey', e.target.value)} placeholder="re_..."
               className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-green-400 transition-all" />
-            <p className="text-xs text-slate-400 mt-1">Found at: resend.com → API Keys</p>
+            <p className="text-xs text-slate-400 mt-1">resend.com → API Keys</p>
           </div>
           <div>
             <label className="block text-xs font-medium text-slate-500 mb-1.5">Sender Email (From address)</label>
             <input type="email" value={form.sendgridFromEmail} onChange={e => set('sendgridFromEmail', e.target.value)} placeholder="yourname@onresend.com"
               className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-400 transition-all" />
-            <p className="text-xs text-slate-400 mt-1">Your Resend sender email</p>
+            <p className="text-xs text-slate-400 mt-1">Must be verified in Resend</p>
           </div>
         </div>
       </div>

@@ -6,6 +6,7 @@ const SETTINGS_KEY = 'remindrr_settings';
 const INVOICES_KEY = 'remindrr_invoices';
 const CLIENTS_KEY  = 'remindrr_clients';
 const SENDGRID_KEY = 'remindrr_sendgrid'; // Separate key for SendGrid - persists on logout
+const GMAIL_KEY    = 'remindrr_gmail';    // Separate key for Gmail OAuth tokens
 
 function safe<T>(key: string, fallback: T): T {
   try { const r = localStorage.getItem(key); return r ? JSON.parse(r) : fallback; }
@@ -36,6 +37,103 @@ export function getSettings(): UserSettings {
     sendgridApiKey: sendgridStored.apiKey || mainSettings.sendgridApiKey,
     sendgridFromEmail: sendgridStored.fromEmail || mainSettings.sendgridFromEmail,
   };
+}
+
+// ─── Gmail OAuth ────────────────────────────────────────────────────────────
+
+export interface GmailTokens {
+  accessToken: string;
+  refreshToken: string;
+  expiresAt: number;
+  email?: string;
+}
+
+export function getGmailTokens(): GmailTokens | null {
+  return safe(GMAIL_KEY, null);
+}
+
+export function saveGmailTokens(tokens: GmailTokens) {
+  persist(GMAIL_KEY, tokens);
+}
+
+export function clearGmailTokens() {
+  localStorage.removeItem(GMAIL_KEY);
+}
+
+export async function getGmailAuthUrl(): Promise<string> {
+  const res = await fetch('/.netlify/functions/gmail-oauth');
+  const data = await res.json();
+  if (!data.url) throw new Error(data.message || 'Could not get Gmail auth URL');
+  return data.url;
+}
+
+export async function exchangeGmailCode(code: string): Promise<GmailTokens> {
+  const res = await fetch('/.netlify/functions/gmail-oauth', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ code }),
+  });
+  const data = await res.json();
+  if (!data.success) throw new Error(data.message || 'Token exchange failed');
+  return {
+    accessToken: data.accessToken,
+    refreshToken: data.refreshToken,
+    expiresAt: data.expiresAt,
+    email: data.email,
+  };
+}
+
+export async function refreshGmailToken(tokens: GmailTokens): Promise<string> {
+  const res = await fetch('/.netlify/functions/gmail-oauth', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ path: '/refresh', refreshToken: tokens.refreshToken }),
+  });
+  const data = await res.json();
+  if (!data.success) throw new Error(data.message || 'Token refresh failed');
+  return data.accessToken;
+}
+
+async function getValidGmailToken(): Promise<{ token: string; gmail: GmailTokens } | null> {
+  const gmail = getGmailTokens();
+  if (!gmail?.accessToken) return null;
+  // Refresh if expires in < 5 minutes
+  if (Date.now() + 300000 < gmail.expiresAt) return { token: gmail.accessToken, gmail };
+  try {
+    const newToken = await refreshGmailToken(gmail);
+    const updated = { ...gmail, accessToken: newToken, expiresAt: Date.now() + 3600000 };
+    saveGmailTokens(updated);
+    return { token: newToken, gmail: updated };
+  } catch {
+    return null;
+  }
+}
+
+async function sendViaGmail(toEmail: string, subject: string, html: string, text: string): Promise<{ success: boolean; message: string }> {
+  const valid = await getValidGmailToken();
+  if (!valid) {
+    return { success: false, message: 'Gmail not connected. Please reconnect in Settings.' };
+  }
+  const gmail = valid.gmail;
+  const res = await fetch('/.netlify/functions/send-gmail', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      accessToken: valid.token,
+      toEmail,
+      fromEmail: gmail.email || 'me',
+      subject,
+      text,
+      html,
+    }),
+  });
+  const data = await res.json();
+  if (res.status === 401) {
+    clearGmailTokens();
+    return { success: false, message: 'Gmail token expired — please reconnect in Settings.' };
+  }
+  if (!data.success) return { success: false, message: data.message };
+  return { success: true, message: 'Email sent via Gmail!' };
 }
 
 export function saveSettings(s: Partial<UserSettings>): UserSettings {
@@ -114,13 +212,29 @@ ${settings?.businessName || ''}`);
 
 export async function sendReminderNow(invoice: Invoice): Promise<{ success: boolean; message: string }> {
   const settings = getSettings();
-
-  if (!settings.sendgridApiKey || !settings.sendgridFromEmail) {
-    return { success: false, message: 'Email not configured. Go to Settings.' };
-  }
-
   const client = getClients().find(c => c.id === invoice.clientId);
   const clientEmail = client?.email || invoice.clientEmail;
+  const subject = `Payment Reminder: Invoice #${invoice.id.slice(0, 8)} for $${invoice.amount}`;
+  const html = buildEmailHtml(invoice, client, settings.businessName, settings);
+  const text = `Payment Reminder for Invoice #${invoice.id.slice(0, 8)}\n\nAmount: $${invoice.amount}\nDue Date: ${new Date(invoice.dueDate).toLocaleDateString()}\n\nPlease send payment at your earliest convenience.\n\nThank you,\n${settings.businessName || ''}`;
+
+  // ── 1. Try Gmail first ─────────────────────────────────────────────────────
+  const gmailResult = await sendViaGmail(clientEmail, subject, html, text);
+  if (gmailResult.success) {
+    const invoices = getInvoices();
+    const updated = invoices.map(i => i.id === invoice.id ? {
+      ...i, reminderSent: true, lastReminderSentAt: new Date().toISOString(),
+      followupCount: (i.followupCount || 0) + 1,
+    } : i);
+    persist(INVOICES_KEY, updated);
+    syncToCloud(getSettings(), updated, getClients());
+    return { success: true, message: 'Reminder sent!' };
+  }
+
+  // ── 2. Fall back to SendGrid / Resend ─────────────────────────────────────
+  if (!settings.sendgridApiKey || !settings.sendgridFromEmail) {
+    return { success: false, message: 'Email not configured. Go to Settings → Email Reminders to connect Gmail or add your API key.' };
+  }
 
   try {
     const response = await fetch('/.netlify/functions/send-email', {
@@ -130,18 +244,15 @@ export async function sendReminderNow(invoice: Invoice): Promise<{ success: bool
         apiKey: settings.sendgridApiKey,
         fromEmail: settings.sendgridFromEmail,
         toEmail: clientEmail,
-        subject: `Payment Reminder: Invoice #${invoice.id.slice(0, 8)} for $${invoice.amount}`,
-        html: buildEmailHtml(invoice, client, settings.businessName, settings),
+        subject,
+        html,
       }),
     });
 
     if (response.ok) {
-      // Update invoice reminder tracking
       const invoices = getInvoices();
       const updated = invoices.map(i => i.id === invoice.id ? {
-        ...i,
-        reminderSent: true,
-        lastReminderSentAt: new Date().toISOString(),
+        ...i, reminderSent: true, lastReminderSentAt: new Date().toISOString(),
         followupCount: (i.followupCount || 0) + 1,
       } : i);
       persist(INVOICES_KEY, updated);
