@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { getSettings, saveSettings } from '../lib/store';
 import type { UserSettings } from '../types';
 import { getGmailTokens, saveGmailTokens, clearGmailTokens, getGmailAuthUrl, exchangeGmailCode } from '../lib/reminder-data';
+import { showToast } from '../hooks/useToast';
 
 const BackIcon = () => <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>;
 const SaveIcon = () => <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" /></svg>;
@@ -295,6 +296,17 @@ export default function SettingsPage() {
   useEffect(() => {
     const tokens = getGmailTokens();
     if (tokens) { setGmailStatus('connected'); setGmailEmail(tokens.email || 'Connected'); }
+    // Handle Gmail OAuth return (params may still be in URL before main.tsx clears them)
+    const params = new URLSearchParams(window.location.search);
+    const gmailConnected = params.get('gmail_connected');
+    const gmailError = params.get('gmail_error');
+    if (gmailConnected === '1') {
+      const freshTokens = getGmailTokens();
+      if (freshTokens) { setGmailStatus('connected'); setGmailEmail(freshTokens.email || 'Connected'); }
+      showToast('Gmail connected successfully!', 'success');
+    }
+    if (gmailError) { showToast('Gmail connection failed: ' + gmailError, 'error'); }
+    if (gmailConnected || gmailError) { window.history.replaceState({}, '', window.location.pathname); }
   }, []);
 
   const connectGmail = async () => {
@@ -302,21 +314,8 @@ export default function SettingsPage() {
     setGmailError('');
     try {
       const authUrl = await getGmailAuthUrl();
-      const popup = window.open(authUrl, 'gmail_oauth', 'width=600,height=700,top=100,left=100');
-      if (!popup) { setGmailError('Popup blocked. Allow popups for remindrr.app and try again.'); setGmailStatus('idle'); return; }
-      const handleMessage = async (event: MessageEvent) => {
-        if (event.origin !== 'https://remindrr.app') return;
-        const { type, data } = event.data || {};
-        if (type !== 'GMAIL_OAUTH_SUCCESS') return;
-        window.removeEventListener('message', handleMessage);
-        popup.close();
-        if (!data) { setGmailError('Authorization failed.'); setGmailStatus('idle'); return; }
-        saveGmailTokens(data);
-        setGmailEmail(data.email || 'Connected');
-        setGmailStatus('connected');
-      };
-      window.addEventListener('message', handleMessage);
-      setTimeout(() => { window.removeEventListener('message', handleMessage); if (!popup.closed) popup.close(); }, 300000);
+      // Open in same tab — function redirects back to app with tokens in URL
+      window.location.href = authUrl;
     } catch (err: unknown) { setGmailError((err as Error).message || 'Failed to connect Gmail.'); setGmailStatus('idle'); }
   };
 

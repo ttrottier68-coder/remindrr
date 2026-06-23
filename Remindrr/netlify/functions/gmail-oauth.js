@@ -77,11 +77,19 @@ exports.handler = async (event) => {
     const error = parsed.searchParams.get('error');
 
     if (error || !code) {
-      return { statusCode: 200, headers: { ...cors, 'Content-Type': 'text/html' }, body: htmlResponse('Access Denied', '❌', error || 'Google denied access. You can close this window.') };
+      return {
+        statusCode: 302,
+        headers: { ...cors, 'Location': 'https://remindrr.app/?gmail_error=' + encodeURIComponent(error || 'access_denied') },
+        body: '',
+      };
     }
 
     if (!CLIENT_ID || !CLIENT_SECRET) {
-      return { statusCode: 200, headers: { ...cors, 'Content-Type': 'text/html' }, body: htmlResponse('Error', '❌', 'Gmail OAuth not configured. Contact support.') };
+      return {
+        statusCode: 302,
+        headers: { ...cors, 'Location': 'https://remindrr.app/?gmail_error=Gmail OAuth not configured' },
+        body: '',
+      };
     }
 
     try {
@@ -95,29 +103,27 @@ exports.handler = async (event) => {
       });
       const data = await tokenRes.json();
       if (data.error) {
-        return { statusCode: 200, headers: { ...cors, 'Content-Type': 'text/html' }, body: htmlResponse('Error', '❌', data.error_description || data.error) };
+        return {
+          statusCode: 302,
+          headers: { ...cors, 'Location': 'https://remindrr.app/?gmail_error=' + encodeURIComponent(data.error_description || data.error) },
+          body: '',
+        };
       }
       let email = '';
       try { email = JSON.parse(Buffer.from(data.id_token.split('.')[1], 'base64').toString()).email; } catch (_) {}
-      const tokenData = { accessToken: data.access_token, refreshToken: data.refresh_token, expiresAt: Date.now() + (data.expires_in || 3600) * 1000, email };
-      return {
-        statusCode: 200,
-        headers: { ...cors, 'Content-Type': 'text/html' },
-        body: `<!DOCTYPE html><html><head><meta charset="utf-8"><style>
-          body{font-family:-apple-system,sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;background:#f8fafc;}
-          .card{background:white;border-radius:16px;padding:40px;box-shadow:0 4px 24px rgba(0,0,0,0.08);text-align:center;}
-          .spinner{width:40px;height:40px;border:3px solid #e2e8f0;border-top-color:#f97316;border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 16px;}
-          @keyframes spin{to{transform:rotate(360deg)}}
-          h2{color:#1e293b;margin:0 0 8px}p{color:#64748b;margin:0;font-size:14px;}
-        </style></head><body>
-        <div class="card"><div class="spinner"></div><h2>Connecting Gmail…</h2><p>Almost done.</p></div>
-        <script>
-          window.opener && window.opener.postMessage({ type: 'GMAIL_OAUTH_SUCCESS', data: ${JSON.stringify(tokenData)} }, 'https://remindrr.app');
-          setTimeout(() => { if (window.opener) window.close(); }, 1500);
-        </script></body></html>`,
-      };
+      const expiresAt = Date.now() + (data.expires_in || 3600) * 1000;
+      // Redirect to app with tokens in URL params (app will save them to localStorage)
+      const redirectUrl = 'https://remindrr.app/?gmail_connected=1&email=' + encodeURIComponent(email) +
+        '&accessToken=' + encodeURIComponent(data.access_token) +
+        '&refreshToken=' + encodeURIComponent(data.refresh_token) +
+        '&expiresAt=' + expiresAt;
+      return { statusCode: 302, headers: { ...cors, 'Location': redirectUrl }, body: '' };
     } catch (err) {
-      return { statusCode: 200, headers: { ...cors, 'Content-Type': 'text/html' }, body: htmlResponse('Error', '❌', err.message) };
+      return {
+        statusCode: 302,
+        headers: { ...cors, 'Location': 'https://remindrr.app/?gmail_error=' + encodeURIComponent(err.message) },
+        body: '',
+      };
     }
   }
 
