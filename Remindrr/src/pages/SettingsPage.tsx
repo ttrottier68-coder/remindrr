@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getSettings, saveSettings } from '../lib/store';
 import type { UserSettings } from '../types';
-import { getGmailTokens, saveGmailTokens, clearGmailTokens, getGmailAuthUrl, exchangeGmailCode } from '../lib/reminder-data';
+import { getGmailTokens, saveGmailTokens, clearGmailTokens, getGmailAuthUrl } from '../lib/reminder-data';
 import { showToast } from '../hooks/useToast';
 
 const BackIcon = () => <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>;
@@ -150,64 +150,33 @@ function StatusBadge({ label, connected, fields }: { label: string; connected: b
 
 // ─── Gmail OAuth ─────────────────────────────────────────────────────────────
 function GmailSection() {
-  const [gmailState, setGmailState] = useState<{connected: boolean; email: string | null; error: string | null}>(() => {
+  const [gmailState, setGmailState] = useState<{connected: boolean; email: string | null; error: string | null}>({ connected: false, email: null, error: null });
+
+  useEffect(() => {
     try {
       const stored = localStorage.getItem('remindrr_gmail');
       if (stored) {
         const data = JSON.parse(stored);
-        return { connected: true, email: data.email || null, error: null };
+        setGmailState({ connected: true, email: data.email || null, error: null });
+        return;
       }
     } catch (_) {}
-    return { connected: false, email: null, error: null };
-  });
+    // Check sessionStorage for new-tab OAuth completion
+    if (sessionStorage.getItem('gmail_oauth_done') === '1') {
+      const email = sessionStorage.getItem('gmail_oauth_email') || '';
+      setGmailState({ connected: true, email, error: null });
+      sessionStorage.removeItem('gmail_oauth_done');
+      sessionStorage.removeItem('gmail_oauth_email');
+    }
+  }, []);
   const [connecting, setConnecting] = useState(false);
 
   const connectGmail = async () => {
-    setConnecting(true);
     setGmailState(s => ({ ...s, error: null }));
     try {
-      const res = await fetch('/.netlify/functions/gmail-oauth', { method: 'GET' });
-      const data = await res.json();
-      if (!data.success) {
-        setGmailState(s => ({ ...s, error: data.message || 'Failed to get OAuth URL' }));
-        setConnecting(false);
-        return;
-      }
-      // Store state for verification when redirected back
-      sessionStorage.setItem('gmail_oauth_state', data.state);
-      // Open Google OAuth window
-      const popup = window.open(data.url, 'gmail_oauth', 'width=600,height=700,left=400,top=100');
-      // Poll for the code being set in localStorage (from the redirect page)
-      const poll = setInterval(() => {
-        const code = sessionStorage.getItem('gmail_auth_code');
-        if (code) {
-          clearInterval(poll);
-          sessionStorage.removeItem('gmail_auth_code');
-          sessionStorage.removeItem('gmail_oauth_state');
-          // Exchange code for tokens
-          fetch('/.netlify/functions/gmail-oauth/exchange', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ code }),
-          }).then(r => r.json()).then(result => {
-            if (result.success) {
-              localStorage.setItem('remindrr_gmail', JSON.stringify({
-                accessToken: result.accessToken,
-                refreshToken: result.refreshToken,
-                expiresAt: result.expiresAt,
-                email: result.email,
-              }));
-              setGmailState({ connected: true, email: result.email, error: null });
-              if (popup) popup.close();
-            } else {
-              setGmailState(s => ({ ...s, error: result.message }));
-            }
-            setConnecting(false);
-          });
-        }
-      }, 500);
-      // Fallback timeout
-      setTimeout(() => { clearInterval(poll); setConnecting(false); }, 300000);
+      const authUrl = await getGmailAuthUrl();
+      window.open(authUrl, '_blank');
+      setConnecting(true);
     } catch (err) {
       setGmailState(s => ({ ...s, error: 'Could not connect. Please try again.' }));
       setConnecting(false);
@@ -299,19 +268,18 @@ export default function SettingsPage() {
     // Handle Gmail OAuth return (from new tab)
     const handleOAuthDone = () => {
       sessionStorage.removeItem('gmail_oauth_done')
+      sessionStorage.removeItem('gmail_oauth_email')
       showToast('Gmail connected! Reloading…', 'success')
       setTimeout(() => window.location.reload(), 1500)
     }
     window.addEventListener('message', (e) => {
       if (e.origin === 'https://remindrr.app' && e.data?.type === 'GMAIL_OAUTH_DONE') handleOAuthDone()
     })
-    // Also check sessionStorage on mount (popup may have set this)
     if (sessionStorage.getItem('gmail_oauth_done') === '1') {
       const email = sessionStorage.getItem('gmail_oauth_email') || ''
       setGmailEmail(email); setGmailStatus('connected')
       handleOAuthDone()
     }
-    // Handle redirect params (fallback for same-tab navigation)
     const params = new URLSearchParams(window.location.search);
     if (params.get('gmail_connected') === '1') { setGmailStatus('connected'); showToast('Gmail connected!', 'success'); }
     if (params.get('gmail_error')) showToast('Gmail error: ' + params.get('gmail_error'), 'error');
