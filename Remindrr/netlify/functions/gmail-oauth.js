@@ -60,10 +60,45 @@ exports.handler = async (event) => {
 
   // Route based on bodyPath for POST, or event.path for GET
   if (bodyPath) {
-    // Internal routing via body.path (POST only)
+    // Internal routing via body.path (POST only — suffix is always '/' in Netlify)
     if (bodyPath === '/exchange') {
       // POST /gmail-oauth/exchange (internal)
-      // ... fall through to existing /exchange handler below
+      if (!CLIENT_ID || !CLIENT_SECRET) {
+        return { statusCode: 500, headers: cors, body: JSON.stringify({ success: false, message: 'Gmail OAuth not configured' }) };
+      }
+      let body;
+      try { body = JSON.parse(event.body); } catch (_) {
+        return { statusCode: 400, headers: cors, body: JSON.stringify({ success: false, message: 'Invalid JSON' }) };
+      }
+      const { code: authCode } = body;
+      if (!authCode) {
+        return { statusCode: 400, headers: cors, body: JSON.stringify({ success: false, message: 'Missing code' }) };
+      }
+      try {
+        const res = await fetch('https://oauth2.googleapis.com/token', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: new URLSearchParams({
+            client_id: CLIENT_ID, client_secret: CLIENT_SECRET,
+            code: authCode, grant_type: 'authorization_code', redirect_uri: REDIRECT_URI,
+          }),
+        });
+        const data = await res.json();
+        if (data.error) {
+          return { statusCode: 400, headers: cors, body: JSON.stringify({ success: false, message: data.error_description || data.error }) };
+        }
+        let email = '';
+        try { email = JSON.parse(Buffer.from(data.id_token.split('.')[1], 'base64').toString()).email; } catch (_) {}
+        return {
+          statusCode: 200, headers: { ...cors, 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            success: true, accessToken: data.access_token,
+            refreshToken: data.refresh_token, expiresAt: Date.now() + (data.expires_in || 3600) * 1000, email,
+          }),
+        };
+      } catch (err) {
+        return { statusCode: 500, headers: cors, body: JSON.stringify({ success: false, message: 'Token exchange failed: ' + err.message }) };
+      }
     } else if (bodyPath === '/refresh') {
       // POST /gmail-oauth/refresh (internal) — handle here inline
       if (!CLIENT_ID || !CLIENT_SECRET) {
@@ -109,15 +144,9 @@ exports.handler = async (event) => {
     }
   }
 
-  // Netlify Functions: event.path includes /.netlify/functions/ prefix
-  // e.g. /.netlify/functions/gmail-oauth or /.netlify/functions/gmail-oauth/exchange
-  const FN = '/.netlify/functions/gmail-oauth';
-  const path = event.path || '';
-  const suffix = path.startsWith(FN) ? path.slice(FN.length) || '/' : path;
-  const fullUrl = 'https://remindrr.app' + event.path + (event.rawQuery ? '?' + event.rawQuery : '');
-
   // GET /gmail-oauth → return OAuth URL (only when NO query params)
-  if (event.httpMethod === 'GET' && suffix === '/' && !event.rawQuery) {
+  // Used by browser for building the Google sign-in URL
+  if (event.httpMethod === 'GET' && !event.rawQuery) {
     if (!CLIENT_ID || !CLIENT_SECRET) {
       return { statusCode: 500, headers: cors, body: JSON.stringify({ success: false, message: 'Gmail OAuth not configured. Set GMAIL_ID and GMAIL_KEY in Netlify env vars.' }) };
     }
@@ -127,9 +156,10 @@ exports.handler = async (event) => {
     return { statusCode: 200, headers: { ...cors, 'Content-Type': 'application/json' }, body: JSON.stringify({ success: true, url: authUrl, state }) };
   }
 
-  // GET /gmail-oauth?code=... → Google redirected back (must check BEFORE OAuth URL branch)
+  // GET /gmail-oauth?code=... → Google OAuth redirect back to the app
+  // The browser will see a 302 redirect to https://remindrr.app/?gmail_connected=1&...
   if (event.httpMethod === 'GET' && event.rawQuery) {
-    const parsed = new URL(fullUrl);
+    const parsed = new URL('https://remindrr.app' + event.path + '?' + event.rawQuery);
     const code  = parsed.searchParams.get('code');
     const error = parsed.searchParams.get('error');
 
@@ -169,7 +199,7 @@ exports.handler = async (event) => {
       let email = '';
       try { email = JSON.parse(Buffer.from(data.id_token.split('.')[1], 'base64').toString()).email; } catch (_) {}
       const expiresAt = Date.now() + (data.expires_in || 3600) * 1000;
-      // Redirect to app with tokens in URL params (app will save them to localStorage)
+      // Redirect to app — app saves tokens from URL params in main.tsx
       const redirectUrl = 'https://remindrr.app/?gmail_connected=1&email=' + encodeURIComponent(email) +
         '&accessToken=' + encodeURIComponent(data.access_token) +
         '&refreshToken=' + encodeURIComponent(data.refresh_token) +
@@ -184,93 +214,5 @@ exports.handler = async (event) => {
     }
   }
 
-  // POST /gmail-oauth/exchange
-  if (event.httpMethod === 'POST' && suffix === '/exchange') {
-    if (!CLIENT_ID || !CLIENT_SECRET) {
-      return { statusCode: 500, headers: cors, body: JSON.stringify({ success: false, message: 'Gmail OAuth not configured' }) };
-    }
-    let body;
-    try { body = JSON.parse(event.body); } catch (_) {
-      return { statusCode: 400, headers: cors, body: JSON.stringify({ success: false, message: 'Invalid JSON' }) };
-    }
-    const { code: authCode } = body;
-    if (!authCode) {
-      return { statusCode: 400, headers: cors, body: JSON.stringify({ success: false, message: 'Missing code' }) };
-    }
-    try {
-      const res = await fetch('https://oauth2.googleapis.com/token', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: new URLSearchParams({
-          client_id: CLIENT_ID, client_secret: CLIENT_SECRET,
-          code: authCode, grant_type: 'authorization_code', redirect_uri: REDIRECT_URI,
-        }),
-      });
-      const data = await res.json();
-      if (data.error) {
-        return { statusCode: 400, headers: cors, body: JSON.stringify({ success: false, message: data.error_description || data.error }) };
-      }
-      let email = '';
-      try { email = JSON.parse(Buffer.from(data.id_token.split('.')[1], 'base64').toString()).email; } catch (_) {}
-      return {
-        statusCode: 200, headers: { ...cors, 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          success: true, accessToken: data.access_token,
-          refreshToken: data.refresh_token, expiresAt: Date.now() + (data.expires_in || 3600) * 1000, email,
-        }),
-      };
-    } catch (err) {
-      return { statusCode: 500, headers: cors, body: JSON.stringify({ success: false, message: 'Token exchange failed: ' + err.message }) };
-    }
-  }
-
-  // POST /gmail-oauth/refresh
-  if (event.httpMethod === 'POST' && suffix === '/refresh') {
-    if (!CLIENT_ID || !CLIENT_SECRET) {
-      return { statusCode: 500, headers: cors, body: JSON.stringify({ success: false, message: 'Gmail OAuth not configured' }) };
-    }
-    let body;
-    try { body = JSON.parse(event.body); } catch (_) {
-      return { statusCode: 400, headers: cors, body: JSON.stringify({ success: false, message: 'Invalid JSON' }) };
-    }
-    const { refreshToken } = body;
-    if (!refreshToken) {
-      return { statusCode: 400, headers: cors, body: JSON.stringify({ success: false, message: 'Missing refreshToken' }) };
-    }
-    try {
-      const res = await fetch('https://oauth2.googleapis.com/token', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: new URLSearchParams({
-          client_id: CLIENT_ID, client_secret: CLIENT_SECRET,
-          refresh_token: refreshToken, grant_type: 'refresh_token',
-        }),
-      });
-      const data = await res.json();
-      if (data.error) {
-        return { statusCode: 400, headers: cors, body: JSON.stringify({ success: false, message: data.error_description || data.error }) };
-      }
-      return {
-        statusCode: 200, headers: { ...cors, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ success: true, accessToken: data.access_token, expiresAt: Date.now() + (data.expires_in || 3600) * 1000 }),
-      };
-    } catch (err) {
-      return { statusCode: 500, headers: cors, body: JSON.stringify({ success: false, message: 'Token refresh failed: ' + err.message }) };
-    }
-  }
-
-  // POST /gmail-oauth/revoke
-  if (event.httpMethod === 'POST' && suffix === '/revoke') {
-    let body;
-    try { body = JSON.parse(event.body); } catch (_) {
-      return { statusCode: 400, headers: cors, body: JSON.stringify({ success: false, message: 'Invalid JSON' }) };
-    }
-    const { accessToken } = body;
-    if (accessToken) {
-      try { await fetch(`https://oauth2.googleapis.com/revoke?token=${accessToken}`); } catch (_) {}
-    }
-    return { statusCode: 200, headers: { ...cors, 'Content-Type': 'application/json' }, body: JSON.stringify({ success: true }) };
-  }
-
-  return { statusCode: 404, headers: cors, body: JSON.stringify({ success: false, message: 'Not found', path: event.path, suffix }) };
+  return { statusCode: 404, headers: cors, body: JSON.stringify({ success: false, message: 'Not found' }) };
 };
