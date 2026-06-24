@@ -52,6 +52,63 @@ exports.handler = async (event) => {
     return { statusCode: 200, headers: cors, body: '' };
   }
 
+  // Parse body for internal routing (frontend calls POST /.netlify/functions/gmail-oauth with {path:"/exchange"} etc.)
+  let bodyPath = null;
+  if (event.httpMethod === 'POST' && event.body) {
+    try { bodyPath = JSON.parse(event.body).path || null; } catch (_) {}
+  }
+
+  // Route based on bodyPath for POST, or event.path for GET
+  if (bodyPath) {
+    // Internal routing via body.path (POST only)
+    if (bodyPath === '/exchange') {
+      // POST /gmail-oauth/exchange (internal)
+      // ... fall through to existing /exchange handler below
+    } else if (bodyPath === '/refresh') {
+      // POST /gmail-oauth/refresh (internal) — handle here inline
+      if (!CLIENT_ID || !CLIENT_SECRET) {
+        return { statusCode: 500, headers: cors, body: JSON.stringify({ success: false, message: 'Gmail OAuth not configured' }) };
+      }
+      let body;
+      try { body = JSON.parse(event.body); } catch (_) {
+        return { statusCode: 400, headers: cors, body: JSON.stringify({ success: false, message: 'Invalid JSON' }) };
+      }
+      const { refreshToken } = body;
+      if (!refreshToken) {
+        return { statusCode: 400, headers: cors, body: JSON.stringify({ success: false, message: 'Missing refreshToken' }) };
+      }
+      try {
+        const res = await fetch('https://oauth2.googleapis.com/token', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: new URLSearchParams({
+            client_id: CLIENT_ID, client_secret: CLIENT_SECRET,
+            refresh_token: refreshToken, grant_type: 'refresh_token',
+          }),
+        });
+        const data = await res.json();
+        if (data.error) {
+          return { statusCode: 400, headers: cors, body: JSON.stringify({ success: false, message: data.error_description || data.error }) };
+        }
+        return {
+          statusCode: 200, headers: { ...cors, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ success: true, accessToken: data.access_token, expiresAt: Date.now() + (data.expires_in || 3600) * 1000 }),
+        };
+      } catch (err) {
+        return { statusCode: 500, headers: cors, body: JSON.stringify({ success: false, message: 'Token refresh failed: ' + err.message }) };
+      }
+    } else if (bodyPath === '/revoke') {
+      // POST /gmail-oauth/revoke (internal) — handle inline
+      let body;
+      try { body = JSON.parse(event.body); } catch (_) {}
+      const { accessToken } = body || {};
+      if (accessToken) {
+        try { await fetch(`https://oauth2.googleapis.com/revoke?token=${accessToken}`); } catch (_) {}
+      }
+      return { statusCode: 200, headers: cors, body: JSON.stringify({ success: true }) };
+    }
+  }
+
   // Netlify Functions: event.path includes /.netlify/functions/ prefix
   // e.g. /.netlify/functions/gmail-oauth or /.netlify/functions/gmail-oauth/exchange
   const FN = '/.netlify/functions/gmail-oauth';
