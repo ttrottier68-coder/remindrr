@@ -96,14 +96,11 @@ export function buildStripePayLink(
   invoiceId: string,
   description: string,
 ): string {
-  // Format amount in cents (Stripe uses smallest currency unit)
-  const amountCents = Math.round(amount * 100);
-  const desc = encodeURIComponent(description || 'Invoice');
-  const name = encodeURIComponent(businessName || 'Payment');
-  // Stripe Payment Link: https://checkout.stripe.com/pay/{account_id}?add_currency=USD
-  // Amount must be passed as a price/line item — simpler: use the hosted checkout link
-  // For on-the-fly links without pre-created prices, use the simple form link:
-  return `https://buy.stripe.com/${stripeAccountId}?amount=${amountCents}&name=${name}&description=${desc}`;
+  // If user pasted a full Payment Link URL (https://buy.stripe.com/pay/...), use it as-is
+  if (stripeAccountId.startsWith('https://')) return stripeAccountId;
+  // Otherwise assume it's a Payment Link ID and build the URL directly
+  // (this path is for future use if we support link IDs separately)
+  return `https://buy.stripe.com/pay/${stripeAccountId}`;
 }
 
 const CLIENT_ID = '1033906172145-gn4egevo8hlgue5cfm06sal4gvr69lq1.apps.googleusercontent.com';

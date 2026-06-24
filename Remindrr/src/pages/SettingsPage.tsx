@@ -253,7 +253,7 @@ export default function SettingsPage() {
   const existing = getSettings();
   const [form, setForm] = useState<UserSettings>(existing || {
     businessName: '', ownerName: '', email: '', phone: '',
-    stripeAccountId: 'acct_1SjQQ7Jo506UIVlZ', twilioSid: '', twilioToken: '', twilioPhone: '',
+    stripeAccountId: '', twilioSid: '', twilioToken: '', twilioPhone: '',
     sendgridApiKey: '',
     plan: 'starter',
   });
@@ -381,12 +381,12 @@ export default function SettingsPage() {
         <StripeGuide />
         <div className="mt-4 space-y-3">
           <div>
-            <label className="block text-xs font-medium text-slate-500 mb-1.5">Stripe Account ID</label>
-            <input value={form.stripeAccountId} onChange={e => set('stripeAccountId', e.target.value)} placeholder="acct_1A2B3C4D5E6F"
+            <label className="block text-xs font-medium text-slate-500 mb-1.5">Stripe Payment Link URL</label>
+            <input value={form.stripeAccountId} onChange={e => set('stripeAccountId', e.target.value)} placeholder="https://buy.stripe.com/pay/..."
               className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all" />
           </div>
           <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 text-xs text-blue-700 leading-relaxed">
-            <strong>Where to find your Stripe Account ID:</strong> Log into <a href="https://dashboard.stripe.com" target="_blank" rel="noreferrer" className="underline font-semibold">dashboard.stripe.com</a> — your Account ID is at the top left, next to your business name. It starts with <span className="font-mono bg-blue-100 px-1 rounded">acct_</span>
+            <strong>How to get your Payment Link:</strong> In <a href="https://dashboard.stripe.com" target="_blank" rel="noreferrer" className="underline font-semibold">dashboard.stripe.com</a>, go to <strong>Payment Links</strong> → Create a link (or use an existing one). Copy the full URL — it starts with <span className="font-mono bg-blue-100 px-1 rounded">https://buy.stripe.com/pay/</span>. Paste it here.
           </div>
         </div>
       </div>

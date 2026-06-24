@@ -6,13 +6,20 @@ const KEYS = {
   clients: 'remindrr_clients',
 };
 
+// Store uses { data: UserSettings } wrapper so reminder-data.ts safe() can unwrap it
 export function getSettings(): UserSettings | null {
-  const data = localStorage.getItem(KEYS.settings);
-  return data ? JSON.parse(data) : null;
+  try {
+    const raw = localStorage.getItem(KEYS.settings);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    // Unwrap if stored as { data: UserSettings }
+    if (parsed && parsed.data && typeof parsed.data === 'object') return parsed.data as UserSettings;
+    return parsed as UserSettings;
+  } catch { return null; }
 }
 
 export function saveSettings(settings: UserSettings): void {
-  localStorage.setItem(KEYS.settings, JSON.stringify(settings));
+  localStorage.setItem(KEYS.settings, JSON.stringify({ data: settings }));
 }
 
 export function getInvoices(): Invoice[] {

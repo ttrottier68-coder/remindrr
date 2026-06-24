@@ -155,10 +155,12 @@ export async function login(email: string, password: string): Promise<string | n
         const expiry = new Date(now.getTime() + SESSION_DAYS * 24 * 60 * 60 * 1000);
         saveSession({
           email: normalizedEmail,
-          name: localSettings?.name || normalizedEmail.split('@')[0],
+          name: localSettings?.ownerName || normalizedEmail.split('@')[0],
           loggedInAt: now.toISOString(),
           sessionExpiry: expiry.toISOString(),
         });
+        // Restore ALL local settings
+        if (localSettings) saveSettingsLocal(localSettings);
         return null;
       }
       return 'Please wait a moment for the page to load, then try again.';
@@ -168,7 +170,7 @@ export async function login(email: string, password: string): Promise<string | n
     const userCredential = await signInWithEmailAndPassword(normalizedEmail, password);
     const firebaseUid = userCredential.user.uid;
 
-    // Preserve existing settings (especially SendGrid) before saving new session
+    // Preserve ALL existing settings before saving new session
     const existingSettings = getSettings();
     
     // Save session with Firebase UID
@@ -182,8 +184,8 @@ export async function login(email: string, password: string): Promise<string | n
       firebaseUid: firebaseUid,
     });
     
-    // Restore Resend settings after login
-    if (existingSettings?.sendgridApiKey || existingSettings?.sendgridFromEmail) {
+    // Restore ALL settings after login (Stripe, PayPal, Venmo, Zelle, SendGrid, etc.)
+    if (existingSettings) {
       saveSettingsLocal(existingSettings);
     }
     
