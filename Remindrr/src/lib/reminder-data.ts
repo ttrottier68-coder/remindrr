@@ -9,8 +9,16 @@ const SENDGRID_KEY = 'remindrr_sendgrid'; // Separate key for SendGrid - persist
 const GMAIL_KEY    = 'remindrr_gmail';    // Separate key for Gmail OAuth tokens
 
 function safe<T>(key: string, fallback: T): T {
-  try { const r = localStorage.getItem(key); return r ? JSON.parse(r) : fallback; }
-  catch { return fallback; }
+  try {
+    const r = localStorage.getItem(key);
+    if (!r) return fallback;
+    const parsed = JSON.parse(r);
+    // store.ts wraps settings in { data: {...} } — unwrap if that pattern is detected
+    if (key === SETTINGS_KEY && parsed && typeof parsed === 'object' && !Array.isArray(parsed) && 'data' in parsed && parsed.data && typeof parsed.data === 'object') {
+      return parsed.data as T;
+    }
+    return parsed;
+  } catch { return fallback; }
 }
 function persist(key: string, data: unknown) {
   localStorage.setItem(key, JSON.stringify(data));
