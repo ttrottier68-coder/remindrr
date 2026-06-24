@@ -340,7 +340,7 @@ function buildEmailHtml(invoice: Invoice, client: Client | undefined, businessNa
     </div>`;
   }
 
-  // ── Custom payment link (if set on invoice) ─────────────────────────────────
+  // ── Custom payment link (if set on invoice, AND no Stripe configured) ────────
   const payOnlineSection = (payLink && !payments.stripeAccountId) ? `
     <div style="margin:0 0 16px;">
       <a href="${payLink}" style="display:block;text-align:center;background:#6366f1;color:#fff;padding:16px;border-radius:12px;text-decoration:none;font-weight:bold;font-size:16px;margin:0 0 24px;">Pay Online (Credit/Debit) →</a>
@@ -367,7 +367,9 @@ function buildEmailHtml(invoice: Invoice, client: Client | undefined, businessNa
       <span style="color:#1e293b;font-size:14px;">Send to: <strong>${payments.zelleInfo}</strong></span>
     </div>` : '';
 
-  const paymentMethodsSection = (paypalSection || venmoSection || zelleSection) ? `
+  // ── Payment methods section (PayPal / Venmo / Zelle — always shown if any set) ──
+  const hasPaymentMethods = (payments.paypalMe || payments.venmoUsername || payments.zelleInfo);
+  const paymentMethodsSection = hasPaymentMethods ? `
     <div style="margin:0 0 24px;">
       <p style="margin:0 0 12px;font-size:13px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:0.5px;">Or pay with</p>
       ${paypalSection}${venmoSection}${zelleSection}
