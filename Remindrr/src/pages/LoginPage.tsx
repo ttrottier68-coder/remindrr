@@ -4,6 +4,10 @@ import { login } from '../lib/auth';
 import { saveSettings, getSettings, loadFromCloud } from '../lib/reminder-data';
 import AuthLayout from '../components/AuthLayout';
 
+const SETTINGS_KEY = 'remindrr_settings';
+const INVOICES_KEY = 'remindrr_invoices';
+const CLIENTS_KEY  = 'remindrr_clients';
+
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -17,7 +21,7 @@ export default function LoginPage() {
     e.preventDefault();
     if (hasSubmitted) return;
     if (!email || !password) { setError('Please fill in all fields'); return; }
-    
+
     setHasSubmitted(true);
     setLoading(true);
     setError('');
@@ -25,34 +29,46 @@ export default function LoginPage() {
     try {
       const err = await login(email, password);
       setLoading(false);
-      if (err) { 
-        setError(err); 
+      if (err) {
+        setError(err);
         setHasSubmitted(false);
-        return; 
+        return;
       }
-      
-      // After successful login, restore all data
+
+      // ─── Restore settings from localStorage ─────────────────────────────
+      // Check RAW localStorage first (bypasses getSettings() defaults).
+      // This is the single source of truth — if remindrr_settings exists
+      // and is non-empty, the user has data and we go home, not onboarding.
+      let hasLocalData = false;
+      try {
+        const raw = localStorage.getItem(SETTINGS_KEY);
+        if (raw && raw !== 'null' && raw !== 'undefined') {
+          const parsed = JSON.parse(raw);
+          // Unwrap {data:{...}} wrapper if present
+          const data = (parsed && parsed.data) ? parsed.data : parsed;
+          hasLocalData = !!(data && (data.ownerName || data.businessName || data.email));
+        }
+      } catch { /* ignore */ }
+
+      // Try cloud (Firebase) — only runs if Firebase is configured
       let cloudData = { settings: null, invoices: null, clients: null };
       try {
         cloudData = await loadFromCloud();
-      } catch (e) {
-        // Cloud sync unavailable — use local data only
-      }
-      const freshSettings = getSettings();
-      const hasExistingSettings = !!(freshSettings?.ownerName || freshSettings?.businessName || freshSettings?.email);
-      
+      } catch { /* ignore */ }
+
       if (cloudData.settings) {
-        // Cloud data takes priority — merge with any local-only fields (Gmail tokens, logo, etc.)
-        const merged = { ...freshSettings, ...cloudData.settings };
+        // Cloud has data — merge with any local-only fields (logo, Gmail tokens)
+        const fresh = getSettings();
+        const merged = { ...fresh, ...cloudData.settings };
         saveSettings(merged);
-        if (cloudData.invoices) localStorage.setItem('remindrr_invoices', JSON.stringify(cloudData.invoices));
-        if (cloudData.clients) localStorage.setItem('remindrr_clients', JSON.stringify(cloudData.clients));
+        if (cloudData.invoices) localStorage.setItem(INVOICES_KEY, JSON.stringify(cloudData.invoices));
+        if (cloudData.clients) localStorage.setItem(CLIENTS_KEY, JSON.stringify(cloudData.clients));
         window.location.href = '/';
-      } else if (hasExistingSettings) {
-        // Local settings exist — just go home (all payment info already in localStorage)
+      } else if (hasLocalData) {
+        // Local data exists — just refresh the page; settings are already in localStorage
         window.location.href = '/';
       } else {
-        // First time user — pre-fill email, go to onboarding
+        // No data anywhere — first time user → onboarding
         saveSettings({
           ownerName: '',
           businessName: '',
