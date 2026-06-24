@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
-import { getSettings, saveSettings, getDashboardStats, getInvoices, getClients, saveInvoice, saveClient, markInvoicePaid, deleteInvoice, sendReminderNow, openMailto, loadFromCloud, syncToCloud, checkAndFireAutoReminders } from './lib/reminder-data';
+import { getSettings, saveSettings, getDashboardStats, getInvoices, getClients, saveInvoice, saveClient, markInvoicePaid, deleteInvoice, sendReminderNow, openMailto, loadFromCloud, syncToCloud, checkAndFireAutoReminders, printInvoice } from './lib/reminder-data';
 import { showToast } from './hooks/useToast';
 import { ToastContainer } from './components/ToastContainer';
 import { isAuthenticated, logout, ensureDemoAccount } from './lib/auth';
@@ -614,9 +614,14 @@ function InvoicesPage() {
                       </>
                     )}
                   </div>
-                  <button onClick={() => navigate(`/invoices/${inv.id}/edit`)} className="text-sm text-orange-500 font-medium hover:underline">
-                    View →
-                  </button>
+                  <div className="flex items-center gap-3">
+                    <button onClick={() => printInvoice(inv)} className="text-xs bg-slate-100 text-slate-600 font-bold px-3 py-1 rounded-lg hover:bg-slate-200">
+                      🖨️ Print
+                    </button>
+                    <button onClick={() => navigate(`/invoices/${inv.id}/edit`)} className="text-sm text-orange-500 font-medium hover:underline">
+                      View →
+                    </button>
+                  </div>
                 </div>
               </div>
             );

@@ -44,6 +44,7 @@ export interface UserSettings {
   paypalMe?: string;
   venmoUsername?: string;
   zelleInfo?: string;
+  businessLogo?: string; // base64 data URL of uploaded logo image
 }
 
 // ── Trial helpers ──────────────────────────────────────────

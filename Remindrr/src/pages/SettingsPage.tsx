@@ -332,6 +332,43 @@ export default function SettingsPage() {
         </button>
       </div>
 
+      {/* ── Logo Upload ── */}
+      <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
+        <h2 className="font-bold text-slate-700 text-base border-b border-slate-100 pb-3 mb-4">🎨 Business Logo</h2>
+        <div className="flex items-center gap-6">
+          <div className="w-24 h-24 rounded-xl border-2 border-dashed border-slate-200 flex items-center justify-center overflow-hidden bg-slate-50 flex-shrink-0">
+            {form.businessLogo ? (
+              <img src={form.businessLogo} alt="Business logo" className="w-full h-full object-contain" />
+            ) : (
+              <span className="text-3xl text-slate-300">🏪</span>
+            )}
+          </div>
+          <div className="flex-1">
+            <input
+              type="file"
+              accept="image/png,image/jpeg,image/jpg,image/webp,image/svg+xml"
+              id="logo-upload"
+              className="hidden"
+              onChange={e => {
+                const file = e.target.files?.[0];
+                if (!file) return;
+                if (file.size > 500000) { alert('Logo must be under 500KB. Please choose a smaller image.'); return; }
+                const reader = new FileReader();
+                reader.onload = ev => { if (ev.target?.result) set('businessLogo', ev.target.result as string); };
+                reader.readAsDataURL(file);
+              }}
+            />
+            <label htmlFor="logo-upload" className="inline-flex items-center gap-2 px-4 py-2 bg-blue-50 hover:bg-blue-100 text-blue-600 font-semibold text-sm rounded-xl cursor-pointer transition-colors border border-blue-200">
+              <span>📤</span> {form.businessLogo ? 'Change Logo' : 'Upload Logo'}
+            </label>
+            {form.businessLogo && (
+              <button onClick={() => set('businessLogo', '')} className="ml-3 text-sm text-red-500 hover:text-red-700 font-medium">Remove</button>
+            )}
+            <p className="text-xs text-slate-400 mt-2">PNG, JPG, WebP or SVG — max 500KB. Appears on all invoice emails.</p>
+          </div>
+        </div>
+      </div>
+
       {/* ── Business Info ── */}
       <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
         <h2 className="font-bold text-slate-700 text-base border-b border-slate-100 pb-3 mb-4">🏢 Business Information</h2>
@@ -387,6 +424,9 @@ export default function SettingsPage() {
           </div>
           <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 text-xs text-blue-700 leading-relaxed">
             <strong>How to get your Payment Link:</strong> In <a href="https://dashboard.stripe.com" target="_blank" rel="noreferrer" className="underline font-semibold">dashboard.stripe.com</a>, go to <strong>Payment Links</strong> → Create a link (or use an existing one). Copy the full URL — it starts with <span className="font-mono bg-blue-100 px-1 rounded">https://buy.stripe.com/pay/</span>. Paste it here.
+          </div>
+          <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 text-xs text-amber-700 mt-3 leading-relaxed">
+            ⚠️ <strong>Note:</strong> A Stripe Payment Link has a fixed amount. It's best suited for subscriptions or preset fees. For variable invoice amounts, use PayPal, Venmo, or Zelle instead — clients enter the amount themselves.
           </div>
         </div>
       </div>
@@ -484,6 +524,25 @@ export default function SettingsPage() {
           <div>
             <h2 className="font-bold text-slate-700 text-base">Payment Methods</h2>
             <p className="text-slate-400 text-xs mt-0.5">Add your payment info so clients can pay you easily</p>
+          </div>
+        </div>
+
+        {/* ── Payment Methods Comparison ── */}
+        <div className="bg-gradient-to-r from-slate-50 to-blue-50 border border-slate-200 rounded-xl p-4 mb-6">
+          <p className="text-xs font-semibold text-slate-700 mb-3">Which payment method should I use?</p>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+            <div className="bg-white rounded-lg p-3 border border-blue-100">
+              <p className="font-bold text-blue-700 mb-1">💳 PayPal / Venmo</p>
+              <p className="text-slate-600 leading-relaxed">Best for: any invoice amount. Client enters the amount themselves when they pay. <strong className="text-slate-700">No fixed amount needed.</strong> Recommended for service businesses.</p>
+            </div>
+            <div className="bg-white rounded-lg p-3 border border-purple-100">
+              <p className="font-bold text-purple-700 mb-1">🏦 Zelle</p>
+              <p className="text-slate-600 leading-relaxed">Best for: US clients with bank accounts. No fees, no app needed. Client enters the amount. <strong className="text-slate-700">No fixed link needed.</strong></p>
+            </div>
+            <div className="bg-white rounded-lg p-3 border border-orange-100">
+              <p className="font-bold text-orange-700 mb-1">⚡ Stripe</p>
+              <p className="text-slate-600 leading-relaxed">Best for: fixed-amount payments only (e.g., subscriptions). Each invoice amount needs its own Stripe Payment Link. <strong className="text-red-600">Not ideal for variable invoices.</strong></p>
+            </div>
           </div>
         </div>
 

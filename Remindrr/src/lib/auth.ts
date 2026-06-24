@@ -39,11 +39,9 @@ function saveSession(session: AuthSession): void {
 
 function clearLocalSession(): void {
   localStorage.removeItem(AUTH_KEY);
-  localStorage.removeItem('remindrr_settings');
-  localStorage.removeItem('remindrr_clients');
-  localStorage.removeItem('remindrr_invoices');
-  // Keep the Resend/SendGrid key - don't make users re-enter it
-  // User data cleared — SendGrid/Resend key preserved
+  // NOTE: Do NOT clear remindrr_settings, remindrr_clients, remindrr_invoices
+  // — settings (Stripe, PayPal, Venmo, Zelle, SendGrid, etc.) persist across logout
+  // Only the auth session is cleared.
 }
 
 // ─── Auth functions ────────────────────────────────────────────────────────────────

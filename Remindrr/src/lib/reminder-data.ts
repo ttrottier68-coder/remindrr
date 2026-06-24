@@ -255,6 +255,121 @@ ${settings?.businessName || ''}`);
   window.open(gmailUrl, '_blank');
 }
 
+export function printInvoice(invoice: Invoice): void {
+  const settings = getSettings();
+  const client = getClients().find(c => c.id === invoice.clientId);
+  const logo = (settings as any).businessLogo || '';
+  const logoHtml = logo ? `<img src="${logo}" style="max-height:60px;max-width:180px;object-fit:contain;" />` : '';
+  const dueDate = new Date(invoice.dueDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+  const invoiceDate = invoice.invoiceDate
+    ? new Date(invoice.invoiceDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
+    : dueDate;
+
+  let paymentSection = '';
+  if (settings.paypalMe || settings.venmoUsername || settings.zelleInfo) {
+    paymentSection = `
+      <div style="margin-top:24px;padding-top:20px;border-top:2px solid #e2e8f0;">
+        <p style="font-size:12px;font-weight:bold;color:#64748b;text-transform:uppercase;letter-spacing:0.5px;margin:0 0 10px;">Payment Options</p>
+        ${settings.paypalMe ? `<p style="font-size:13px;margin:4px 0;">PayPal: <strong>${settings.paypalMe}</strong></p>` : ''}
+        ${settings.venmoUsername ? `<p style="font-size:13px;margin:4px 0;">Venmo: <strong>${settings.venmoUsername}</strong></p>` : ''}
+        ${settings.zelleInfo ? `<p style="font-size:13px;margin:4px 0;">Zelle: <strong>${settings.zelleInfo}</strong></p>` : ''}
+      </div>`;
+  }
+
+  const html = `<!DOCTYPE html>
+<html><head><meta charset="utf-8">
+<title>Invoice ${invoice.id.slice(0, 8)}</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: Arial, sans-serif; font-size: 14px; color: #1e293b; padding: 40px; }
+  .invoice-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 40px; border-bottom: 3px solid #6366f1; padding-bottom: 24px; }
+  .invoice-header-left h1 { font-size: 26px; color: #6366f1; margin-bottom: 4px; }
+  .invoice-header-left p { font-size: 13px; color: #64748b; }
+  .invoice-header-right { text-align: right; }
+  .invoice-header-right .invoice-number { font-size: 18px; font-weight: bold; color: #1e293b; }
+  .invoice-header-right p { font-size: 12px; color: #64748b; margin-top: 4px; }
+  .invoice-body { display: flex; justify-content: space-between; margin-bottom: 40px; }
+  .invoice-body-left h3, .invoice-body-right h3 { font-size: 11px; font-weight: bold; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+  .invoice-body-left p, .invoice-body-right p { font-size: 13px; color: #334155; margin-top: 2px; }
+  .invoice-items { width: 100%; border-collapse: collapse; margin-bottom: 24px; }
+  .invoice-items th { background: #f1f5f9; font-size: 11px; font-weight: bold; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; padding: 10px 14px; text-align: left; border-bottom: 2px solid #e2e8f0; }
+  .invoice-items th:last-child { text-align: right; }
+  .invoice-items td { padding: 12px 14px; border-bottom: 1px solid #f1f5f9; font-size: 13px; }
+  .invoice-items td:last-child { text-align: right; font-weight: bold; }
+  .invoice-total { display: flex; justify-content: flex-end; }
+  .invoice-total-box { background: #f8fafc; border: 2px solid #6366f1; border-radius: 10px; padding: 20px 28px; min-width: 240px; }
+  .invoice-total-box .label { font-size: 12px; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; }
+  .invoice-total-box .amount { font-size: 32px; font-weight: bold; color: #6366f1; margin-top: 4px; }
+  .invoice-footer { margin-top: 40px; padding-top: 20px; border-top: 1px solid #e2e8f0; font-size: 12px; color: #94a3b8; text-align: center; }
+  @media print { body { padding: 20px; } }
+</style>
+</head>
+<body>
+  <div class="invoice-header">
+    <div class="invoice-header-left">
+      ${logoHtml ? `<div style="margin-bottom:12px;">${logoHtml}</div>` : ''}
+      <h1>${settings.businessName || 'Invoice'}</h1>
+      <p>${settings.ownerName || ''}</p>
+      ${settings.email ? `<p>${settings.email}</p>` : ''}
+      ${settings.phone ? `<p>${settings.phone}</p>` : ''}
+    </div>
+    <div class="invoice-header-right">
+      <p class="invoice-number">INVOICE</p>
+      <p># ${invoice.invoiceNumber || invoice.id.slice(0, 8).toUpperCase()}</p>
+      <p>Date: ${invoiceDate}</p>
+      <p>Due: ${dueDate}</p>
+    </div>
+  </div>
+  <div class="invoice-body">
+    <div class="invoice-body-left">
+      <h3>Bill To</h3>
+      <p><strong>${client?.name || invoice.clientName}</strong></p>
+      ${(client?.email || invoice.clientEmail) ? `<p>${client?.email || invoice.clientEmail}</p>` : ''}
+      ${(client?.address || invoice.clientAddress) ? `<p>${client?.address || ''}</p>` : ''}
+    </div>
+    <div class="invoice-body-right">
+      <h3>Status</h3>
+      <p><strong style="color:${invoice.status === 'paid' ? '#22c55e' : '#ef4444'};">${invoice.status === 'paid' ? '✅ PAID' : '⏳ UNPAID'}</strong></p>
+    </div>
+  </div>
+  <table class="invoice-items">
+    <thead>
+      <tr>
+        <th>Description</th>
+        <th>Qty</th>
+        <th>Rate</th>
+        <th>Amount</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>${invoice.description || 'Professional Services'}</td>
+        <td>${invoice.quantity || 1}</td>
+        <td>$${(invoice.amount / (invoice.quantity || 1)).toFixed(2)}</td>
+        <td>$${invoice.amount.toFixed(2)}</td>
+      </tr>
+    </tbody>
+  </table>
+  <div class="invoice-total">
+    <div class="invoice-total-box">
+      <p class="label">Total Due</p>
+      <p class="amount">$${invoice.amount.toFixed(2)}</p>
+    </div>
+  </div>
+  ${paymentSection}
+  <div class="invoice-footer">
+    <p>Thank you for your business!</p>
+    <p style="margin-top:4px;">${settings.businessName || ''}</p>
+  </div>
+</body></html>`;
+
+  const win = window.open('', '_blank');
+  if (!win) { alert('Please allow popups to print invoices.'); return; }
+  win.document.write(html);
+  win.document.close();
+  win.onload = () => { win.print(); };
+}
+
 export async function sendReminderNow(invoice: Invoice): Promise<{ success: boolean; message: string }> {
   const settings = getSettings();
   const payments = getPaymentSettings(); // read fresh from localStorage
@@ -318,6 +433,14 @@ function buildEmailHtml(invoice: Invoice, client: Client | undefined, businessNa
   const amount = invoice.amount.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
   const payLink = invoice.paymentLink || '';
   const business = businessName || 'Invoice Reminder';
+  // Read logo from settings (already loaded via _settings)
+  const businessLogo = (_settings as any).businessLogo as string | undefined;
+
+  // ── Logo in header ──────────────────────────────────────────────────────────
+  const logoHeader = businessLogo ? `
+    <div style="padding: 24px 24px 0;">
+      <img src="${businessLogo}" alt="${business} logo" style="max-height:64px;max-width:200px;object-fit:contain;" />
+    </div>` : '';
   const clientName = client?.name || 'there';
   const description = invoice.description || 'your invoice';
   const invoiceId = invoice.id.slice(0, 8);
@@ -378,6 +501,7 @@ function buildEmailHtml(invoice: Invoice, client: Client | undefined, businessNa
   return `<!DOCTYPE html>
 <html><head><meta charset="utf-8"></head>
 <body style="font-family:Arial,sans-serif;max-width:600px;margin:40px auto;padding:0 20px;color:#1e293b;">
+  ${logoHeader}
   <div style="background:#6366f1;padding:32px 24px;text-align:center;border-radius:16px 16px 0 0;">
     <h1 style="margin:0;color:#fff;font-size:24px;">${business}</h1>
   </div>

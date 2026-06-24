@@ -31,25 +31,28 @@ export default function LoginPage() {
         return; 
       }
       
-      // After successful login, try to load data from cloud
-      // If Firebase ready, try cloud sync - otherwise use localStorage
+      // After successful login, restore all data
       let cloudData = { settings: null, invoices: null, clients: null };
       try {
         cloudData = await loadFromCloud();
       } catch (e) {
-        // Cloud sync unavailable — user can still use local data
+        // Cloud sync unavailable — use local data only
       }
       const freshSettings = getSettings();
+      const hasExistingSettings = !!(freshSettings?.ownerName || freshSettings?.businessName || freshSettings?.email);
+      
       if (cloudData.settings) {
-        // Has cloud data - restore it
-        saveSettings(cloudData.settings);
+        // Cloud data takes priority — merge with any local-only fields (Gmail tokens, logo, etc.)
+        const merged = { ...freshSettings, ...cloudData.settings };
+        saveSettings(merged);
         if (cloudData.invoices) localStorage.setItem('remindrr_invoices', JSON.stringify(cloudData.invoices));
         if (cloudData.clients) localStorage.setItem('remindrr_clients', JSON.stringify(cloudData.clients));
         window.location.href = '/';
-      } else if (freshSettings?.ownerName) {
+      } else if (hasExistingSettings) {
+        // Local settings exist — just go home (all payment info already in localStorage)
         window.location.href = '/';
       } else {
-        // No settings yet in this browser → save basic settings from login, then go to onboarding
+        // First time user — pre-fill email, go to onboarding
         saveSettings({
           ownerName: '',
           businessName: '',
