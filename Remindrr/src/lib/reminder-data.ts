@@ -259,115 +259,121 @@ export function printInvoice(invoice: Invoice): void {
   const settings = getSettings();
   const client = getClients().find(c => c.id === invoice.clientId);
   const logo = (settings as any).businessLogo || '';
-  const logoHtml = logo ? `<img src="${logo}" style="max-height:60px;max-width:180px;object-fit:contain;" />` : '';
+  const logoHtml = logo ? `<div style="margin-bottom:14px;"><img src="${logo}" style="max-height:60px;max-width:180px;object-fit:contain;" /></div>` : '';
   const dueDate = new Date(invoice.dueDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
   const invoiceDate = invoice.invoiceDate
     ? new Date(invoice.invoiceDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
     : dueDate;
+  const qty = invoice.quantity || 1;
+  const rate = (invoice.amount / qty).toFixed(2);
+  const isPaid = invoice.status === 'paid';
 
   let paymentSection = '';
   if (settings.paypalMe || settings.venmoUsername || settings.zelleInfo) {
     paymentSection = `
-      <div style="margin-top:24px;padding-top:20px;border-top:2px solid #e2e8f0;">
-        <p style="font-size:12px;font-weight:bold;color:#64748b;text-transform:uppercase;letter-spacing:0.5px;margin:0 0 10px;">Payment Options</p>
-        ${settings.paypalMe ? `<p style="font-size:13px;margin:4px 0;">PayPal: <strong>${settings.paypalMe}</strong></p>` : ''}
-        ${settings.venmoUsername ? `<p style="font-size:13px;margin:4px 0;">Venmo: <strong>${settings.venmoUsername}</strong></p>` : ''}
-        ${settings.zelleInfo ? `<p style="font-size:13px;margin:4px 0;">Zelle: <strong>${settings.zelleInfo}</strong></p>` : ''}
+      <div style="margin-top:32px;padding-top:20px;border-top:2px solid #e2e8f0;">
+        <p style="font-size:11px;font-weight:bold;color:#94a3b8;text-transform:uppercase;letter-spacing:0.8px;margin:0 0 10px;">Payment Options</p>
+        ${settings.paypalMe ? `<p style="font-size:13px;margin:4px 0;"><span style="color:#94a3b8;">PayPal:</span> <strong>${settings.paypalMe}</strong></p>` : ''}
+        ${settings.venmoUsername ? `<p style="font-size:13px;margin:4px 0;"><span style="color:#94a3b8;">Venmo:</span> <strong>${settings.venmoUsername}</strong></p>` : ''}
+        ${settings.zelleInfo ? `<p style="font-size:13px;margin:4px 0;"><span style="color:#94a3b8;">Zelle:</span> <strong>${settings.zelleInfo}</strong></p>` : ''}
       </div>`;
   }
 
+  // Build the full HTML — includes <html>, <head>, <body>
   const html = `<!DOCTYPE html>
-<html><head><meta charset="utf-8">
-<title>Invoice ${invoice.id.slice(0, 8)}</title>
+<html>
+<head><meta charset="utf-8"><title>Invoice ${invoice.id.slice(0, 8)}</title></head>
+<body>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { font-family: Arial, sans-serif; font-size: 14px; color: #1e293b; padding: 40px; }
-  .invoice-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 40px; border-bottom: 3px solid #6366f1; padding-bottom: 24px; }
-  .invoice-header-left h1 { font-size: 26px; color: #6366f1; margin-bottom: 4px; }
-  .invoice-header-left p { font-size: 13px; color: #64748b; }
-  .invoice-header-right { text-align: right; }
-  .invoice-header-right .invoice-number { font-size: 18px; font-weight: bold; color: #1e293b; }
-  .invoice-header-right p { font-size: 12px; color: #64748b; margin-top: 4px; }
-  .invoice-body { display: flex; justify-content: space-between; margin-bottom: 40px; }
-  .invoice-body-left h3, .invoice-body-right h3 { font-size: 11px; font-weight: bold; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
-  .invoice-body-left p, .invoice-body-right p { font-size: 13px; color: #334155; margin-top: 2px; }
-  .invoice-items { width: 100%; border-collapse: collapse; margin-bottom: 24px; }
-  .invoice-items th { background: #f1f5f9; font-size: 11px; font-weight: bold; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; padding: 10px 14px; text-align: left; border-bottom: 2px solid #e2e8f0; }
-  .invoice-items th:last-child { text-align: right; }
-  .invoice-items td { padding: 12px 14px; border-bottom: 1px solid #f1f5f9; font-size: 13px; }
-  .invoice-items td:last-child { text-align: right; font-weight: bold; }
-  .invoice-total { display: flex; justify-content: flex-end; }
-  .invoice-total-box { background: #f8fafc; border: 2px solid #6366f1; border-radius: 10px; padding: 20px 28px; min-width: 240px; }
-  .invoice-total-box .label { font-size: 12px; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; }
-  .invoice-total-box .amount { font-size: 32px; font-weight: bold; color: #6366f1; margin-top: 4px; }
-  .invoice-footer { margin-top: 40px; padding-top: 20px; border-top: 1px solid #e2e8f0; font-size: 12px; color: #94a3b8; text-align: center; }
-  @media print { body { padding: 20px; } }
+  body { font-family: Arial, sans-serif; font-size: 14px; color: #1e293b; padding: 40px; max-width: 800px; margin: 0 auto; }
+  .inv-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 36px; border-bottom: 3px solid #6366f1; padding-bottom: 24px; }
+  .inv-from { font-size: 11px; color: #64748b; margin-top: 2px; }
+  .inv-number { text-align: right; }
+  .inv-number .big { font-size: 22px; font-weight: bold; color: #6366f1; }
+  .inv-number p { font-size: 12px; color: #64748b; margin-top: 4px; }
+  .inv-body { display: flex; justify-content: space-between; margin-bottom: 32px; }
+  .inv-bill h3, .inv-status h3 { font-size: 10px; font-weight: bold; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px; }
+  .inv-bill p, .inv-status p { font-size: 13px; color: #334155; margin-top: 2px; }
+  .inv-table { width: 100%; border-collapse: collapse; margin-bottom: 24px; }
+  .inv-table th { background: #f8fafc; font-size: 10px; font-weight: bold; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.6px; padding: 10px 12px; text-align: left; border-bottom: 2px solid #e2e8f0; }
+  .inv-table th:last-child { text-align: right; }
+  .inv-table td { padding: 12px 12px; border-bottom: 1px solid #f1f5f9; font-size: 13px; }
+  .inv-table td:last-child { text-align: right; font-weight: bold; }
+  .inv-total { display: flex; justify-content: flex-end; margin-bottom: 24px; }
+  .inv-total-box { background: #f8fafc; border: 2px solid #6366f1; border-radius: 10px; padding: 16px 28px; text-align: center; }
+  .inv-total-box .lbl { font-size: 11px; color: #64748b; text-transform: uppercase; letter-spacing: 0.6px; }
+  .inv-total-box .amt { font-size: 30px; font-weight: bold; color: #6366f1; margin-top: 2px; }
+  .inv-footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid #e2e8f0; font-size: 12px; color: #94a3b8; text-align: center; }
+  @media print { body { padding: 20px 0; } }
 </style>
-</head>
-<body>
-  <div class="invoice-header">
-    <div class="invoice-header-left">
-      ${logoHtml ? `<div style="margin-bottom:12px;">${logoHtml}</div>` : ''}
-      <h1>${settings.businessName || 'Invoice'}</h1>
-      <p>${settings.ownerName || ''}</p>
-      ${settings.email ? `<p>${settings.email}</p>` : ''}
-      ${settings.phone ? `<p>${settings.phone}</p>` : ''}
-    </div>
-    <div class="invoice-header-right">
-      <p class="invoice-number">INVOICE</p>
-      <p># ${invoice.invoiceNumber || invoice.id.slice(0, 8).toUpperCase()}</p>
-      <p>Date: ${invoiceDate}</p>
-      <p>Due: ${dueDate}</p>
-    </div>
+
+<div class="inv-header">
+  <div>
+    ${logoHtml}
+    <h1 style="font-size:24px;color:#6366f1;">${settings.businessName || 'Invoice'}</h1>
+    ${settings.ownerName ? `<p class="inv-from">${settings.ownerName}</p>` : ''}
+    ${settings.email ? `<p class="inv-from">${settings.email}</p>` : ''}
+    ${settings.phone ? `<p class="inv-from">${settings.phone}</p>` : ''}
   </div>
-  <div class="invoice-body">
-    <div class="invoice-body-left">
-      <h3>Bill To</h3>
-      <p><strong>${client?.name || invoice.clientName}</strong></p>
-      ${(client?.email || invoice.clientEmail) ? `<p>${client?.email || invoice.clientEmail}</p>` : ''}
-      ${(client?.address || invoice.clientAddress) ? `<p>${client?.address || ''}</p>` : ''}
-    </div>
-    <div class="invoice-body-right">
-      <h3>Status</h3>
-      <p><strong style="color:${invoice.status === 'paid' ? '#22c55e' : '#ef4444'};">${invoice.status === 'paid' ? '✅ PAID' : '⏳ UNPAID'}</strong></p>
-    </div>
+  <div class="inv-number">
+    <p class="big">INVOICE</p>
+    <p># ${invoice.invoiceNumber || invoice.id.slice(0, 8).toUpperCase()}</p>
+    <p>Date: ${invoiceDate}</p>
+    <p>Due: ${dueDate}</p>
   </div>
-  <table class="invoice-items">
-    <thead>
-      <tr>
-        <th>Description</th>
-        <th>Qty</th>
-        <th>Rate</th>
-        <th>Amount</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td>${invoice.description || 'Professional Services'}</td>
-        <td>${invoice.quantity || 1}</td>
-        <td>$${(invoice.amount / (invoice.quantity || 1)).toFixed(2)}</td>
-        <td>$${invoice.amount.toFixed(2)}</td>
-      </tr>
-    </tbody>
-  </table>
-  <div class="invoice-total">
-    <div class="invoice-total-box">
-      <p class="label">Total Due</p>
-      <p class="amount">$${invoice.amount.toFixed(2)}</p>
-    </div>
+</div>
+
+<div class="inv-body">
+  <div class="inv-bill">
+    <h3>Bill To</h3>
+    <p><strong>${client?.name || invoice.clientName}</strong></p>
+    ${(client?.email || invoice.clientEmail) ? `<p>${client?.email || invoice.clientEmail}</p>` : ''}
+    ${(client?.address || invoice.clientAddress) ? `<p>${client?.address || ''}</p>` : ''}
   </div>
-  ${paymentSection}
-  <div class="invoice-footer">
-    <p>Thank you for your business!</p>
-    <p style="margin-top:4px;">${settings.businessName || ''}</p>
+  <div class="inv-status">
+    <h3>Status</h3>
+    <p style="font-size:16px;"><strong style="color:${isPaid ? '#22c55e' : '#ef4444'};">${isPaid ? 'PAID' : 'UNPAID'}</strong></p>
   </div>
+</div>
+
+<table class="inv-table">
+  <thead><tr><th>Description</th><th>Qty</th><th>Rate</th><th>Amount</th></tr></thead>
+  <tbody>
+    <tr>
+      <td>${invoice.description || 'Professional Services'}</td>
+      <td>${qty}</td>
+      <td>$${rate}</td>
+      <td>$${invoice.amount.toFixed(2)}</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="inv-total">
+  <div class="inv-total-box">
+    <p class="lbl">Total Due</p>
+    <p class="amt">$${invoice.amount.toFixed(2)}</p>
+  </div>
+</div>
+
+${paymentSection}
+
+<div class="inv-footer">
+  <p>Thank you for your business!</p>
+  ${settings.businessName ? `<p style="margin-top:4px;">${settings.businessName}</p>` : ''}
+</div>
 </body></html>`;
 
   const win = window.open('', '_blank');
-  if (!win) { alert('Please allow popups to print invoices.'); return; }
-  win.document.write(html);
-  win.document.close();
-  win.onload = () => { win.print(); };
+  if (!win) {
+    alert('Print was blocked. Please allow pop-ups for remindrr.app and try again.');
+    return;
+  }
+  // Use innerHTML instead of document.write() — synchronous, reliable in all browsers
+  win.document.head.innerHTML = `<meta charset="utf-8"><title>Invoice ${invoice.id.slice(0, 8)}</title>`;
+  win.document.body.innerHTML = html.split('<body>')[1].split('</body>')[0];
+  // Directly trigger print — no async onload needed since innerHTML is synchronous
+  win.print();
 }
 
 export async function sendReminderNow(invoice: Invoice): Promise<{ success: boolean; message: string }> {
