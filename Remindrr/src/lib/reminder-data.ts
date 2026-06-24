@@ -300,6 +300,11 @@ export function printInvoice(invoice: Invoice): void {
   .inv-table th:last-child { text-align: right; }
   .inv-table td { padding: 12px 12px; border-bottom: 1px solid #f1f5f9; font-size: 13px; }
   .inv-table td:last-child { text-align: right; font-weight: bold; }
+  .inv-table tfoot td { padding: 8px 12px; font-size: 13px; }
+  .inv-table tfoot td:last-child { text-align: right; font-weight: bold; }
+  .inv-tax-row { color: #64748b; }
+  .inv-subtotal-row { border-top: 2px solid #e2e8f0; }
+  .inv-total-row { border-top: 2px solid #6366f1; font-weight: bold; font-size: 15px; color: #6366f1; }
   .inv-total { display: flex; justify-content: flex-end; margin-bottom: 24px; }
   .inv-total-box { background: #f8fafc; border: 2px solid #6366f1; border-radius: 10px; padding: 16px 28px; text-align: center; }
   .inv-total-box .lbl { font-size: 11px; color: #64748b; text-transform: uppercase; letter-spacing: 0.6px; }
@@ -347,14 +352,30 @@ export function printInvoice(invoice: Invoice): void {
       <td>$${invoice.amount.toFixed(2)}</td>
     </tr>
   </tbody>
+  ${invoice.taxRate > 0 ? `
+  <tfoot>
+    <tr class="inv-subtotal-row">
+      <td colspan="3" style="text-align:right;padding-top:12px;">Subtotal</td>
+      <td style="padding-top:12px;">$${invoice.subtotal.toFixed(2)}</td>
+    </tr>
+    <tr class="inv-tax-row">
+      <td colspan="3" style="text-align:right;">${invoice.taxName || 'Tax'} (${invoice.taxRate}%)</td>
+      <td>$${((invoice.subtotal * invoice.taxRate) / 100).toFixed(2)}</td>
+    </tr>
+    <tr class="inv-total-row">
+      <td colspan="3" style="text-align:right;">Total Due</td>
+      <td>$${invoice.amount.toFixed(2)}</td>
+    </tr>
+  </tfoot>` : ''}
 </table>
 
+${invoice.taxRate === 0 ? `
 <div class="inv-total">
   <div class="inv-total-box">
     <p class="lbl">Total Due</p>
     <p class="amt">$${invoice.amount.toFixed(2)}</p>
   </div>
-</div>
+</div>` : ''}
 
 ${paymentSection}
 
