@@ -296,30 +296,36 @@ export default function SettingsPage() {
   useEffect(() => {
     const tokens = getGmailTokens();
     if (tokens) { setGmailStatus('connected'); setGmailEmail(tokens.email || 'Connected'); }
-    // Handle Gmail OAuth return (params may still be in URL before main.tsx clears them)
-    const params = new URLSearchParams(window.location.search);
-    const gmailConnected = params.get('gmail_connected');
-    const gmailError = params.get('gmail_error');
-    if (gmailConnected === '1') {
-      const freshTokens = getGmailTokens();
-      if (freshTokens) { setGmailStatus('connected'); setGmailEmail(freshTokens.email || 'Connected'); }
-      showToast('Gmail connected successfully!', 'success');
+    // Handle Gmail OAuth return (from new tab)
+    const handleOAuthDone = () => {
+      sessionStorage.removeItem('gmail_oauth_done')
+      showToast('Gmail connected! Reloading…', 'success')
+      setTimeout(() => window.location.reload(), 1500)
     }
-    if (gmailError) { showToast('Gmail connection failed: ' + gmailError, 'error'); }
+    window.addEventListener('message', (e) => {
+      if (e.origin === 'https://remindrr.app' && e.data?.type === 'GMAIL_OAUTH_DONE') handleOAuthDone()
+    })
+    // Also check sessionStorage on mount (popup may have set this)
+    if (sessionStorage.getItem('gmail_oauth_done') === '1') {
+      const email = sessionStorage.getItem('gmail_oauth_email') || ''
+      setGmailEmail(email); setGmailStatus('connected')
+      handleOAuthDone()
+    }
+    // Handle redirect params (fallback for same-tab navigation)
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('gmail_connected') === '1') { setGmailStatus('connected'); showToast('Gmail connected!', 'success'); }
+    if (params.get('gmail_error')) showToast('Gmail error: ' + params.get('gmail_error'), 'error');
   }, []);
 
   const connectGmail = async () => {
     setGmailError('');
     try {
       const authUrl = await getGmailAuthUrl();
-      // Navigate using a hidden anchor element — most reliable method
-      const a = document.createElement('a');
-      a.href = authUrl;
-      a.rel = 'noopener noreferrer';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-    } catch (err: unknown) { setGmailError((err as Error).message || 'Failed to connect Gmail.'); }
+      // Open in a new tab — most reliable, avoids all React/routing interference
+      window.open(authUrl, '_blank', 'noopener,noreferrer');
+      // Show helper message since user will return from the new tab
+      setGmailStatus('loading');
+    } catch (err: unknown) { setGmailError((err as Error).message || 'Failed to connect Gmail.'); setGmailStatus('idle'); }
   };
 
   const disconnectGmail = () => { clearGmailTokens(); setGmailStatus('idle'); setGmailEmail(''); setGmailError(''); };
