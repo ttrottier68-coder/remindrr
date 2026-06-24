@@ -26,7 +26,7 @@ function HeroSection() {
     <section className="bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 text-white pt-24 pb-32 px-6">
       <div className="max-w-5xl mx-auto text-center">
         <div className="flex justify-center gap-3 mb-6">
-          <UrgencyBadge>🚀 Start getting paid faster today</UrgencyBadge>
+          <UrgencyBadge>🚀 Create invoices & get paid faster</UrgencyBadge>
           <UrgencyBadge>✅ Cancel anytime</UrgencyBadge>
         </div>
         <h1 className="text-5xl md:text-6xl font-bold leading-tight mb-6">
@@ -34,7 +34,7 @@ function HeroSection() {
           <span className="text-blue-400">Without Chasing Customers</span>
         </h1>
         <p className="text-xl text-blue-100 max-w-2xl mx-auto mb-4">
-          Remindrr automatically sends friendly email payment reminders so contractors and small business owners get paid on time — without awkward follow-ups.
+          Create professional invoices in minutes — Remindrr sends automated reminders so you get paid on time, without chasing customers.
         </p>
         <p className="text-blue-300/60 text-sm mb-10">14-day free trial · No credit card</p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -282,7 +282,7 @@ function Pricing() {
             MOST POPULAR
           </div>
           <div className="text-blue-300 font-medium mb-2">Starter Plan</div>
-          <div className="text-5xl font-bold mb-1">$29<span className="text-xl font-normal text-slate-400">/mo</span></div>
+          <div className="text-5xl font-bold mb-1">$19<span className="text-xl font-normal text-slate-400">/mo</span></div>
           <p className="text-slate-400 text-sm mb-8">Cancel anytime · No contracts · No hidden fees</p>
           <ul className="space-y-3 mb-8 text-left">
             {[
@@ -355,7 +355,7 @@ function FAQ() {
     },
     {
       q: 'How much does it cost?',
-      a: "Plans start at $19/month. Remindrr handles everything — from SMS and email reminders to payment links, all in one place. Cancel anytime.",
+      a: "Plans start at $19/month. Create invoices, send automated reminders, and get paid — all in one place. Cancel anytime.",
     },
   ];
   return (
