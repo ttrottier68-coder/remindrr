@@ -59,8 +59,8 @@ exports.handler = async (event) => {
   const suffix = path.startsWith(FN) ? path.slice(FN.length) || '/' : path;
   const fullUrl = 'https://remindrr.app' + event.path + (event.rawQuery ? '?' + event.rawQuery : '');
 
-  // GET /gmail-oauth → return OAuth URL
-  if (event.httpMethod === 'GET' && suffix === '/') {
+  // GET /gmail-oauth → return OAuth URL (only when NO query params)
+  if (event.httpMethod === 'GET' && suffix === '/' && !event.rawQuery) {
     if (!CLIENT_ID || !CLIENT_SECRET) {
       return { statusCode: 500, headers: cors, body: JSON.stringify({ success: false, message: 'Gmail OAuth not configured. Set GMAIL_ID and GMAIL_KEY in Netlify env vars.' }) };
     }
@@ -70,8 +70,8 @@ exports.handler = async (event) => {
     return { statusCode: 200, headers: { ...cors, 'Content-Type': 'application/json' }, body: JSON.stringify({ success: true, url: authUrl, state }) };
   }
 
-  // GET /gmail-oauth?code=... → Google redirected back
-  if (event.httpMethod === 'GET' && (suffix === '/' || suffix === '') && event.rawQuery) {
+  // GET /gmail-oauth?code=... → Google redirected back (must check BEFORE OAuth URL branch)
+  if (event.httpMethod === 'GET' && event.rawQuery) {
     const parsed = new URL(fullUrl);
     const code  = parsed.searchParams.get('code');
     const error = parsed.searchParams.get('error');
