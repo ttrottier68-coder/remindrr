@@ -171,10 +171,10 @@ function GmailSection() {
   }, []);
   const [connecting, setConnecting] = useState(false);
 
-  const connectGmail = async () => {
+  const connectGmail = () => {
     setGmailState(s => ({ ...s, error: null }));
     try {
-      const authUrl = await getGmailAuthUrl();
+      const authUrl = getGmailAuthUrl();
       window.open(authUrl, '_blank');
       setConnecting(true);
     } catch (err) {
@@ -285,10 +285,10 @@ export default function SettingsPage() {
     if (params.get('gmail_error')) showToast('Gmail error: ' + params.get('gmail_error'), 'error');
   }, []);
 
-  const connectGmail = async () => {
+  const connectGmail = () => {
     setGmailError('');
     try {
-      const authUrl = await getGmailAuthUrl();
+      const authUrl = getGmailAuthUrl();
       // Open in a new tab — most reliable, avoids all React/routing interference
       window.open(authUrl, '_blank', 'noopener,noreferrer');
       // Show helper message since user will return from the new tab

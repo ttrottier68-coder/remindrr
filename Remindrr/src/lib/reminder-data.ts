@@ -64,8 +64,8 @@ const CLIENT_ID = '1033906172145-gn4egevo8hlgue5cfm06sal4gvr69lq1.apps.googleuse
 const REDIRECT_URI = 'https://remindrr.app/.netlify/functions/gmail-oauth';
 const SCOPE = encodeURIComponent('https://www.googleapis.com/auth/gmail.send');
 
-export async function getGmailAuthUrl(): Promise<string> {
-  const state = Math.random().toString(36).substring(2);
+export function getGmailAuthUrl(): string {
+  const state = Math.random().toString(36).substring(2, 12);
   return `https://accounts.google.com/o/oauth2/v2/auth?client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=code&scope=${SCOPE}&access_type=offline&prompt=consent&state=${state}`;
 }
 
