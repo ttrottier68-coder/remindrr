@@ -194,7 +194,7 @@ function SetupPage() {
         {step === 2 && (
           <div className="space-y-3">
             <p className="text-slate-600 text-sm mb-3">Choose your plan.</p>
-            {[['starter','Starter','$29.99/mo','50 clients · 200 SMS'],['pro','Pro','$59.99/mo','Unlimited clients & SMS'],['business','Business','$129/mo','Multi-user + API']].map(([id,label,price,desc]) => (
+            {[['starter','Starter','$19/mo','50 clients · 200 SMS'],['pro','Pro','$59.99/mo','Unlimited clients & SMS'],['business','Business','$129/mo','Multi-user + API']].map(([id,label,price,desc]) => (
               <div key={id} onClick={() => setS(ss => ({ ...ss, plan: id as typeof ss.plan }))}
                 className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${s.plan === id ? 'border-orange-500 bg-orange-50' : 'border-slate-200 hover:border-slate-300'}`}>
                 <div className="flex items-center justify-between">
@@ -208,7 +208,7 @@ function SetupPage() {
               <p className="text-sm font-semibold text-slate-700 mb-2">💳 Subscribe to use Remindrr</p>
               <button onClick={handlePayment}
                 className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white font-bold py-3 rounded-xl shadow-lg mb-3">
-                Pay {s.plan === 'starter' ? '$29.99/mo' : s.plan === 'pro' ? '$59.99/mo' : '$129/mo'} with Stripe →
+                Pay {s.plan === 'starter' ? '$19/mo' : s.plan === 'pro' ? '$59.99/mo' : '$129/mo'} with Stripe →
               </button>
               {paymentComplete && (
                 <label className="flex items-center gap-2 text-sm text-green-600">
@@ -263,7 +263,7 @@ function TrialBanner() {
             onClick={() => window.location.href = '/plans'}
             className="bg-white text-orange-600 font-bold text-xs px-4 py-2 rounded-lg hover:bg-orange-50 transition-colors whitespace-nowrap"
           >
-            Upgrade → $29/mo
+            Upgrade → $19/mo
           </button>
           <button onClick={() => setDismissed(true)} className="text-orange-200 hover:text-white text-xs px-2 py-2">✕</button>
         </div>

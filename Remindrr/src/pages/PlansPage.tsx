@@ -58,7 +58,7 @@ export default function PlansPage() {
               onClick={handleStartStarter}
               className="bg-gradient-to-r from-orange-500 to-orange-600 text-white font-bold px-8 py-3 rounded-xl shadow-lg shadow-orange-500/30 hover:opacity-90 transition-opacity"
             >
-              Unlock full access — $29/mo →
+              Unlock full access — $19/mo →
             </button>
             <p className="text-orange-500 text-xs mt-3">Cancel anytime. No contracts.</p>
           </div>
@@ -74,7 +74,7 @@ export default function PlansPage() {
               onClick={handleStartStarter}
               className="bg-gradient-to-r from-red-500 to-red-600 text-white font-bold px-8 py-3 rounded-xl shadow-lg hover:opacity-90 transition-opacity"
             >
-              Upgrade to Starter — $29/mo →
+              Upgrade to Starter — $19/mo →
             </button>
           </div>
         )}
@@ -123,7 +123,7 @@ export default function PlansPage() {
             <div className="p-6">
               <h2 className="text-xl font-black text-slate-800 mb-1">Starter</h2>
               <div className="flex items-baseline gap-1 mb-3">
-                <span className="text-3xl font-black text-slate-900">$29</span>
+                <span className="text-3xl font-black text-slate-900">$19</span>
                 <span className="text-slate-400 text-sm font-medium">/month</span>
               </div>
               <p className="text-slate-500 text-sm mb-5">Full access, billed monthly. Cancel anytime.</p>

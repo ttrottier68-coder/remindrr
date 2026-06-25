@@ -36,7 +36,7 @@ function SubscribeStep({
       {/* Plan Selection */}
       <div className="space-y-3">
         {[
-          ['starter', 'Starter', '$29.99/mo', '50 clients/mo', true],
+          ['starter', 'Starter', '$19/mo', '50 clients/mo', true],
           ['pro', 'Pro', '$59.99/mo', 'Unlimited clients', false],
           ['business', 'Business', '$129/mo', 'Multi-user + API', false]
         ].map(([plan, name, price, desc, isPopular]) => (
@@ -66,7 +66,7 @@ function SubscribeStep({
         onClick={handlePay}
         className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-4 rounded-xl transition-all flex items-center justify-center gap-2"
       >
-        <span>💳</span> Pay {selectedPlan === 'starter' ? '$29.99/mo' : selectedPlan === 'pro' ? '$59.99/mo' : '$129/mo'} with Stripe
+        <span>💳</span> Pay {selectedPlan === 'starter' ? '$19/mo' : selectedPlan === 'pro' ? '$59.99/mo' : '$129/mo'} with Stripe
       </button>
 
       {/* Confirmation */}

@@ -649,7 +649,7 @@ export default function SettingsPage() {
         <div className="flex items-center gap-4">
           <div className="flex-1 p-4 rounded-xl border-2 border-orange-500 bg-orange-50 text-center">
             <div className="text-base font-bold text-slate-800">Starter</div>
-            <div className="text-xs text-slate-500 mt-1">$29/mo</div>
+            <div className="text-xs text-slate-500 mt-1">$19/mo</div>
             <div className="mt-2 text-xs text-green-600 font-medium">✓ Current plan</div>
           </div>
           <div className="flex-1 p-4 rounded-xl border border-slate-200 bg-slate-50 text-center">
