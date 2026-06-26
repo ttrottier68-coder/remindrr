@@ -301,14 +301,27 @@ export default function SettingsPage() {
   const set = (k: keyof UserSettings, v: string) => setForm(f => ({ ...f, [k]: v }));
   const setBool = (k: keyof UserSettings, v: boolean) => setForm(f => ({ ...f, [k]: v }));
 
-  // Helpers: existing users default to ON if they have the field filled in
-  const isPaypalOn = () => form.paypalEnabled !== false && !!form.paypalMe;
-  const isVenmoOn = () => form.venmoEnabled !== false && !!form.venmoUsername;
-  const isZelleOn = () => form.zelleEnabled !== false && !!form.zelleInfo;
-  const isInteracOn = () => form.interacEnabled !== false && !!form.interacEmail;
+  // Helpers: true if the enabled flag is set to true OR if it's undefined (new users default to on)
+  // The input field must also be filled in for the toggle to visually show on
+  const isPaypalOn = () => (form.paypalEnabled !== false) && !!form.paypalMe;
+  const isVenmoOn = () => (form.venmoEnabled !== false) && !!form.venmoUsername;
+  const isZelleOn = () => (form.zelleEnabled !== false) && !!form.zelleInfo;
+  const isInteracOn = () => (form.interacEnabled !== false) && !!form.interacEmail;
+
+  // Raw toggle state (ignores field content — for click handler to flip reliably)
+  const paypalToggleOn = () => form.paypalEnabled === true;
+  const venmoToggleOn = () => form.venmoEnabled === true;
+  const zelleToggleOn = () => form.zelleEnabled === true;
+  const interacToggleOn = () => form.interacEnabled === true;
 
   const handleSave = () => {
-    saveSettings(form);
+    // Auto-enable payment methods if field is filled but toggle was never touched
+    const toSave = { ...form };
+    if (form.paypalMe && toSave.paypalEnabled === undefined) toSave.paypalEnabled = true;
+    if (form.venmoUsername && toSave.venmoEnabled === undefined) toSave.venmoEnabled = true;
+    if (form.zelleInfo && toSave.zelleEnabled === undefined) toSave.zelleEnabled = true;
+    if (form.interacEmail && toSave.interacEnabled === undefined) toSave.interacEnabled = true;
+    saveSettings(toSave);
     // Also save Resend key separately (persists on logout)
     if (form.sendgridApiKey) {
       localStorage.setItem('remindrr_sendgrid', JSON.stringify({
@@ -560,9 +573,9 @@ export default function SettingsPage() {
               <div className="bg-blue-600 text-white text-xs font-bold px-3 py-1 rounded-lg">PayPal</div>
               <h3 className="font-bold text-slate-700 text-sm">PayPal.me (Recommended)</h3>
             </div>
-            <button type="button" onClick={() => setBool('paypalEnabled', !isPaypalOn())}
-              className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${isPaypalOn() ? 'bg-blue-600' : 'bg-slate-200'}`}>
-              <span className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${isPaypalOn() ? 'translate-x-4' : 'translate-x-0'}`} />
+            <button type="button" onClick={() => setBool('paypalEnabled', !paypalToggleOn())}
+              className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${paypalToggleOn() ? 'bg-blue-600' : 'bg-slate-200'}`}>
+              <span className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${paypalToggleOn() ? 'translate-x-4' : 'translate-x-0'}`} />
             </button>
           </div>
           <p className="text-sm text-slate-600 mb-3">
@@ -597,9 +610,9 @@ export default function SettingsPage() {
               <div className="bg-sky-600 text-white text-xs font-bold px-3 py-1 rounded-lg">Venmo</div>
               <h3 className="font-bold text-slate-700 text-sm">Venmo @username</h3>
             </div>
-            <button type="button" onClick={() => setBool('venmoEnabled', !isVenmoOn())}
-              className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${isVenmoOn() ? 'bg-sky-600' : 'bg-slate-200'}`}>
-              <span className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${isVenmoOn() ? 'translate-x-4' : 'translate-x-0'}`} />
+            <button type="button" onClick={() => setBool('venmoEnabled', !venmoToggleOn())}
+              className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${venmoToggleOn() ? 'bg-sky-600' : 'bg-slate-200'}`}>
+              <span className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${venmoToggleOn() ? 'translate-x-4' : 'translate-x-0'}`} />
             </button>
           </div>
           <p className="text-sm text-slate-600 mb-3">
@@ -637,9 +650,9 @@ export default function SettingsPage() {
               <div className="bg-purple-800 text-white text-xs font-bold px-3 py-1 rounded-lg">Zelle</div>
               <h3 className="font-bold text-slate-700 text-sm">Zelle</h3>
             </div>
-            <button type="button" onClick={() => setBool('zelleEnabled', !isZelleOn())}
-              className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${isZelleOn() ? 'bg-purple-800' : 'bg-slate-200'}`}>
-              <span className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${isZelleOn() ? 'translate-x-4' : 'translate-x-0'}`} />
+            <button type="button" onClick={() => setBool('zelleEnabled', !zelleToggleOn())}
+              className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${zelleToggleOn() ? 'bg-purple-800' : 'bg-slate-200'}`}>
+              <span className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${zelleToggleOn() ? 'translate-x-4' : 'translate-x-0'}`} />
             </button>
           </div>
           <p className="text-sm text-slate-600 mb-3">
@@ -676,9 +689,9 @@ export default function SettingsPage() {
               <div className="bg-orange-500 text-white text-xs font-bold px-3 py-1 rounded-lg">Interac</div>
               <h3 className="font-bold text-slate-700 text-sm">Interac e-Transfer (Canada)</h3>
             </div>
-            <button type="button" onClick={() => setBool('interacEnabled', !isInteracOn())}
-              className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${isInteracOn() ? 'bg-orange-500' : 'bg-slate-200'}`}>
-              <span className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${isInteracOn() ? 'translate-x-4' : 'translate-x-0'}`} />
+            <button type="button" onClick={() => setBool('interacEnabled', !interacToggleOn())}
+              className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${interacToggleOn() ? 'bg-orange-500' : 'bg-slate-200'}`}>
+              <span className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${interacToggleOn() ? 'translate-x-4' : 'translate-x-0'}`} />
             </button>
           </div>
           <p className="text-sm text-slate-600 mb-3">
