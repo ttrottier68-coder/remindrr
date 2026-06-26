@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
-import { getSettings, saveSettings, getDashboardStats, getInvoices, getClients, saveInvoice, saveClient, markInvoicePaid, deleteInvoice, sendReminderNow, openMailto, loadFromCloud, syncToCloud, checkAndFireAutoReminders, printInvoice } from './lib/reminder-data';
+import { getSettings, saveSettings, getDashboardStats, getInvoices, getClients, saveInvoice, saveClient, markInvoicePaid, deleteInvoice, sendReminderNow, openMailto, loadFromCloud, syncToCloud, checkAndFireAutoReminders, printInvoice, getPaymentSettings } from './lib/reminder-data';
 import { showToast } from './hooks/useToast';
 import { ToastContainer } from './components/ToastContainer';
 import { isAuthenticated, logout, ensureDemoAccount } from './lib/auth';
@@ -665,8 +665,20 @@ function NewInvoicePage() {
   // paymentLink intentionally left empty — let users configure PayPal/Venmo/Zelle in settings
 
   const defaultEmailSubject = finalEmail ? `Payment Reminder: Invoice for ${description || 'your service'}` : '';
+
+  // Build dynamic payment methods line from enabled settings
+  const payments = getPaymentSettings();
+  const enabledMethods: string[] = [];
+  if (payments.paypalMe && payments.paypalEnabled) enabledMethods.push('PayPal');
+  if (payments.venmoUsername && payments.venmoEnabled) enabledMethods.push('Venmo');
+  if (payments.zelleInfo && payments.zelleEnabled) enabledMethods.push('Zelle');
+  if (payments.interacEmail && payments.interacEnabled) enabledMethods.push('Interac e-Transfer');
+  const paymentLine = enabledMethods.length > 0
+    ? `You can pay using ${enabledMethods.join(', ')} — details below.\n\n`
+    : '';
+
   const defaultEmailBody = finalEmail
-    ? `Hi ${finalName},\n\nJust a friendly reminder that your invoice of $${total.toFixed(2)} for "${description || 'your service'}"${taxRate > 0 ? ` (incl. ${taxName})` : ''} is due on ${formatDate(dueDate)}.\n\nYou can pay using PayPal, Venmo, or Zelle — details below.\n\nThanks for your business!`
+    ? `Hi ${finalName},\n\nJust a friendly reminder that your invoice of $${total.toFixed(2)} for "${description || 'your service'}"${taxRate > 0 ? ` (incl. ${taxName})` : ''} is due on ${formatDate(dueDate)}.\n\n${paymentLine}Thanks for your business!`
     : '';
 
   const [messageText, setMessageText] = useState('');
