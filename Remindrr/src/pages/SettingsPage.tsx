@@ -299,6 +299,13 @@ export default function SettingsPage() {
   const disconnectGmail = () => { clearGmailTokens(); setGmailStatus('idle'); setGmailEmail(''); setGmailError(''); };
 
   const set = (k: keyof UserSettings, v: string) => setForm(f => ({ ...f, [k]: v }));
+  const setBool = (k: keyof UserSettings, v: boolean) => setForm(f => ({ ...f, [k]: v }));
+
+  // Helpers: existing users default to ON if they have the field filled in
+  const isPaypalOn = () => form.paypalEnabled !== false && !!form.paypalMe;
+  const isVenmoOn = () => form.venmoEnabled !== false && !!form.venmoUsername;
+  const isZelleOn = () => form.zelleEnabled !== false && !!form.zelleInfo;
+  const isInteracOn = () => form.interacEnabled !== false && !!form.interacEmail;
 
   const handleSave = () => {
     saveSettings(form);
@@ -548,9 +555,15 @@ export default function SettingsPage() {
 
         {/* ── PayPal ── */}
         <div className="mb-6">
-          <div className="flex items-center gap-2 mb-2">
-            <div className="bg-blue-600 text-white text-xs font-bold px-3 py-1 rounded-lg">PayPal</div>
-            <h3 className="font-bold text-slate-700 text-sm">PayPal.me (Recommended)</h3>
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2">
+              <div className="bg-blue-600 text-white text-xs font-bold px-3 py-1 rounded-lg">PayPal</div>
+              <h3 className="font-bold text-slate-700 text-sm">PayPal.me (Recommended)</h3>
+            </div>
+            <button type="button" onClick={() => setBool('paypalEnabled', !isPaypalOn())}
+              className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${isPaypalOn() ? 'bg-blue-600' : 'bg-slate-200'}`}>
+              <span className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${isPaypalOn() ? 'translate-x-4' : 'translate-x-0'}`} />
+            </button>
           </div>
           <p className="text-sm text-slate-600 mb-3">
             The easiest way for clients to pay you via PayPal. They just tap your link, review the amount, and pay — no app install needed.
@@ -579,9 +592,15 @@ export default function SettingsPage() {
 
         {/* ── Venmo ── */}
         <div className="mb-6">
-          <div className="flex items-center gap-2 mb-2">
-            <div className="bg-sky-600 text-white text-xs font-bold px-3 py-1 rounded-lg">Venmo</div>
-            <h3 className="font-bold text-slate-700 text-sm">Venmo @username</h3>
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2">
+              <div className="bg-sky-600 text-white text-xs font-bold px-3 py-1 rounded-lg">Venmo</div>
+              <h3 className="font-bold text-slate-700 text-sm">Venmo @username</h3>
+            </div>
+            <button type="button" onClick={() => setBool('venmoEnabled', !isVenmoOn())}
+              className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${isVenmoOn() ? 'bg-sky-600' : 'bg-slate-200'}`}>
+              <span className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${isVenmoOn() ? 'translate-x-4' : 'translate-x-0'}`} />
+            </button>
           </div>
           <p className="text-sm text-slate-600 mb-3">
             Clients can find you in the Venmo app by searching your username. Works great for clients who already use Venmo.
@@ -613,9 +632,15 @@ export default function SettingsPage() {
 
         {/* ── Zelle ── */}
         <div className="mb-2">
-          <div className="flex items-center gap-2 mb-2">
-            <div className="bg-purple-800 text-white text-xs font-bold px-3 py-1 rounded-lg">Zelle</div>
-            <h3 className="font-bold text-slate-700 text-sm">Zelle</h3>
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2">
+              <div className="bg-purple-800 text-white text-xs font-bold px-3 py-1 rounded-lg">Zelle</div>
+              <h3 className="font-bold text-slate-700 text-sm">Zelle</h3>
+            </div>
+            <button type="button" onClick={() => setBool('zelleEnabled', !isZelleOn())}
+              className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${isZelleOn() ? 'bg-purple-800' : 'bg-slate-200'}`}>
+              <span className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${isZelleOn() ? 'translate-x-4' : 'translate-x-0'}`} />
+            </button>
           </div>
           <p className="text-sm text-slate-600 mb-3">
             Direct bank transfer. Clients pay from their bank app — no fees for either party. Most major US banks support it. <strong>US bank accounts only.</strong>
@@ -646,9 +671,15 @@ export default function SettingsPage() {
 
         {/* ── Interac e-Transfer ── */}
         <div className="mb-2">
-          <div className="flex items-center gap-2 mb-2">
-            <div className="bg-orange-500 text-white text-xs font-bold px-3 py-1 rounded-lg">Interac</div>
-            <h3 className="font-bold text-slate-700 text-sm">Interac e-Transfer (Canada)</h3>
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2">
+              <div className="bg-orange-500 text-white text-xs font-bold px-3 py-1 rounded-lg">Interac</div>
+              <h3 className="font-bold text-slate-700 text-sm">Interac e-Transfer (Canada)</h3>
+            </div>
+            <button type="button" onClick={() => setBool('interacEnabled', !isInteracOn())}
+              className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${isInteracOn() ? 'bg-orange-500' : 'bg-slate-200'}`}>
+              <span className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${isInteracOn() ? 'translate-x-4' : 'translate-x-0'}`} />
+            </button>
           </div>
           <p className="text-sm text-slate-600 mb-3">
             The most popular way Canadians pay each other. Clients send an e-Transfer directly to your email — no app install, no fees. <strong>Canada only.</strong>

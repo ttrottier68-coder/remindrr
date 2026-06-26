@@ -72,20 +72,27 @@ export function clearGmailTokens() {
 
 export interface PaymentSettings {
   paypalMe?: string;
+  paypalEnabled?: boolean;
   venmoUsername?: string;
+  venmoEnabled?: boolean;
   zelleInfo?: string;
+  zelleEnabled?: boolean;
   interacEmail?: string;
+  interacEnabled?: boolean;
   stripeAccountId?: string;
 }
 
-/** Read payment fields directly from localStorage so emails always get latest values */
 export function getPaymentSettings(): PaymentSettings {
   const stored = safe<Partial<UserSettings>>(SETTINGS_KEY, {});
   return {
     paypalMe: stored.paypalMe,
+    paypalEnabled: stored.paypalEnabled,
     venmoUsername: stored.venmoUsername,
+    venmoEnabled: stored.venmoEnabled,
     zelleInfo: stored.zelleInfo,
+    zelleEnabled: stored.zelleEnabled,
     interacEmail: stored.interacEmail,
+    interacEnabled: stored.interacEnabled,
     stripeAccountId: stored.stripeAccountId,
   };
 }
@@ -234,10 +241,10 @@ export function openMailto(invoice: Invoice): void {
   
   // Build payment methods section
   let paymentMethods = '';
-  if (settings.paypalMe) paymentMethods += `\nPayPal: ${settings.paypalMe}`;
-  if (settings.venmoUsername) paymentMethods += `\nVenmo: ${settings.venmoUsername}`;
-  if (settings.zelleInfo) paymentMethods += `\nZelle: ${settings.zelleInfo}`;
-  if (settings.interacEmail) paymentMethods += `\nInterac e-Transfer: ${settings.interacEmail}`;
+  if (settings.paypalMe && settings.paypalEnabled) paymentMethods += `\nPayPal: ${settings.paypalMe}`;
+  if (settings.venmoUsername && settings.venmoEnabled) paymentMethods += `\nVenmo: ${settings.venmoUsername}`;
+  if (settings.zelleInfo && settings.zelleEnabled) paymentMethods += `\nZelle: ${settings.zelleInfo}`;
+  if (settings.interacEmail && settings.interacEnabled) paymentMethods += `\nInterac e-Transfer: ${settings.interacEmail}`;
   
   const invoicePaymentLink = invoice.paymentLink || '';
   const body = encodeURIComponent(`Hi ${clientName},
@@ -500,35 +507,35 @@ function buildEmailHtml(invoice: Invoice, client: Client | undefined, businessNa
     </div>` : '';
 
   // ── PayPal section ──────────────────────────────────────────────────────────
-  const paypalSection = payments.paypalMe ? `
+  const paypalSection = (payments.paypalMe && payments.paypalEnabled) ? `
     <div style="display:flex;align-items:center;gap:12px;padding:12px 16px;background:#f0f4ff;border:1px solid #dde4ff;border-radius:10px;margin-bottom:8px;">
       <div style="background:#0070ba;color:#fff;font-weight:bold;font-size:13px;padding:6px 14px;border-radius:6px;white-space:nowrap;">PayPal</div>
       <a href="${payments.paypalMe}" style="color:#0070ba;font-weight:600;font-size:14px;text-decoration:none;">${payments.paypalMe} →</a>
     </div>` : '';
 
   // ── Venmo section ───────────────────────────────────────────────────────────
-  const venmoSection = payments.venmoUsername ? `
+  const venmoSection = (payments.venmoUsername && payments.venmoEnabled) ? `
     <div style="display:flex;align-items:center;gap:12px;padding:12px 16px;background:#f0f4ff;border:1px solid #dde4ff;border-radius:10px;margin-bottom:8px;">
       <div style="background:#3d95ce;color:#fff;font-weight:bold;font-size:13px;padding:6px 14px;border-radius:6px;white-space:nowrap;">Venmo</div>
       <span style="color:#1e293b;font-size:14px;"><strong>${payments.venmoUsername}</strong> <span style="color:#64748b;font-size:12px;">— scan in the Venmo app</span></span>
     </div>` : '';
 
   // ── Zelle section ───────────────────────────────────────────────────────────
-  const zelleSection = payments.zelleInfo ? `
+  const zelleSection = (payments.zelleInfo && payments.zelleEnabled) ? `
     <div style="display:flex;align-items:center;gap:12px;padding:12px 16px;background:#f0f4ff;border:1px solid #dde4ff;border-radius:10px;margin-bottom:8px;">
       <div style="background:#6d1a8a;color:#fff;font-weight:bold;font-size:13px;padding:6px 14px;border-radius:6px;white-space:nowrap;">Zelle</div>
       <span style="color:#1e293b;font-size:14px;">Send to: <strong>${payments.zelleInfo}</strong></span>
     </div>` : '';
 
   // ── Interac e-Transfer section ─────────────────────────────────────────────
-  const interacSection = payments.interacEmail ? `
+  const interacSection = (payments.interacEmail && payments.interacEnabled) ? `
     <div style="display:flex;align-items:center;gap:12px;padding:12px 16px;background:#f0f4ff;border:1px solid #dde4ff;border-radius:10px;margin-bottom:8px;">
       <div style="background:#ff6b00;color:#fff;font-weight:bold;font-size:13px;padding:6px 14px;border-radius:6px;white-space:nowrap;">Interac</div>
       <span style="color:#1e293b;font-size:14px;">e-Transfer to: <strong>${payments.interacEmail}</strong></span>
     </div>` : '';
 
-  // ── Payment methods section (PayPal / Venmo / Zelle / Interac — always shown if any set) ──
-  const hasPaymentMethods = (payments.paypalMe || payments.venmoUsername || payments.zelleInfo || payments.interacEmail);
+  // ── Payment methods section (PayPal / Venmo / Zelle / Interac — always shown if any enabled) ──
+  const hasPaymentMethods = (paypalSection || venmoSection || zelleSection || interacSection);
   const paymentMethodsSection = hasPaymentMethods ? `
     <div style="margin:0 0 24px;">
       <p style="margin:0 0 12px;font-size:13px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:0.5px;">Or pay with</p>

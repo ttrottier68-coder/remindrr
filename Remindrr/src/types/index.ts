@@ -42,9 +42,13 @@ export interface UserSettings {
   plan: 'trial' | 'starter' | 'pro' | 'business';
   trialStartDate?: string; // ISO date string when trial began
   paypalMe?: string;
+  paypalEnabled?: boolean;
   venmoUsername?: string;
+  venmoEnabled?: boolean;
   zelleInfo?: string;
+  zelleEnabled?: boolean;
   interacEmail?: string;
+  interacEnabled?: boolean;
   businessLogo?: string; // base64 data URL of uploaded logo image
 }
 
