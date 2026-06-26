@@ -74,6 +74,7 @@ export interface PaymentSettings {
   paypalMe?: string;
   venmoUsername?: string;
   zelleInfo?: string;
+  interacEmail?: string;
   stripeAccountId?: string;
 }
 
@@ -84,6 +85,7 @@ export function getPaymentSettings(): PaymentSettings {
     paypalMe: stored.paypalMe,
     venmoUsername: stored.venmoUsername,
     zelleInfo: stored.zelleInfo,
+    interacEmail: stored.interacEmail,
     stripeAccountId: stored.stripeAccountId,
   };
 }
@@ -235,6 +237,7 @@ export function openMailto(invoice: Invoice): void {
   if (settings.paypalMe) paymentMethods += `\nPayPal: ${settings.paypalMe}`;
   if (settings.venmoUsername) paymentMethods += `\nVenmo: ${settings.venmoUsername}`;
   if (settings.zelleInfo) paymentMethods += `\nZelle: ${settings.zelleInfo}`;
+  if (settings.interacEmail) paymentMethods += `\nInterac e-Transfer: ${settings.interacEmail}`;
   
   const invoicePaymentLink = invoice.paymentLink || '';
   const body = encodeURIComponent(`Hi ${clientName},
@@ -517,12 +520,19 @@ function buildEmailHtml(invoice: Invoice, client: Client | undefined, businessNa
       <span style="color:#1e293b;font-size:14px;">Send to: <strong>${payments.zelleInfo}</strong></span>
     </div>` : '';
 
-  // ── Payment methods section (PayPal / Venmo / Zelle — always shown if any set) ──
-  const hasPaymentMethods = (payments.paypalMe || payments.venmoUsername || payments.zelleInfo);
+  // ── Interac e-Transfer section ─────────────────────────────────────────────
+  const interacSection = payments.interacEmail ? `
+    <div style="display:flex;align-items:center;gap:12px;padding:12px 16px;background:#f0f4ff;border:1px solid #dde4ff;border-radius:10px;margin-bottom:8px;">
+      <div style="background:#ff6b00;color:#fff;font-weight:bold;font-size:13px;padding:6px 14px;border-radius:6px;white-space:nowrap;">Interac</div>
+      <span style="color:#1e293b;font-size:14px;">e-Transfer to: <strong>${payments.interacEmail}</strong></span>
+    </div>` : '';
+
+  // ── Payment methods section (PayPal / Venmo / Zelle / Interac — always shown if any set) ──
+  const hasPaymentMethods = (payments.paypalMe || payments.venmoUsername || payments.zelleInfo || payments.interacEmail);
   const paymentMethodsSection = hasPaymentMethods ? `
     <div style="margin:0 0 24px;">
       <p style="margin:0 0 12px;font-size:13px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:0.5px;">Or pay with</p>
-      ${paypalSection}${venmoSection}${zelleSection}
+      ${paypalSection}${venmoSection}${zelleSection}${interacSection}
     </div>` : '';
 
   return `<!DOCTYPE html>
