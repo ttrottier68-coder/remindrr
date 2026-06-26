@@ -83,7 +83,7 @@ function NavBar() {
     { label: 'Dashboard', to: '/', icon: <DollarIcon /> },
     { label: 'Invoices', to: '/invoices', icon: <FileIcon /> },
     { label: 'Clients', to: '/clients', icon: <UsersIcon /> },
-    { label: 'Settings', to: '/settings', icon: <CogIcon /> },
+    { label: 'Payment Setup', to: '/settings', icon: <CogIcon /> },
   ];
   return (
     <nav className="bg-slate-900 text-white shadow-lg sticky top-0 z-50">
