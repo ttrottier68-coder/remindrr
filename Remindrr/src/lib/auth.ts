@@ -201,9 +201,8 @@ export async function login(email: string, password: string): Promise<string | n
     if (error.code === 'auth/too-many-requests') {
       return 'Too many login attempts. Please wait and try again.';
     }
-    // DEBUG — remove after diagnosis
-    console.error('Login error details:', error.code, error.message, JSON.stringify(error));
-    return 'Login failed. Please try again.';
+    // Show the raw Firebase error so we can diagnose — remove after diagnosis
+    return `Login failed: ${error.code || 'unknown'} — ${error.message || 'no message'}`;
   }
 }
 
