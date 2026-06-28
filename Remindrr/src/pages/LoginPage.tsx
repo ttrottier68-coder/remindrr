@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { login } from '../lib/auth';
+import { login, isAuthenticated } from '../lib/auth';
 import { saveSettings, getSettings, loadFromCloud } from '../lib/reminder-data';
 import AuthLayout from '../components/AuthLayout';
 
@@ -14,6 +14,15 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const navigate = useNavigate();
+
+  // Redirect if already logged in
+  useEffect(() => {
+    if (isAuthenticated()) {
+      const raw = localStorage.getItem(SETTINGS_KEY);
+      const hasData = raw && raw !== 'null' && raw !== 'undefined' && JSON.parse(raw)?.data?.ownerName;
+      window.location.href = hasData ? '/' : '/onboarding';
+    }
+  }, []);
 
   const [hasSubmitted, setHasSubmitted] = useState(false);
 

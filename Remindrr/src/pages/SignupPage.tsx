@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import AuthLayout from '../components/AuthLayout';
-import { register } from '../lib/auth';
+import { register, isAuthenticated } from '../lib/auth';
 import { saveSettings } from '../lib/reminder-data';
 
 
@@ -16,6 +16,13 @@ export default function SignupPage() {
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  // Redirect if already logged in
+  useEffect(() => {
+    if (isAuthenticated()) {
+      window.location.href = '/';
+    }
+  }, []);
 
   // Pre-fill email when arriving from forgot-password flow
   useEffect(() => {
