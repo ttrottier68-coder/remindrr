@@ -1,7 +1,6 @@
 import { useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import AuthLayout from '../components/AuthLayout';
-import { clearPassword, emailExists } from '../lib/auth';
 
 export default function ForgotPasswordPage() {
   const navigate = useNavigate();
@@ -19,19 +18,21 @@ export default function ForgotPasswordPage() {
     setError('');
     setLoading(true);
 
-    // Small delay to feel like we're "checking"
-    await new Promise(r => setTimeout(r, 600));
-
-    const normalized = email.toLowerCase().trim();
-    if (!emailExists(normalized)) {
-      setError('No account found with this email address.');
-      setLoading(false);
-      return;
+    try {
+      const { sendPasswordResetEmail } = await import('../lib/firebase');
+      const normalized = email.toLowerCase().trim();
+      await sendPasswordResetEmail(normalized);
+      setDone(true);
+    } catch (err: any) {
+      if (err.code === 'auth/user-not-found') {
+        // Don't reveal whether email exists — show success anyway
+        setDone(true);
+      } else if (err.code === 'auth/too-many-requests') {
+        setError('Too many attempts. Please wait a few minutes and try again.');
+      } else {
+        setError('Something went wrong. Please try again.');
+      }
     }
-
-    // Clear the password — next step is to set a new one
-    clearPassword(normalized);
-    setDone(true);
     setLoading(false);
   };
 
@@ -39,23 +40,17 @@ export default function ForgotPasswordPage() {
     return (
       <AuthLayout>
         <div className="text-center">
-          <div className="text-5xl mb-4">✅</div>
-          <h1 className="text-2xl font-bold text-slate-800 mb-2">Password reset!</h1>
+          <div className="text-5xl mb-4">📧</div>
+          <h1 className="text-2xl font-bold text-slate-800 mb-2">Check your inbox</h1>
           <p className="text-slate-500 text-sm mb-6">
-            Your password has been cleared. You can now create a new one.
+            If an account exists for <strong>{email}</strong>, we've sent a password reset link. Check your spam folder if you don't see it within a few minutes.
           </p>
           <button
-            onClick={() => navigate(`/signup?email=${encodeURIComponent(email)}`)}
+            onClick={() => navigate('/login')}
             className="w-full bg-gradient-to-r from-orange-500 to-orange-600 text-white font-bold py-3 rounded-xl shadow-lg shadow-orange-500/30 transition-opacity"
           >
-            Create new password
+            Back to sign in
           </button>
-          <p className="text-center text-sm text-slate-500 mt-4">
-            Remember your password?{' '}
-            <button onClick={() => navigate('/login')} className="text-orange-500 font-bold hover:underline">
-              Sign in
-            </button>
-          </p>
         </div>
       </AuthLayout>
     );
@@ -66,7 +61,7 @@ export default function ForgotPasswordPage() {
       <div className="text-center mb-6">
         <h1 className="text-2xl font-bold text-slate-800">Forgot password?</h1>
         <p className="text-slate-500 mt-1 text-sm">
-          Enter your email and we'll reset it for you.
+          Enter your email and we'll send you a reset link.
         </p>
       </div>
 
@@ -94,7 +89,7 @@ export default function ForgotPasswordPage() {
           disabled={loading}
           className="w-full bg-gradient-to-r from-orange-500 to-orange-600 text-white font-bold py-3 rounded-xl shadow-lg shadow-orange-500/30 disabled:opacity-60 disabled:cursor-not-allowed transition-opacity"
         >
-          {loading ? 'Checking...' : 'Reset password'}
+          {loading ? 'Sending...' : 'Send reset link'}
         </button>
       </form>
 

@@ -44,6 +44,11 @@ export async function signOut() {
   return (window as any).firebase.auth().signOut();
 }
 
+export async function sendPasswordResetEmail(email: string) {
+  if (!isFirebaseReady()) throw new Error('Firebase not loaded');
+  return (window as any).firebase.auth().sendPasswordResetEmail(email);
+}
+
 export function onAuthStateChanged(callback: (user: any) => void) {
   if (!isFirebaseReady()) return;
   return (window as any).firebase.auth().onAuthStateChanged(callback);
