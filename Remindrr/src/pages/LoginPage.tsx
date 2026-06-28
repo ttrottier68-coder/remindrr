@@ -87,9 +87,10 @@ export default function LoginPage() {
         });
         window.location.href = '/onboarding';
       }
-    } catch (err) {
+    } catch (err: any) {
       setLoading(false);
-      setError('An error occurred. Please try again.');
+      // Log exact error so we can diagnose — remove after diagnosis
+      setError(`An error occurred: ${err?.message || err?.code || JSON.stringify(err)}`);
       setHasSubmitted(false);
     }
   };
