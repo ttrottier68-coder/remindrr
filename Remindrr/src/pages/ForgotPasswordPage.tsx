@@ -21,7 +21,9 @@ export default function ForgotPasswordPage() {
     try {
       const { sendPasswordResetEmail } = await import('../lib/firebase');
       const normalized = email.toLowerCase().trim();
-      await sendPasswordResetEmail(normalized);
+      // Send user back to the app's login page after they complete the reset
+      const continueUrl = `${window.location.origin}/login`;
+      await sendPasswordResetEmail(normalized, continueUrl);
       setDone(true);
     } catch (err: any) {
       if (err.code === 'auth/user-not-found') {
@@ -29,6 +31,10 @@ export default function ForgotPasswordPage() {
         setDone(true);
       } else if (err.code === 'auth/too-many-requests') {
         setError('Too many attempts. Please wait a few minutes and try again.');
+      } else if (err.code === 'auth/invalid-email') {
+        setError('That email address doesn\'t look right. Please check and try again.');
+      } else if (err.code === 'auth/network-request-failed') {
+        setError('Network error. Check your connection and try again.');
       } else {
         setError('Something went wrong. Please try again.');
       }
