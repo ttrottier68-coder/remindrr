@@ -23,6 +23,7 @@
 //   { ok: true, users: N, reminders: M, errors: [...] }
 
 const admin = require('firebase-admin');
+const { getFirestore } = require('firebase-admin/firestore');
 
 const HEADERS = {
   'Access-Control-Allow-Origin': '*',
@@ -48,7 +49,7 @@ function getAdmin() {
     throw new Error('FIREBASE_SERVICE_ACCOUNT is not valid base64-encoded JSON: ' + e.message);
   }
   adminApp = admin.initializeApp({
-    credential: admin.credential.cert(sa),
+    credential: admin.cert(sa),
   }, 'remindrr-cron');
   return adminApp;
 }
@@ -146,7 +147,7 @@ exports.handler = async (event) => {
   let db;
   try {
     const app = getAdmin();
-    db = app.firestore();
+    db = getFirestore(app);
   } catch (e) {
     return { statusCode: 500, headers: HEADERS, body: JSON.stringify({ ok: false, error: e.message }) };
   }
