@@ -1,0 +1,30 @@
+name: Daily reminder cron
+
+# Runs every day at 14:00 UTC (10am ET / 7am PT).
+on:
+  schedule:
+    - cron: '0 14 * * *'
+  workflow_dispatch:
+
+jobs:
+  fire-reminders:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Hit cron endpoint
+        env:
+          CRON_URL: ${{ secrets.CRON_URL }}
+        run: |
+          if [ -z "$CRON_URL" ]; then
+            echo "::error::CRON_URL secret is not set"
+            exit 1
+          fi
+          echo "Hitting $CRON_URL"
+          response=$(curl -fsS -w "\nHTTP_STATUS:%{http_code}\n" "$CRON_URL" || echo "CURL_FAILED")
+          echo "$response"
+          if echo "$response" | grep -q "HTTP_STATUS:[23]"; then
+            echo "✅ Cron completed"
+          else
+            echo "::error::Cron request failed"
+            exit 1
+          fi
