@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AuthLayout from '../components/AuthLayout';
+import { sendBrandedPasswordReset } from '../lib/password-reset';
 
 export default function ForgotPasswordPage() {
   const navigate = useNavigate();
@@ -18,28 +19,25 @@ export default function ForgotPasswordPage() {
     setError('');
     setLoading(true);
 
-    try {
-      const { sendPasswordResetEmail } = await import('../lib/firebase');
-      const normalized = email.toLowerCase().trim();
-      // Send user back to the app's login page after they complete the reset
-      const continueUrl = `${window.location.origin}/login`;
-      await sendPasswordResetEmail(normalized, continueUrl);
-      setDone(true);
-    } catch (err: any) {
-      if (err.code === 'auth/user-not-found') {
-        // Don't reveal whether email exists — show success anyway
-        setDone(true);
-      } else if (err.code === 'auth/too-many-requests') {
-        setError('Too many attempts. Please wait a few minutes and try again.');
-      } else if (err.code === 'auth/invalid-email') {
-        setError('That email address doesn\'t look right. Please check and try again.');
-      } else if (err.code === 'auth/network-request-failed') {
-        setError('Network error. Check your connection and try again.');
-      } else {
-        setError('Something went wrong. Please try again.');
-      }
-    }
+    const continueUrl = `${window.location.origin}/login`;
+    const result = await sendBrandedPasswordReset(email.toLowerCase().trim(), continueUrl);
+
     setLoading(false);
+
+    if (result.ok) {
+      setDone(true);
+      return;
+    }
+
+    if (result.error === 'auth/too-many-requests') {
+      setError('Too many attempts. Please wait a few minutes and try again.');
+    } else if (result.error === 'auth/invalid-email') {
+      setError("That email address doesn't look right. Please check and try again.");
+    } else if (result.error === 'auth/network-request-failed') {
+      setError('Network error. Check your connection and try again.');
+    } else {
+      setError('Something went wrong. Please try again.');
+    }
   };
 
   if (done) {
