@@ -44,6 +44,9 @@ function clearLocalSession(): void {
   // Only the auth session is cleared.
 }
 
+// Exported for useValidatedAuth hook — only the session, not the user data
+export { clearLocalSession };
+
 // ─── Auth functions ────────────────────────────────────────────────────────────────
 
 // Demo credentials

@@ -4,6 +4,7 @@ import { getSettings, saveSettings, getDashboardStats, getInvoices, getClients, 
 import { showToast } from './hooks/useToast';
 import { ToastContainer } from './components/ToastContainer';
 import { isAuthenticated, logout, ensureDemoAccount } from './lib/auth';
+import { useValidatedAuth } from './hooks/useValidatedAuth';
 import type { Invoice, Client } from './types';
 import { getTrialDaysLeft } from './types';
 import SettingsPage from './pages/SettingsPage';
@@ -1071,18 +1072,20 @@ async function seedDemoData() {
 export default function App() {
   const [ready, setReady] = useState(false);
   const [settings, setSettings] = useState(() => getSettings());
-  const [authed, setAuthed] = useState(() => isAuthenticated());
+  const validated = useValidatedAuth();
 
   useEffect(() => {
     Promise.all([seedDemoData(), checkAndFireAutoReminders()]).then(() => {
       setSettings(getSettings());
-      setAuthed(isAuthenticated());
       setReady(true);
     });
   }, []);
 
-  // Show nothing until demo data is ready
-  if (!ready) {
+  // Show nothing until both data is ready AND Firebase auth state is validated.
+  // The validated.authed check replaces the old isAuthenticated() so a fake
+  // localStorage session can't get past the route guard — useValidatedAuth
+  // auto-logs-out if Firebase says the user is gone.
+  if (!ready || validated.loading) {
     return (
       <div className="min-h-screen bg-slate-900 flex items-center justify-center">
         <div className="text-center">
@@ -1093,11 +1096,11 @@ export default function App() {
     );
   }
 
-// Case 1: Has settings AND is logged in → show the app
+  const authed = validated.authed;
   const hasSettings = !!settings?.ownerName?.trim();
 
-  // User is logged in and has settings → full app access
-  if (isAuthenticated() && hasSettings) {
+  // Case 1: Has settings AND is logged in → show the app
+  if (authed && hasSettings) {
     return (
       <BrowserRouter>
         <div className="min-h-screen bg-slate-50">
