@@ -15,16 +15,16 @@ jobs:
         env:
           CRON_URL: ${{ secrets.CRON_URL }}
         run: |
-          if [ -z "$CRON_URL" ]; then
-            echo "::error::CRON_URL secret is not set"
-            exit 1
-          fi
-          echo "Hitting $CRON_URL"
-          response=$(curl -fsS -w "\nHTTP_STATUS:%{http_code}\n" "$CRON_URL" || echo "CURL_FAILED")
-          echo "$response"
-          if echo "$response" | grep -q "HTTP_STATUS:[23]"; then
+          echo "Hitting cron endpoint (URL length: ${#CRON_URL})"
+          # Capture status code separately, save body to a file
+          HTTP_STATUS=$(curl -s -o /tmp/cron_response.json -w "%{http_code}" "$CRON_URL")
+          echo "HTTP status: $HTTP_STATUS"
+          echo "Response body:"
+          cat /tmp/cron_response.json
+          echo ""
+          if [ "$HTTP_STATUS" -ge 200 ] && [ "$HTTP_STATUS" -lt 300 ]; then
             echo "✅ Cron completed"
           else
-            echo "::error::Cron request failed"
+            echo "::error::Cron request failed (HTTP $HTTP_STATUS)"
             exit 1
           fi
