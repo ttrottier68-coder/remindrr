@@ -13,18 +13,30 @@ export interface Invoice {
   clientId: string;
   clientName: string;
   clientEmail: string;
+  clientPhone?: string;
+  clientAddress?: string;
   amount: number;
   taxRate: number;
   taxName: string;
   subtotal: number;
   description: string;
   dueDate: string;
+  invoiceDate?: string;
+  quantity?: number;
   status: 'pending' | 'paid' | 'overdue';
   paymentLink?: string;
   paidAt?: string;
   createdAt: string;
   reminderSent?: boolean;
   reminderMethod?: 'email';
+  lastReminderSentAt?: string;
+  followupCount?: number;
+  recurring?: 'none' | 'weekly' | 'monthly' | 'quarterly';
+  reminderSettings?: {
+    threeDaysBefore?: boolean;
+    onDueDate?: boolean;
+    threeDaysAfter?: boolean;
+  };
 }
 
 export interface UserSettings {

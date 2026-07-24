@@ -502,34 +502,9 @@ export default function OnboardingFlow() {
 
   const handleRemindersNext = (data: typeof reminderData) => {
     setReminderData(data);
-    // Save the invoice before finishing
-    if (invoiceData) {
-      const clientId = `client_${Date.now()}`;
-      const newClient: Client = {
-        id: clientId,
-        name: invoiceData.customerName,
-        email: invoiceData.customerEmail || '',
-        phone: invoiceData.customerPhone,
-        createdAt: new Date().toISOString(),
-      };
-      saveClient(newClient);
-
-      const newInvoice: Invoice = {
-        id: `inv_${Date.now()}`,
-        clientId,
-        clientName: invoiceData.customerName,
-        clientPhone: invoiceData.customerPhone,
-        clientEmail: invoiceData.customerEmail,
-        description: invoiceData.description,
-        amount: parseFloat(invoiceData.amount),
-        dueDate: invoiceData.dueDate,
-        createdAt: new Date().toISOString(),
-        status: 'pending',
-        reminderSettings: data,
-      };
-      saveInvoice(newInvoice);
-    }
-    finishOnboarding();
+    // Move to Preview step — the invoice is actually created in handlePreviewNext
+    // so the user gets a chance to see what will be sent.
+    setStep(5);
   };
 
   const handlePreviewNext = () => {
@@ -599,6 +574,8 @@ export default function OnboardingFlow() {
           {step === 4 && <SetRemindersStep onNext={handleRemindersNext} />}
 
           {step === 5 && invoiceData && <PreviewStep invoiceData={invoiceData} onNext={handlePreviewNext} />}
+
+          {step === 6 && <SuccessStep onFinish={finishOnboarding} />}
 
           {step === 6 && <SuccessStep onFinish={finishOnboarding} />}
         </div>

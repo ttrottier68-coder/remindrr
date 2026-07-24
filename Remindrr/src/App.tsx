@@ -83,7 +83,8 @@ function NavBar() {
     { label: 'Dashboard', to: '/', icon: <DollarIcon /> },
     { label: 'Invoices', to: '/invoices', icon: <FileIcon /> },
     { label: 'Clients', to: '/clients', icon: <UsersIcon /> },
-    { label: 'Payment Setup', to: '/settings', icon: <CogIcon /> },
+    { label: 'Settings', to: '/settings', icon: <CogIcon /> },
+    { label: 'Plans', to: '/plans', icon: <CogIcon /> },
   ];
   return (
     <nav className="bg-slate-900 text-white shadow-lg sticky top-0 z-50">
@@ -235,17 +236,17 @@ function TrialBanner() {
   const settings = getSettings();
   const [dismissed, setDismissed] = useState(false);
   const daysLeft = getTrialDaysLeft(settings);
+  const navigate = useNavigate();
+
+  // Expired trial — redirect to plans page (in useEffect, not during render)
+  useEffect(() => {
+    if (settings?.plan === 'trial' && daysLeft === 0 && window.location.pathname !== '/plans') {
+      navigate('/plans', { replace: true });
+    }
+  }, [settings?.plan, daysLeft, navigate]);
 
   if (dismissed) return null;
-
-  // Expired trial — redirect to plans page
-  if (settings?.plan === 'trial' && daysLeft === 0) {
-    if (window.location.pathname !== '/plans') {
-      window.location.href = '/plans';
-      return null;
-    }
-    return null;
-  }
+  if (settings?.plan === 'trial' && daysLeft === 0) return null;
 
   // Active trial — show banner
   if (settings?.plan === 'trial' && daysLeft > 0) {
@@ -695,7 +696,7 @@ function NewInvoicePage() {
  useEffect(() => {
   if (done) navigate('/invoices');
 }, [done]);
-  
+
   const handleConfirm = async () => {
     
     setSaving(true);
