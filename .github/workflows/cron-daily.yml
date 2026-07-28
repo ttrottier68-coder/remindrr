@@ -1,1 +1,30 @@
+name: Daily reminder cron
 
+# Runs every day at 14:00 UTC (10am ET / 7am PT).
+on:
+  schedule:
+    - cron: '0 14 * * *'
+  workflow_dispatch:
+
+jobs:
+  fire-reminders:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Hit cron endpoint
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          FUNCTION_BASE: https://remindrr.app/.netlify/functions/cron-daily
+        run: |
+          CRON_URL="${FUNCTION_BASE}?secret=${CRON_SECRET}"
+          echo "Hitting cron endpoint (URL length: ${#CRON_URL})"
+          HTTP_STATUS=$(curl -s -o /tmp/cron_response.json -w "%{http_code}" "$CRON_URL")
+          echo "HTTP status: $HTTP_STATUS"
+          cat /tmp/cron_response.json
+          echo ""
+          if [ "$HTTP_STATUS" -ge 200 ] && [ "$HTTP_STATUS" -lt 300 ]; then
+            echo "✅ Cron completed"
+          else
+            echo "::error::Cron request failed (HTTP $HTTP_STATUS)"
+            exit 1
+          fi
